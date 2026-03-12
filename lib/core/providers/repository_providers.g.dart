@@ -1,0 +1,150 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'repository_providers.dart';
+
+// **************************************************************************
+// RiverpodGenerator
+// **************************************************************************
+
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint, type=warning
+
+@ProviderFor(incomeRepository)
+final incomeRepositoryProvider = IncomeRepositoryProvider._();
+
+final class IncomeRepositoryProvider
+    extends
+        $FunctionalProvider<
+          IncomeRepository,
+          IncomeRepository,
+          IncomeRepository
+        >
+    with $Provider<IncomeRepository> {
+  IncomeRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'incomeRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$incomeRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<IncomeRepository> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  IncomeRepository create(Ref ref) {
+    return incomeRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(IncomeRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<IncomeRepository>(value),
+    );
+  }
+}
+
+String _$incomeRepositoryHash() => r'be2197287abae213b83eaa7175fbea4febfb5e38';
+
+@ProviderFor(expenseRepository)
+final expenseRepositoryProvider = ExpenseRepositoryProvider._();
+
+final class ExpenseRepositoryProvider
+    extends
+        $FunctionalProvider<
+          ExpenseRepository,
+          ExpenseRepository,
+          ExpenseRepository
+        >
+    with $Provider<ExpenseRepository> {
+  ExpenseRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'expenseRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$expenseRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<ExpenseRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  ExpenseRepository create(Ref ref) {
+    return expenseRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ExpenseRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ExpenseRepository>(value),
+    );
+  }
+}
+
+String _$expenseRepositoryHash() => r'1ff72d252256ff436b3c247c37a6d7860557f024';
+
+@ProviderFor(savingsRepository)
+final savingsRepositoryProvider = SavingsRepositoryProvider._();
+
+final class SavingsRepositoryProvider
+    extends
+        $FunctionalProvider<
+          SavingsRepository,
+          SavingsRepository,
+          SavingsRepository
+        >
+    with $Provider<SavingsRepository> {
+  SavingsRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'savingsRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$savingsRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<SavingsRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SavingsRepository create(Ref ref) {
+    return savingsRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SavingsRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SavingsRepository>(value),
+    );
+  }
+}
+
+String _$savingsRepositoryHash() => r'0d35a9adb75cce8722cde130a31544e22c7688bb';
