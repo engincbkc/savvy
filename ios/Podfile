@@ -29,6 +29,12 @@ flutter_ios_podfile_setup
 target 'Runner' do
   use_frameworks!
 
+  # Pin Firebase internal pods to 11.4.x to avoid Swift 6 'sending' keyword issues on Xcode 15
+  pod 'FirebaseSharedSwift', '11.4.0'
+  pod 'FirebaseCoreInternal', '11.4.0'
+  pod 'FirebaseAppCheckInterop', '11.4.0'
+  pod 'FirebaseAuthInterop', '11.4.0'
+
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
     inherit! :search_paths

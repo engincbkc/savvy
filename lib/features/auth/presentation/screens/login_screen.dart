@@ -39,7 +39,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    ref.listen(authProvider, (_, next) {
+    ref.listen(authProvider, (prev, next) {
       if (next.hasError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -51,6 +51,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             backgroundColor: AppColors.expense,
           ),
         );
+      }
+      // Navigate to dashboard after successful sign-in
+      if (prev?.isLoading == true && !next.isLoading && !next.hasError) {
+        context.go('/dashboard');
       }
     });
 

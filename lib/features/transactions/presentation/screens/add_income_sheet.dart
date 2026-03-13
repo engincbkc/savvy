@@ -21,14 +21,31 @@ class _AddIncomeSheetState extends ConsumerState<AddIncomeSheet> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
+  final _dateController = TextEditingController();
   IncomeCategory _category = IncomeCategory.salary;
   DateTime _date = DateTime.now();
+  bool _isRecurring = false;
+  DateTime? _recurringEndDate;
+  final _recurringEndDateController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _updateDateText();
+  }
 
   @override
   void dispose() {
     _amountController.dispose();
     _noteController.dispose();
+    _dateController.dispose();
+    _recurringEndDateController.dispose();
     super.dispose();
+  }
+
+  void _updateDateText() {
+    _dateController.text =
+        '${_date.day.toString().padLeft(2, '0')}.${_date.month.toString().padLeft(2, '0')}.${_date.year}';
   }
 
   Future<void> _pickDate() async {
@@ -37,9 +54,13 @@ class _AddIncomeSheetState extends ConsumerState<AddIncomeSheet> {
       initialDate: _date,
       firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 366)),
-      locale: const Locale('tr', 'TR'),
     );
-    if (picked != null) setState(() => _date = picked);
+    if (picked != null) {
+      setState(() {
+        _date = picked;
+        _updateDateText();
+      });
+    }
   }
 
   Future<void> _submit() async {
@@ -55,12 +76,23 @@ class _AddIncomeSheetState extends ConsumerState<AddIncomeSheet> {
       category: _category,
       date: _date,
       note: _noteController.text.isEmpty ? null : _noteController.text,
+      isRecurring: _isRecurring,
+      recurringEndDate: _recurringEndDate,
       createdAt: DateTime.now(),
     );
 
     final success =
         await ref.read(transactionFormProvider.notifier).addIncome(income);
-    if (mounted && success) Navigator.of(context).pop();
+    if (mounted && success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gelir başarıyla kaydedildi'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -166,15 +198,74 @@ class _AddIncomeSheetState extends ConsumerState<AddIncomeSheet> {
                 onTap: _pickDate,
                 child: AbsorbPointer(
                   child: TextFormField(
-                    decoration: InputDecoration(
+                    controller: _dateController,
+                    decoration: const InputDecoration(
                       hintText: 'Tarih',
-                      prefixIcon: const Icon(AppIcons.calendar, size: 20),
-                      suffixText:
-                          '${_date.day.toString().padLeft(2, '0')}.${_date.month.toString().padLeft(2, '0')}.${_date.year}',
+                      prefixIcon: Icon(AppIcons.calendar, size: 20),
                     ),
                   ),
                 ),
               ),
+              const SizedBox(height: AppSpacing.base),
+
+              // Recurring toggle
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  'Periyodik Gelir',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                subtitle: Text(
+                  'Her ay tekrarlanan gelir',
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
+                ),
+                value: _isRecurring,
+                activeTrackColor: AppColors.income,
+                onChanged: (v) => setState(() {
+                  _isRecurring = v;
+                  if (!v) {
+                    _recurringEndDate = null;
+                    _recurringEndDateController.clear();
+                  }
+                }),
+              ),
+
+              // Recurring end date
+              if (_isRecurring) ...[
+                const SizedBox(height: AppSpacing.sm),
+                GestureDetector(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate:
+                          _recurringEndDate ?? _date.add(const Duration(days: 365)),
+                      firstDate: _date,
+                      lastDate: DateTime.now().add(const Duration(days: 1825)),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        _recurringEndDate = picked;
+                        _recurringEndDateController.text =
+                            '${picked.day.toString().padLeft(2, '0')}.${picked.month.toString().padLeft(2, '0')}.${picked.year}';
+                      });
+                    }
+                  },
+                  child: AbsorbPointer(
+                    child: TextFormField(
+                      controller: _recurringEndDateController,
+                      decoration: const InputDecoration(
+                        hintText: 'Bitiş Tarihi (opsiyonel)',
+                        prefixIcon: Icon(Icons.event_busy_rounded, size: 20),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+
               const SizedBox(height: AppSpacing.base),
 
               // Note

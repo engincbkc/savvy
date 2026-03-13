@@ -93,10 +93,13 @@ class FinancialCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      _label,
-                      style: AppTypography.titleSmall.copyWith(
-                        color: _color,
+                    Flexible(
+                      child: Text(
+                        _label,
+                        style: AppTypography.titleSmall.copyWith(
+                          color: _color,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

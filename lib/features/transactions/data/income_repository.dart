@@ -16,27 +16,44 @@ class IncomeRepository implements BaseRepository<Income> {
   CollectionReference<Map<String, dynamic>> get _collection =>
       _firestore.collection('users/$_uid/incomes');
 
+  /// Convert Firestore Timestamps to ISO strings for json_serializable
+  Map<String, dynamic> _docToMap(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = {...doc.data()!, 'id': doc.id};
+    if (data['date'] is Timestamp) {
+      data['date'] = (data['date'] as Timestamp).toDate().toIso8601String();
+    }
+    if (data['createdAt'] is Timestamp) {
+      data['createdAt'] =
+          (data['createdAt'] as Timestamp).toDate().toIso8601String();
+    }
+    if (data['recurringEndDate'] is Timestamp) {
+      data['recurringEndDate'] =
+          (data['recurringEndDate'] as Timestamp).toDate().toIso8601String();
+    }
+    return data;
+  }
+
   Stream<List<Income>> watchMonthIncomes(String yearMonth) {
     final range = YearMonthRange.from(yearMonth);
     return _collection
-        .where('isDeleted', isEqualTo: false)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(range.start))
         .where('date', isLessThan: Timestamp.fromDate(range.end))
         .orderBy('date', descending: true)
         .snapshots()
         .map((snap) => snap.docs
-            .map((d) => Income.fromJson({...d.data(), 'id': d.id}))
+            .map((d) => Income.fromJson(_docToMap(d)))
+            .where((i) => !i.isDeleted)
             .toList());
   }
 
   @override
   Stream<List<Income>> watchAll() {
     return _collection
-        .where('isDeleted', isEqualTo: false)
         .orderBy('date', descending: true)
         .snapshots()
         .map((snap) => snap.docs
-            .map((d) => Income.fromJson({...d.data(), 'id': d.id}))
+            .map((d) => Income.fromJson(_docToMap(d)))
+            .where((i) => !i.isDeleted)
             .toList());
   }
 
@@ -44,7 +61,7 @@ class IncomeRepository implements BaseRepository<Income> {
   Future<Income?> getById(String id) async {
     final doc = await _collection.doc(id).get();
     if (!doc.exists) return null;
-    return Income.fromJson({...doc.data()!, 'id': doc.id});
+    return Income.fromJson(_docToMap(doc));
   }
 
   @override

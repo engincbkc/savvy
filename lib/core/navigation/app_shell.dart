@@ -14,13 +14,10 @@ class AppShell extends StatelessWidget {
 
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
-    return switch (location) {
-      '/dashboard' => 0,
-      '/transactions' => 1,
-      '/simulate' => 2,
-      '/settings' => 3,
-      _ => 0,
-    };
+    if (location.startsWith('/transactions')) return 1;
+    if (location.startsWith('/simulate')) return 2;
+    if (location.startsWith('/settings')) return 3;
+    return 0;
   }
 
   void _showSheet(BuildContext context, Widget sheet) {

@@ -16,27 +16,44 @@ class SavingsRepository implements BaseRepository<Savings> {
   CollectionReference<Map<String, dynamic>> get _collection =>
       _firestore.collection('users/$_uid/savings');
 
+  /// Convert Firestore Timestamps to ISO strings for json_serializable
+  Map<String, dynamic> _docToMap(DocumentSnapshot<Map<String, dynamic>> doc) {
+    final data = {...doc.data()!, 'id': doc.id};
+    if (data['date'] is Timestamp) {
+      data['date'] = (data['date'] as Timestamp).toDate().toIso8601String();
+    }
+    if (data['createdAt'] is Timestamp) {
+      data['createdAt'] =
+          (data['createdAt'] as Timestamp).toDate().toIso8601String();
+    }
+    if (data['recurringEndDate'] is Timestamp) {
+      data['recurringEndDate'] =
+          (data['recurringEndDate'] as Timestamp).toDate().toIso8601String();
+    }
+    return data;
+  }
+
   Stream<List<Savings>> watchMonthSavings(String yearMonth) {
     final range = YearMonthRange.from(yearMonth);
     return _collection
-        .where('isDeleted', isEqualTo: false)
         .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(range.start))
         .where('date', isLessThan: Timestamp.fromDate(range.end))
         .orderBy('date', descending: true)
         .snapshots()
         .map((snap) => snap.docs
-            .map((d) => Savings.fromJson({...d.data(), 'id': d.id}))
+            .map((d) => Savings.fromJson(_docToMap(d)))
+            .where((s) => !s.isDeleted)
             .toList());
   }
 
   @override
   Stream<List<Savings>> watchAll() {
     return _collection
-        .where('isDeleted', isEqualTo: false)
         .orderBy('date', descending: true)
         .snapshots()
         .map((snap) => snap.docs
-            .map((d) => Savings.fromJson({...d.data(), 'id': d.id}))
+            .map((d) => Savings.fromJson(_docToMap(d)))
+            .where((s) => !s.isDeleted)
             .toList());
   }
 
@@ -44,7 +61,7 @@ class SavingsRepository implements BaseRepository<Savings> {
   Future<Savings?> getById(String id) async {
     final doc = await _collection.doc(id).get();
     if (!doc.exists) return null;
-    return Savings.fromJson({...doc.data()!, 'id': doc.id});
+    return Savings.fromJson(_docToMap(doc));
   }
 
   @override

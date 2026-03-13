@@ -9,12 +9,11 @@ part of 'dashboard_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(selectedYearMonth)
+@ProviderFor(SelectedYearMonth)
 final selectedYearMonthProvider = SelectedYearMonthProvider._();
 
 final class SelectedYearMonthProvider
-    extends $FunctionalProvider<String, String, String>
-    with $Provider<String> {
+    extends $NotifierProvider<SelectedYearMonth, String> {
   SelectedYearMonthProvider._()
     : super(
         from: null,
@@ -31,13 +30,7 @@ final class SelectedYearMonthProvider
 
   @$internal
   @override
-  $ProviderElement<String> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  String create(Ref ref) {
-    return selectedYearMonth(ref);
-  }
+  SelectedYearMonth create() => SelectedYearMonth();
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(String value) {
@@ -48,7 +41,25 @@ final class SelectedYearMonthProvider
   }
 }
 
-String _$selectedYearMonthHash() => r'b9db096aa2355ebf85b7d1610d73bd28d90cdd48';
+String _$selectedYearMonthHash() => r'cc393cd91b7c23e7f5c3673a2650cdfda186123f';
+
+abstract class _$SelectedYearMonth extends $Notifier<String> {
+  String build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<String, String>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<String, String>,
+              String,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
 
 @ProviderFor(monthIncomes)
 final monthIncomesProvider = MonthIncomesFamily._();
@@ -275,12 +286,189 @@ final class MonthSavingsFamily extends $Family
   String toString() => r'monthSavingsProvider';
 }
 
+@ProviderFor(allIncomes)
+final allIncomesProvider = AllIncomesProvider._();
+
+final class AllIncomesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Income>>,
+          List<Income>,
+          Stream<List<Income>>
+        >
+    with $FutureModifier<List<Income>>, $StreamProvider<List<Income>> {
+  AllIncomesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'allIncomesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$allIncomesHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<List<Income>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<Income>> create(Ref ref) {
+    return allIncomes(ref);
+  }
+}
+
+String _$allIncomesHash() => r'4ad2e7a3d58965d4eab9af8ccf87c9dc5f3f78ac';
+
+@ProviderFor(allExpenses)
+final allExpensesProvider = AllExpensesProvider._();
+
+final class AllExpensesProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Expense>>,
+          List<Expense>,
+          Stream<List<Expense>>
+        >
+    with $FutureModifier<List<Expense>>, $StreamProvider<List<Expense>> {
+  AllExpensesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'allExpensesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$allExpensesHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<List<Expense>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<Expense>> create(Ref ref) {
+    return allExpenses(ref);
+  }
+}
+
+String _$allExpensesHash() => r'e333f6a5a01147dd1ee3d46f481f3f891d2f4bad';
+
+@ProviderFor(allSavings)
+final allSavingsProvider = AllSavingsProvider._();
+
+final class AllSavingsProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<List<Savings>>,
+          List<Savings>,
+          Stream<List<Savings>>
+        >
+    with $FutureModifier<List<Savings>>, $StreamProvider<List<Savings>> {
+  AllSavingsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'allSavingsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$allSavingsHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<List<Savings>> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<List<Savings>> create(Ref ref) {
+    return allSavings(ref);
+  }
+}
+
+String _$allSavingsHash() => r'dc44a6630f91f581d2a48e8e3faa49496f32a726';
+
+/// All month summaries grouped by yearMonth, sorted most recent first.
+/// Each summary includes carry-over from previous months.
+
+@ProviderFor(allMonthSummaries)
+final allMonthSummariesProvider = AllMonthSummariesProvider._();
+
+/// All month summaries grouped by yearMonth, sorted most recent first.
+/// Each summary includes carry-over from previous months.
+
+final class AllMonthSummariesProvider
+    extends
+        $FunctionalProvider<
+          List<MonthSummary>,
+          List<MonthSummary>,
+          List<MonthSummary>
+        >
+    with $Provider<List<MonthSummary>> {
+  /// All month summaries grouped by yearMonth, sorted most recent first.
+  /// Each summary includes carry-over from previous months.
+  AllMonthSummariesProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'allMonthSummariesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$allMonthSummariesHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<MonthSummary>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<MonthSummary> create(Ref ref) {
+    return allMonthSummaries(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<MonthSummary> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<MonthSummary>>(value),
+    );
+  }
+}
+
+String _$allMonthSummariesHash() => r'320e505a87cd446544a55de57cead75fe454e14b';
+
+/// Single month summary (used in detail screen)
+
 @ProviderFor(monthSummary)
 final monthSummaryProvider = MonthSummaryFamily._();
+
+/// Single month summary (used in detail screen)
 
 final class MonthSummaryProvider
     extends $FunctionalProvider<MonthSummary?, MonthSummary?, MonthSummary?>
     with $Provider<MonthSummary?> {
+  /// Single month summary (used in detail screen)
   MonthSummaryProvider._({
     required MonthSummaryFamily super.from,
     required String super.argument,
@@ -332,7 +520,9 @@ final class MonthSummaryProvider
   }
 }
 
-String _$monthSummaryHash() => r'8b5785bd300bb528d8f06813e553cec4e6372d72';
+String _$monthSummaryHash() => r'979a3bb86166e245e9b20d9bb2686bf11841a396';
+
+/// Single month summary (used in detail screen)
 
 final class MonthSummaryFamily extends $Family
     with $FunctionalFamilyOverride<MonthSummary?, String> {
@@ -344,6 +534,8 @@ final class MonthSummaryFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
+
+  /// Single month summary (used in detail screen)
 
   MonthSummaryProvider call(String yearMonth) =>
       MonthSummaryProvider._(argument: yearMonth, from: this);

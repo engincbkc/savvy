@@ -8,6 +8,7 @@ import 'package:savvy/features/auth/presentation/screens/register_screen.dart';
 import 'package:savvy/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:savvy/features/transactions/presentation/screens/transactions_screen.dart';
 import 'package:savvy/features/simulation/presentation/screens/simulation_screen.dart';
+import 'package:savvy/features/dashboard/presentation/screens/month_detail_screen.dart';
 import 'package:savvy/features/settings/presentation/settings_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -51,6 +52,14 @@ final appRouter = GoRouter(
           pageBuilder: (context, state) => const NoTransitionPage(
             child: DashboardScreen(),
           ),
+          routes: [
+            GoRoute(
+              path: 'month/:yearMonth',
+              builder: (context, state) => MonthDetailScreen(
+                yearMonth: state.pathParameters['yearMonth']!,
+              ),
+            ),
+          ],
         ),
         GoRoute(
           path: '/transactions',

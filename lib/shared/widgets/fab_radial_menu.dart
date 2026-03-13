@@ -27,6 +27,7 @@ class _FabRadialMenuState extends State<FabRadialMenu>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   bool _isOpen = false;
+  OverlayEntry? _overlayEntry;
 
   @override
   void initState() {
@@ -39,119 +40,160 @@ class _FabRadialMenuState extends State<FabRadialMenu>
 
   @override
   void dispose() {
+    _removeOverlay();
     _controller.dispose();
     super.dispose();
   }
 
   void _toggle() {
     HapticFeedback.lightImpact();
-    setState(() {
-      _isOpen = !_isOpen;
-      if (_isOpen) {
-        _controller.forward();
-      } else {
-        _controller.reverse();
-      }
-    });
+    if (_isOpen) {
+      _close();
+    } else {
+      _open();
+    }
+  }
+
+  void _open() {
+    setState(() => _isOpen = true);
+    _showOverlay();
+    _controller.forward();
   }
 
   void _close() {
-    if (_isOpen) _toggle();
+    _controller.reverse().then((_) {
+      _removeOverlay();
+      if (mounted) setState(() => _isOpen = false);
+    });
+  }
+
+  void _showOverlay() {
+    _removeOverlay();
+    final overlay = Overlay.of(context);
+    _overlayEntry = OverlayEntry(
+      builder: (_) => _MenuOverlay(
+        controller: _controller,
+        onClose: _close,
+        items: [
+          _MenuItem(
+            label: 'Gelir',
+            color: AppColors.income,
+            icon: AppIcons.income,
+            onTap: () {
+              _close();
+              widget.onAddIncome();
+            },
+          ),
+          _MenuItem(
+            label: 'Gider',
+            color: AppColors.expense,
+            icon: AppIcons.expense,
+            onTap: () {
+              _close();
+              widget.onAddExpense();
+            },
+          ),
+          _MenuItem(
+            label: 'Birikim',
+            color: AppColors.savings,
+            icon: AppIcons.savings,
+            onTap: () {
+              _close();
+              widget.onAddSavings();
+            },
+          ),
+        ],
+      ),
+    );
+    overlay.insert(_overlayEntry!);
+  }
+
+  void _removeOverlay() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.bottomCenter,
-      children: [
-        // Overlay
-        if (_isOpen)
+    return FloatingActionButton(
+      heroTag: 'main_fab',
+      onPressed: _toggle,
+      backgroundColor: AppColors.brandPrimary,
+      shape: const CircleBorder(),
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) => Transform.rotate(
+          angle: _controller.value * math.pi / 4,
+          child: const Icon(
+            AppIcons.add,
+            color: AppColors.textInverse,
+            size: 28,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MenuOverlay extends StatelessWidget {
+  final AnimationController controller;
+  final VoidCallback onClose;
+  final List<_MenuItem> items;
+
+  const _MenuOverlay({
+    required this.controller,
+    required this.onClose,
+    required this.items,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    // FAB center position: bottomNavHeight + fabSize/2
+    final fabBottom = AppSpacing.bottomNavHeight + bottomPadding - AppSpacing.fabSize / 2 + 8;
+
+    return Material(
+      color: Colors.transparent,
+      child: Stack(
+        children: [
+          // Full-screen overlay
           Positioned.fill(
             child: GestureDetector(
-              onTap: _close,
+              onTap: onClose,
               child: AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) => Container(
-                  color: Colors.black
-                      .withValues(alpha: 0.3 * _controller.value),
+                animation: controller,
+                builder: (context, child) => ColoredBox(
+                  color: Colors.black.withValues(alpha: 0.4 * controller.value),
                 ),
               ),
             ),
           ),
-
-        // Menu items
-        ..._buildMenuItems(),
-
-        // Main FAB
-        FloatingActionButton(
-          heroTag: 'main_fab',
-          onPressed: _toggle,
-          backgroundColor: AppColors.brandPrimary,
-          shape: const CircleBorder(),
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) => Transform.rotate(
-              angle: _controller.value * math.pi / 4,
-              child: const Icon(
-                AppIcons.add,
-                color: AppColors.textInverse,
-                size: 28,
+          // Menu items positioned above FAB
+          ...List.generate(items.length, (i) {
+            final delay = i * 0.12;
+            final end = (0.6 + delay).clamp(0.0, 1.0);
+            final animation = CurvedAnimation(
+              parent: controller,
+              curve: Interval(delay, end, curve: AppCurve.overshoot),
+            );
+            return Positioned(
+              bottom: fabBottom + AppSpacing.fabSize + 12 + i * 60.0,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: ScaleTransition(
+                  scale: animation,
+                  child: FadeTransition(
+                    opacity: animation,
+                    child: _buildMenuItem(items[i]),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ),
-      ],
+            );
+          }),
+        ],
+      ),
     );
-  }
-
-  List<Widget> _buildMenuItems() {
-    final items = [
-      _MenuItem(
-        label: 'Gelir',
-        color: AppColors.income,
-        icon: AppIcons.income,
-        onTap: () {
-          _close();
-          widget.onAddIncome();
-        },
-      ),
-      _MenuItem(
-        label: 'Gider',
-        color: AppColors.expense,
-        icon: AppIcons.expense,
-        onTap: () {
-          _close();
-          widget.onAddExpense();
-        },
-      ),
-      _MenuItem(
-        label: 'Birikim',
-        color: AppColors.savings,
-        icon: AppIcons.savings,
-        onTap: () {
-          _close();
-          widget.onAddSavings();
-        },
-      ),
-    ];
-
-    return List.generate(items.length, (i) {
-      final delay = i * 0.15;
-      final animation = CurvedAnimation(
-        parent: _controller,
-        curve: Interval(delay, 0.7 + delay, curve: AppCurve.overshoot),
-      );
-      return Positioned(
-        bottom: 80.0 + (i + 1) * 64.0,
-        child: ScaleTransition(
-          scale: animation,
-          child: FadeTransition(
-            opacity: animation,
-            child: _buildMenuItem(items[i]),
-          ),
-        ),
-      );
-    });
   }
 
   Widget _buildMenuItem(_MenuItem item) {
@@ -193,6 +235,13 @@ class _FabRadialMenuState extends State<FabRadialMenu>
             decoration: BoxDecoration(
               color: item.color,
               shape: BoxShape.circle,
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x26000000),
+                  blurRadius: 6,
+                  offset: Offset(0, 2),
+                ),
+              ],
             ),
             child: Icon(item.icon, color: AppColors.textInverse, size: 20),
           ),

@@ -21,14 +21,27 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
+  final _dateController = TextEditingController();
   SavingsCategory _category = SavingsCategory.emergency;
   DateTime _date = DateTime.now();
+
+  @override
+  void initState() {
+    super.initState();
+    _updateDateText();
+  }
 
   @override
   void dispose() {
     _amountController.dispose();
     _noteController.dispose();
+    _dateController.dispose();
     super.dispose();
+  }
+
+  void _updateDateText() {
+    _dateController.text =
+        '${_date.day.toString().padLeft(2, '0')}.${_date.month.toString().padLeft(2, '0')}.${_date.year}';
   }
 
   Future<void> _pickDate() async {
@@ -37,9 +50,13 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
       initialDate: _date,
       firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 366)),
-      locale: const Locale('tr', 'TR'),
     );
-    if (picked != null) setState(() => _date = picked);
+    if (picked != null) {
+      setState(() {
+        _date = picked;
+        _updateDateText();
+      });
+    }
   }
 
   Future<void> _submit() async {
@@ -60,7 +77,16 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
 
     final success =
         await ref.read(transactionFormProvider.notifier).addSavings(savings);
-    if (mounted && success) Navigator.of(context).pop();
+    if (mounted && success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Birikim başarıyla kaydedildi'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      Navigator.of(context).pop();
+    }
   }
 
   @override
@@ -166,11 +192,10 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
                 onTap: _pickDate,
                 child: AbsorbPointer(
                   child: TextFormField(
-                    decoration: InputDecoration(
+                    controller: _dateController,
+                    decoration: const InputDecoration(
                       hintText: 'Tarih',
-                      prefixIcon: const Icon(AppIcons.calendar, size: 20),
-                      suffixText:
-                          '${_date.day.toString().padLeft(2, '0')}.${_date.month.toString().padLeft(2, '0')}.${_date.year}',
+                      prefixIcon: Icon(AppIcons.calendar, size: 20),
                     ),
                   ),
                 ),

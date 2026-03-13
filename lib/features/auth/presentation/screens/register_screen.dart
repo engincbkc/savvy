@@ -44,7 +44,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    ref.listen(authProvider, (_, next) {
+    ref.listen(authProvider, (prev, next) {
       if (next.hasError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -56,6 +56,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             backgroundColor: AppColors.expense,
           ),
         );
+      }
+      // Navigate to dashboard after successful sign-up
+      if (prev?.isLoading == true && !next.isLoading && !next.hasError) {
+        context.go('/dashboard');
       }
     });
 
