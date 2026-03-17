@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:savvy/core/constants/financial_enums.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
+import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/features/transactions/domain/models/expense.dart';
@@ -21,33 +22,23 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
-  final _dateController = TextEditingController();
+  final _personController = TextEditingController();
   ExpenseCategory _category = ExpenseCategory.market;
   ExpenseType _expenseType = ExpenseType.variable;
   DateTime _date = DateTime.now();
   bool _isRecurring = false;
   DateTime? _recurringEndDate;
-  final _recurringEndDateController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _updateDateText();
-  }
 
   @override
   void dispose() {
     _amountController.dispose();
     _noteController.dispose();
-    _dateController.dispose();
-    _recurringEndDateController.dispose();
+    _personController.dispose();
     super.dispose();
   }
 
-  void _updateDateText() {
-    _dateController.text =
-        '${_date.day.toString().padLeft(2, '0')}.${_date.month.toString().padLeft(2, '0')}.${_date.year}';
-  }
+  String _formatDate(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -56,12 +47,17 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
       firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 366)),
     );
-    if (picked != null) {
-      setState(() {
-        _date = picked;
-        _updateDateText();
-      });
-    }
+    if (picked != null) setState(() => _date = picked);
+  }
+
+  Future<void> _pickEndDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _recurringEndDate ?? _date.add(const Duration(days: 365)),
+      firstDate: _date,
+      lastDate: DateTime.now().add(const Duration(days: 1825)),
+    );
+    if (picked != null) setState(() => _recurringEndDate = picked);
   }
 
   Future<void> _submit() async {
@@ -76,6 +72,7 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
       amount: amount,
       category: _category,
       expenseType: _expenseType,
+      person: _personController.text.isEmpty ? null : _personController.text,
       date: _date,
       note: _noteController.text.isEmpty ? null : _noteController.text,
       isRecurring: _isRecurring,
@@ -86,13 +83,7 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
     final success =
         await ref.read(transactionFormProvider.notifier).addExpense(expense);
     if (mounted && success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Gider başarıyla kaydedildi'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      HapticFeedback.mediumImpact();
       Navigator.of(context).pop();
     }
   }
@@ -105,8 +96,8 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
       padding: EdgeInsets.only(
         left: AppSpacing.lg,
         right: AppSpacing.lg,
-        top: AppSpacing.lg,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
+        top: AppSpacing.base,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
       ),
       child: Form(
         key: _formKey,
@@ -128,164 +119,211 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // Title
+              // Header
               Row(
                 children: [
                   Container(
-                    width: 32,
-                    height: 32,
-                    decoration: const BoxDecoration(
-                      color: AppColors.expense,
-                      shape: BoxShape.circle,
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFC81E1E), Color(0xFFEF4444)],
+                      ),
+                      borderRadius: AppRadius.chip,
                     ),
                     child: const Icon(AppIcons.expense,
-                        color: AppColors.textInverse, size: 18),
+                        color: Colors.white, size: 20),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    'Gider Ekle',
-                    style: AppTypography.titleLarge.copyWith(
-                      color: AppColors.textPrimary,
-                    ),
+                  const SizedBox(width: AppSpacing.md),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Gider Ekle',
+                        style: AppTypography.headlineSmall.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        'Yeni bir gider kaydi olustur',
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.xl),
 
               // Amount
-              TextFormField(
-                controller: _amountController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
-                ],
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  hintText: 'Tutar (₺)',
-                  prefixIcon: Icon(AppIcons.expense, size: 20),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.base),
+                decoration: BoxDecoration(
+                  color: AppColors.expenseSurfaceDim,
+                  borderRadius: AppRadius.card,
+                  border: Border.all(color: AppColors.expense.withValues(alpha: 0.2)),
                 ),
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Tutar giriniz';
-                  final parsed = double.tryParse(
-                      v.replaceAll(',', '.').replaceAll(' ', ''));
-                  if (parsed == null || parsed <= 0) {
-                    return 'Geçerli bir tutar giriniz';
-                  }
-                  if (parsed > 10000000) return 'Maksimum tutar ₺10.000.000';
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppSpacing.base),
-
-              // Category
-              DropdownButtonFormField<ExpenseCategory>(
-                initialValue: _category,
-                decoration: const InputDecoration(
-                  hintText: 'Kategori',
-                  prefixIcon: Icon(AppIcons.category, size: 20),
+                child: TextFormField(
+                  controller: _amountController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
+                  ],
+                  textInputAction: TextInputAction.next,
+                  style: AppTypography.numericLarge.copyWith(
+                    color: AppColors.expenseStrong,
+                  ),
+                  textAlign: TextAlign.center,
+                  decoration: InputDecoration(
+                    hintText: '0',
+                    hintStyle: AppTypography.numericLarge.copyWith(
+                      color: AppColors.expense.withValues(alpha: 0.3),
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    suffixText: '₺',
+                    suffixStyle: AppTypography.numericMedium.copyWith(
+                      color: AppColors.expense.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Tutar giriniz';
+                    final parsed = double.tryParse(
+                        v.replaceAll(',', '.').replaceAll(' ', ''));
+                    if (parsed == null || parsed <= 0) {
+                      return 'Geçerli bir tutar giriniz';
+                    }
+                    if (parsed > 10000000) return 'Maksimum tutar ₺10.000.000';
+                    return null;
+                  },
                 ),
-                items: ExpenseCategory.values
-                    .map((c) =>
-                        DropdownMenuItem(value: c, child: Text(c.label)))
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) setState(() => _category = v);
-                },
               ),
               const SizedBox(height: AppSpacing.base),
 
               // Expense type
-              DropdownButtonFormField<ExpenseType>(
-                initialValue: _expenseType,
-                decoration: const InputDecoration(
-                  hintText: 'Gider Tipi',
-                  prefixIcon: Icon(AppIcons.filter, size: 20),
-                ),
-                items: ExpenseType.values
-                    .map((t) =>
-                        DropdownMenuItem(value: t, child: Text(t.label)))
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) setState(() => _expenseType = v);
-                },
-              ),
-              const SizedBox(height: AppSpacing.base),
-
-              // Date
-              GestureDetector(
-                onTap: _pickDate,
-                child: AbsorbPointer(
-                  child: TextFormField(
-                    controller: _dateController,
-                    decoration: const InputDecoration(
-                      hintText: 'Tarih',
-                      prefixIcon: Icon(AppIcons.calendar, size: 20),
+              Text('Gider Tipi',
+                  style: AppTypography.labelMedium
+                      .copyWith(color: AppColors.textSecondary)),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: ExpenseType.values.map((type) {
+                  final isSelected = _expenseType == type;
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _expenseType = type),
+                      child: Container(
+                        margin: EdgeInsets.only(
+                            right: type != ExpenseType.values.last
+                                ? AppSpacing.xs
+                                : 0),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.expense
+                              : AppColors.surfaceOverlay,
+                          borderRadius: AppRadius.chip,
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.expense
+                                : AppColors.borderDefault,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          type.label,
+                          style: AppTypography.caption.copyWith(
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.textSecondary,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                }).toList(),
               ),
+
               const SizedBox(height: AppSpacing.base),
 
-              // Recurring toggle
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  'Periyodik Gider',
-                  style: AppTypography.titleMedium.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                subtitle: Text(
-                  'Her ay tekrarlanan gider',
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.textTertiary,
-                  ),
-                ),
-                value: _isRecurring,
-                activeTrackColor: AppColors.expense,
-                onChanged: (v) => setState(() {
-                  _isRecurring = v;
-                  if (!v) {
-                    _recurringEndDate = null;
-                    _recurringEndDateController.clear();
-                  }
-                }),
+              // Category chips
+              Text('Kategori',
+                  style: AppTypography.labelMedium
+                      .copyWith(color: AppColors.textSecondary)),
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: ExpenseCategory.values.map((cat) {
+                  final isSelected = _category == cat;
+                  return GestureDetector(
+                    onTap: () => setState(() => _category = cat),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.expense
+                            : AppColors.surfaceOverlay,
+                        borderRadius: AppRadius.pill,
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.expense
+                              : AppColors.borderDefault,
+                        ),
+                      ),
+                      child: Text(
+                        cat.label,
+                        style: AppTypography.labelSmall.copyWith(
+                          color: isSelected
+                              ? Colors.white
+                              : AppColors.textSecondary,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
 
-              // Recurring end date
-              if (_isRecurring) ...[
-                const SizedBox(height: AppSpacing.sm),
-                GestureDetector(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate:
-                          _recurringEndDate ?? _date.add(const Duration(days: 365)),
-                      firstDate: _date,
-                      lastDate: DateTime.now().add(const Duration(days: 1825)),
-                    );
-                    if (picked != null) {
-                      setState(() {
-                        _recurringEndDate = picked;
-                        _recurringEndDateController.text =
-                            '${picked.day.toString().padLeft(2, '0')}.${picked.month.toString().padLeft(2, '0')}.${picked.year}';
-                      });
-                    }
-                  },
-                  child: AbsorbPointer(
-                    child: TextFormField(
-                      controller: _recurringEndDateController,
-                      decoration: const InputDecoration(
-                        hintText: 'Bitiş Tarihi (opsiyonel)',
-                        prefixIcon: Icon(Icons.event_busy_rounded, size: 20),
+              const SizedBox(height: AppSpacing.base),
+
+              // Date & Person row
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: _pickDate,
+                      child: _FieldChip(
+                        icon: AppIcons.calendar,
+                        label: _formatDate(_date),
                       ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _personController,
+                      textInputAction: TextInputAction.next,
+                      decoration: InputDecoration(
+                        hintText: 'Kisi (opsiyonel)',
+                        prefixIcon: const Icon(AppIcons.person, size: 18),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md, vertical: AppSpacing.md),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
 
-              const SizedBox(height: AppSpacing.base),
+              const SizedBox(height: AppSpacing.sm),
 
               // Note
               TextFormField(
@@ -294,31 +332,121 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
                 maxLength: 200,
                 decoration: const InputDecoration(
                   hintText: 'Not (opsiyonel)',
-                  prefixIcon: Icon(AppIcons.note, size: 20),
+                  prefixIcon: Icon(AppIcons.note, size: 18),
+                  counterText: '',
                 ),
               ),
+
+              const SizedBox(height: AppSpacing.sm),
+
+              // Recurring toggle
+              Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceOverlay,
+                  borderRadius: AppRadius.input,
+                ),
+                child: Row(
+                  children: [
+                    Icon(AppIcons.recurring,
+                        size: 18, color: AppColors.textSecondary),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text('Periyodik Gider',
+                          style: AppTypography.titleSmall
+                              .copyWith(color: AppColors.textPrimary)),
+                    ),
+                    Switch.adaptive(
+                      value: _isRecurring,
+                      activeTrackColor: AppColors.expense,
+                      onChanged: (v) => setState(() {
+                        _isRecurring = v;
+                        if (!v) _recurringEndDate = null;
+                      }),
+                    ),
+                  ],
+                ),
+              ),
+
+              if (_isRecurring) ...[
+                const SizedBox(height: AppSpacing.sm),
+                GestureDetector(
+                  onTap: _pickEndDate,
+                  child: _FieldChip(
+                    icon: Icons.event_busy_rounded,
+                    label: _recurringEndDate != null
+                        ? 'Bitis: ${_formatDate(_recurringEndDate!)}'
+                        : 'Bitis Tarihi (opsiyonel)',
+                  ),
+                ),
+              ],
+
               const SizedBox(height: AppSpacing.xl),
 
               // Submit
-              ElevatedButton(
-                onPressed: formState.isLoading ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.expense,
+              SizedBox(
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: formState.isLoading ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.expense,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: AppRadius.input),
+                    elevation: 0,
+                  ),
+                  child: formState.isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text('Gider Ekle',
+                          style: AppTypography.labelLarge
+                              .copyWith(color: Colors.white)),
                 ),
-                child: formState.isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.textInverse,
-                        ),
-                      )
-                    : const Text('Gider Ekle'),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FieldChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _FieldChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md, vertical: AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceInput,
+        borderRadius: AppRadius.input,
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.textTertiary),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              label,
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textPrimary,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

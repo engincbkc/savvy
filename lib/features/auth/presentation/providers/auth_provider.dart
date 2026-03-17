@@ -1,7 +1,13 @@
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:crypto/crypto.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:savvy/core/errors/app_exception.dart';
 import 'package:savvy/core/providers/firebase_providers.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 part 'auth_provider.g.dart';
 
@@ -48,9 +54,75 @@ class AuthNotifier extends _$AuthNotifier {
     });
   }
 
+  Future<void> signInWithGoogle() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final googleSignIn = GoogleSignIn.instance;
+      await googleSignIn.initialize();
+
+      final googleUser = await googleSignIn.authenticate();
+      final idToken = googleUser.authentication.idToken;
+
+      final credential = GoogleAuthProvider.credential(idToken: idToken);
+      await ref.read(firebaseAuthProvider).signInWithCredential(credential);
+    });
+  }
+
+  Future<void> signInWithApple() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final rawNonce = _generateNonce();
+      final nonce = _sha256ofString(rawNonce);
+
+      final appleCredential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: nonce,
+      );
+
+      final oauthCredential = OAuthProvider('apple.com').credential(
+        idToken: appleCredential.identityToken,
+        rawNonce: rawNonce,
+      );
+
+      final userCredential = await ref
+          .read(firebaseAuthProvider)
+          .signInWithCredential(oauthCredential);
+
+      // Apple only sends name on first sign-in
+      if (appleCredential.givenName != null) {
+        final name =
+            '${appleCredential.givenName ?? ''} ${appleCredential.familyName ?? ''}'
+                .trim();
+        if (name.isNotEmpty) {
+          await userCredential.user?.updateDisplayName(name);
+        }
+      }
+    });
+  }
+
+  String _generateNonce([int length = 32]) {
+    const charset =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)])
+        .join();
+  }
+
+  String _sha256ofString(String input) {
+    final bytes = utf8.encode(input);
+    final digest = sha256.convert(bytes);
+    return digest.toString();
+  }
+
   Future<void> signOut() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
+      try {
+        await GoogleSignIn.instance.disconnect();
+      } catch (_) {}
       await ref.read(firebaseAuthProvider).signOut();
     });
   }

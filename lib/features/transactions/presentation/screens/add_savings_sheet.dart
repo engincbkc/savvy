@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:savvy/core/constants/financial_enums.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
+import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/features/savings/domain/models/savings.dart';
@@ -21,28 +22,18 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
-  final _dateController = TextEditingController();
   SavingsCategory _category = SavingsCategory.emergency;
   DateTime _date = DateTime.now();
-
-  @override
-  void initState() {
-    super.initState();
-    _updateDateText();
-  }
 
   @override
   void dispose() {
     _amountController.dispose();
     _noteController.dispose();
-    _dateController.dispose();
     super.dispose();
   }
 
-  void _updateDateText() {
-    _dateController.text =
-        '${_date.day.toString().padLeft(2, '0')}.${_date.month.toString().padLeft(2, '0')}.${_date.year}';
-  }
+  String _formatDate(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}';
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -51,12 +42,7 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
       firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 366)),
     );
-    if (picked != null) {
-      setState(() {
-        _date = picked;
-        _updateDateText();
-      });
-    }
+    if (picked != null) setState(() => _date = picked);
   }
 
   Future<void> _submit() async {
@@ -78,13 +64,7 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
     final success =
         await ref.read(transactionFormProvider.notifier).addSavings(savings);
     if (mounted && success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Birikim başarıyla kaydedildi'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      HapticFeedback.mediumImpact();
       Navigator.of(context).pop();
     }
   }
@@ -97,8 +77,8 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
       padding: EdgeInsets.only(
         left: AppSpacing.lg,
         right: AppSpacing.lg,
-        top: AppSpacing.lg,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.lg,
+        top: AppSpacing.base,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
       ),
       child: Form(
         key: _formKey,
@@ -120,87 +100,144 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // Title
+              // Header
               Row(
                 children: [
                   Container(
-                    width: 32,
-                    height: 32,
-                    decoration: const BoxDecoration(
-                      color: AppColors.savings,
-                      shape: BoxShape.circle,
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFB45309), Color(0xFFD97706)],
+                      ),
+                      borderRadius: AppRadius.chip,
                     ),
                     child: const Icon(AppIcons.savings,
-                        color: AppColors.textInverse, size: 18),
+                        color: Colors.white, size: 20),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text(
-                    'Birikim Ekle',
-                    style: AppTypography.titleLarge.copyWith(
-                      color: AppColors.textPrimary,
-                    ),
+                  const SizedBox(width: AppSpacing.md),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Birikim Ekle',
+                        style: AppTypography.headlineSmall.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        'Yeni bir birikim kaydi olustur',
+                        style: AppTypography.caption.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.xl),
 
               // Amount
-              TextFormField(
-                controller: _amountController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
-                ],
-                textInputAction: TextInputAction.next,
-                decoration: const InputDecoration(
-                  hintText: 'Tutar (₺)',
-                  prefixIcon: Icon(AppIcons.savings, size: 20),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.base),
+                decoration: BoxDecoration(
+                  color: AppColors.savingsSurfaceDim,
+                  borderRadius: AppRadius.card,
+                  border: Border.all(
+                      color: AppColors.savings.withValues(alpha: 0.2)),
                 ),
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Tutar giriniz';
-                  final parsed = double.tryParse(
-                      v.replaceAll(',', '.').replaceAll(' ', ''));
-                  if (parsed == null || parsed <= 0) {
-                    return 'Geçerli bir tutar giriniz';
-                  }
-                  if (parsed > 10000000) return 'Maksimum tutar ₺10.000.000';
-                  return null;
-                },
+                child: TextFormField(
+                  controller: _amountController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
+                  ],
+                  textInputAction: TextInputAction.next,
+                  style: AppTypography.numericLarge.copyWith(
+                    color: AppColors.savingsStrong,
+                  ),
+                  textAlign: TextAlign.center,
+                  decoration: InputDecoration(
+                    hintText: '0',
+                    hintStyle: AppTypography.numericLarge.copyWith(
+                      color: AppColors.savings.withValues(alpha: 0.3),
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    suffixText: '₺',
+                    suffixStyle: AppTypography.numericMedium.copyWith(
+                      color: AppColors.savings.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Tutar giriniz';
+                    final parsed = double.tryParse(
+                        v.replaceAll(',', '.').replaceAll(' ', ''));
+                    if (parsed == null || parsed <= 0) {
+                      return 'Geçerli bir tutar giriniz';
+                    }
+                    if (parsed > 10000000) return 'Maksimum tutar ₺10.000.000';
+                    return null;
+                  },
+                ),
               ),
               const SizedBox(height: AppSpacing.base),
 
-              // Category
-              DropdownButtonFormField<SavingsCategory>(
-                initialValue: _category,
-                decoration: const InputDecoration(
-                  hintText: 'Kategori',
-                  prefixIcon: Icon(AppIcons.category, size: 20),
-                ),
-                items: SavingsCategory.values
-                    .map((c) =>
-                        DropdownMenuItem(value: c, child: Text(c.label)))
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) setState(() => _category = v);
-                },
+              // Category chips
+              Text('Kategori',
+                  style: AppTypography.labelMedium
+                      .copyWith(color: AppColors.textSecondary)),
+              const SizedBox(height: AppSpacing.sm),
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children: SavingsCategory.values.map((cat) {
+                  final isSelected = _category == cat;
+                  return GestureDetector(
+                    onTap: () => setState(() => _category = cat),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.savings
+                            : AppColors.surfaceOverlay,
+                        borderRadius: AppRadius.pill,
+                        border: Border.all(
+                          color: isSelected
+                              ? AppColors.savings
+                              : AppColors.borderDefault,
+                        ),
+                      ),
+                      child: Text(
+                        cat.label,
+                        style: AppTypography.labelSmall.copyWith(
+                          color: isSelected
+                              ? Colors.white
+                              : AppColors.textSecondary,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
               ),
+
               const SizedBox(height: AppSpacing.base),
 
               // Date
               GestureDetector(
                 onTap: _pickDate,
-                child: AbsorbPointer(
-                  child: TextFormField(
-                    controller: _dateController,
-                    decoration: const InputDecoration(
-                      hintText: 'Tarih',
-                      prefixIcon: Icon(AppIcons.calendar, size: 20),
-                    ),
-                  ),
+                child: _FieldChip(
+                  icon: AppIcons.calendar,
+                  label: _formatDate(_date),
                 ),
               ),
-              const SizedBox(height: AppSpacing.base),
+
+              const SizedBox(height: AppSpacing.sm),
 
               // Note
               TextFormField(
@@ -209,31 +246,76 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
                 maxLength: 200,
                 decoration: const InputDecoration(
                   hintText: 'Not (opsiyonel)',
-                  prefixIcon: Icon(AppIcons.note, size: 20),
+                  prefixIcon: Icon(AppIcons.note, size: 18),
+                  counterText: '',
                 ),
               ),
+
               const SizedBox(height: AppSpacing.xl),
 
               // Submit
-              ElevatedButton(
-                onPressed: formState.isLoading ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.savings,
+              SizedBox(
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: formState.isLoading ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.savings,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: AppRadius.input),
+                    elevation: 0,
+                  ),
+                  child: formState.isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text('Birikim Ekle',
+                          style: AppTypography.labelLarge
+                              .copyWith(color: Colors.white)),
                 ),
-                child: formState.isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.textInverse,
-                        ),
-                      )
-                    : const Text('Birikim Ekle'),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _FieldChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _FieldChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md, vertical: AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceInput,
+        borderRadius: AppRadius.input,
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.textTertiary),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              label,
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textPrimary,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

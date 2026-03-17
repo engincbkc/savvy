@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
+import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
@@ -53,23 +54,43 @@ class DashboardScreen extends ConsumerWidget {
 
     final summaries = ref.watch(allMonthSummariesProvider);
 
-    // Overall cumulative = first item (most recent month) netWithCarryOver
     final cumulativeNet =
         summaries.isNotEmpty ? summaries.first.netWithCarryOver : 0.0;
     final overallHealth =
         summaries.isNotEmpty ? summaries.first.healthScore : 0;
 
+    // Current month summary for quick stats
+    final currentMonth = summaries.isNotEmpty ? summaries.first : null;
+
     return SafeArea(
       child: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
         slivers: [
-          // App Bar
           SliverAppBar(
             floating: true,
-            title: Text(
-              'Savvy',
-              style: AppTypography.headlineMedium.copyWith(
-                color: AppColors.brandPrimary,
-              ),
+            backgroundColor: AppColors.surfaceBackground,
+            surfaceTintColor: Colors.transparent,
+            title: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF1A56DB), Color(0xFF3F83F8)],
+                    ),
+                    borderRadius: AppRadius.chip,
+                  ),
+                  child: const Icon(LucideIcons.wallet, color: Colors.white, size: 18),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'Savvy',
+                  style: AppTypography.headlineMedium.copyWith(
+                    color: AppColors.brandPrimary,
+                  ),
+                ),
+              ],
             ),
             centerTitle: false,
           ),
@@ -83,9 +104,11 @@ class DashboardScreen extends ConsumerWidget {
                       const SavvyShimmer(
                         child: Column(
                           children: [
-                            ShimmerBox(height: 140),
-                            SizedBox(height: AppSpacing.lg),
-                            ShimmerBox(height: 160),
+                            ShimmerBox(height: 170),
+                            SizedBox(height: AppSpacing.base),
+                            ShimmerBox(height: 80),
+                            SizedBox(height: AppSpacing.base),
+                            ShimmerBox(height: 60),
                             SizedBox(height: AppSpacing.sm),
                             ShimmerBox(height: 160),
                           ],
@@ -97,16 +120,22 @@ class DashboardScreen extends ConsumerWidget {
                     delegate: SliverChildListDelegate([
                       const SizedBox(height: AppSpacing.sm),
 
-                      // ── Overall Hero ──
+                      // Hero Card
                       _OverallHeroCard(
                         cumulativeNet: cumulativeNet,
                         healthScore: overallHealth,
                         monthCount: summaries.length,
                       ),
 
-                      const SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: AppSpacing.base),
 
-                      // ── Future Projection Card ──
+                      // Quick Stats Row (current month)
+                      if (currentMonth != null) ...[
+                        _QuickStatsRow(summary: currentMonth),
+                        const SizedBox(height: AppSpacing.base),
+                      ],
+
+                      // Future Projection
                       _FutureProjectionCard(
                         onTap: () {
                           HapticFeedback.lightImpact();
@@ -116,20 +145,40 @@ class DashboardScreen extends ConsumerWidget {
 
                       const SizedBox(height: AppSpacing.xl),
 
-                      // ── Section title ──
-                      Text(
-                        'Aylık Özet',
-                        style: AppTypography.headlineSmall.copyWith(
-                          color: AppColors.textPrimary,
-                        ),
+                      // Section header
+                      Row(
+                        children: [
+                          Text(
+                            'Aylık Özet',
+                            style: AppTypography.headlineSmall.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceOverlay,
+                              borderRadius: AppRadius.pill,
+                            ),
+                            child: Text(
+                              '${summaries.length} ay',
+                              style: AppTypography.caption.copyWith(
+                                color: AppColors.textTertiary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
 
                       const SizedBox(height: AppSpacing.md),
 
-                      // ── Month cards ──
+                      // Month cards
                       ...summaries.map((s) => Padding(
                             padding:
-                                const EdgeInsets.only(bottom: AppSpacing.md),
+                                const EdgeInsets.only(bottom: AppSpacing.sm),
                             child: _MonthCard(
                               summary: s,
                               monthLabel: monthLabel(s.yearMonth),
@@ -140,9 +189,114 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                           )),
 
-                      const SizedBox(height: AppSpacing.xl5),
+                      const SizedBox(height: 100),
                     ]),
                   ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Quick Stats Row ────────────────────────────────────────────────────────
+
+class _QuickStatsRow extends StatelessWidget {
+  final MonthSummary summary;
+  const _QuickStatsRow({required this.summary});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _QuickStatCard(
+            label: 'Gelir',
+            amount: summary.totalIncome,
+            color: AppColors.income,
+            icon: AppIcons.income,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _QuickStatCard(
+            label: 'Gider',
+            amount: summary.totalExpense,
+            color: AppColors.expense,
+            icon: AppIcons.expense,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(
+          child: _QuickStatCard(
+            label: 'Birikim',
+            amount: summary.totalSavings,
+            color: AppColors.savings,
+            icon: AppIcons.savings,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _QuickStatCard extends StatelessWidget {
+  final String label;
+  final double amount;
+  final Color color;
+  final IconData icon;
+
+  const _QuickStatCard({
+    required this.label,
+    required this.amount,
+    required this.color,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: AppRadius.input,
+        border: Border.all(
+          color: color.withValues(alpha: 0.15),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 24,
+                height: 24,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: AppRadius.chip,
+                ),
+                child: Icon(icon, size: 13, color: color),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.textTertiary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            CurrencyFormatter.formatNoDecimal(amount),
+            style: AppTypography.numericSmall.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -191,12 +345,11 @@ class _OverallHeroCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Top row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'TOPLAM BAKİYE',
+                'TOPLAM BAKIYE',
                 style: AppTypography.labelMedium.copyWith(
                   color: AppColors.textInverse.withValues(alpha: 0.7),
                   letterSpacing: 1.5,
@@ -228,9 +381,8 @@ class _OverallHeroCard extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.xl),
 
-          // Big number
           TweenAnimationBuilder<double>(
             tween: Tween(begin: 0, end: cumulativeNet),
             duration: AppDuration.countUp,
@@ -282,33 +434,24 @@ class _MonthCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.surfaceCard,
           borderRadius: AppRadius.card,
-          boxShadow: AppShadow.sm,
           border: Border.all(
             color: AppColors.borderDefault.withValues(alpha: 0.5),
-            width: 1,
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header row: Month name + health badge + arrow
+            // Header
             Row(
               children: [
-                // Month icon
                 Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: summary.netBalance >= 0
-                          ? [
-                              const Color(0xFF059669),
-                              const Color(0xFF10B981),
-                            ]
-                          : [
-                              const Color(0xFFDC2626),
-                              const Color(0xFFEF4444),
-                            ],
+                          ? [const Color(0xFF059669), const Color(0xFF10B981)]
+                          : [const Color(0xFFDC2626), const Color(0xFFEF4444)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -327,91 +470,69 @@ class _MonthCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        monthLabel,
-                        style: AppTypography.titleLarge.copyWith(
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
+                      Text(monthLabel,
+                          style: AppTypography.titleLarge
+                              .copyWith(color: AppColors.textPrimary)),
                       Row(
                         children: [
-                          _HealthIcon(
-                              score: summary.healthScore, size: 12),
+                          _HealthIcon(score: summary.healthScore, size: 12),
                           const SizedBox(width: 3),
-                          Text(
-                            'Sağlık: ${summary.healthScore}',
-                            style: AppTypography.caption.copyWith(
-                              color: AppColors.textTertiary,
-                            ),
-                          ),
+                          Text('Sağlık: ${summary.healthScore}',
+                              style: AppTypography.caption
+                                  .copyWith(color: AppColors.textTertiary)),
                         ],
                       ),
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: AppColors.textTertiary,
-                  size: 24,
-                ),
+                Icon(Icons.chevron_right_rounded,
+                    color: AppColors.textTertiary, size: 24),
               ],
             ),
 
             const SizedBox(height: AppSpacing.base),
 
-            // Financial summary grid
+            // Stats grid
             Row(
               children: [
                 Expanded(
-                  child: _MiniStat(
-                    label: 'Gelir',
-                    amount: summary.totalIncome,
-                    color: AppColors.income,
-                    prefix: '+',
-                  ),
-                ),
+                    child: _MiniStat(
+                        label: 'Gelir',
+                        amount: summary.totalIncome,
+                        color: AppColors.income,
+                        prefix: '+')),
                 Expanded(
-                  child: _MiniStat(
-                    label: 'Gider',
-                    amount: summary.totalExpense,
-                    color: AppColors.expense,
-                    prefix: '-',
-                  ),
-                ),
+                    child: _MiniStat(
+                        label: 'Gider',
+                        amount: summary.totalExpense,
+                        color: AppColors.expense,
+                        prefix: '-')),
               ],
             ),
-
             const SizedBox(height: AppSpacing.sm),
-
             Row(
               children: [
                 Expanded(
-                  child: _MiniStat(
-                    label: 'Aylık Net',
-                    amount: summary.netBalance,
-                    color: _netColor,
-                    prefix: summary.netBalance >= 0 ? '+' : '',
-                  ),
-                ),
+                    child: _MiniStat(
+                        label: 'Aylık Net',
+                        amount: summary.netBalance,
+                        color: _netColor,
+                        prefix: summary.netBalance >= 0 ? '+' : '')),
                 Expanded(
-                  child: _MiniStat(
-                    label: 'Birikim',
-                    amount: summary.totalSavings,
-                    color: AppColors.savings,
-                    prefix: '',
-                  ),
-                ),
+                    child: _MiniStat(
+                        label: 'Birikim',
+                        amount: summary.totalSavings,
+                        color: AppColors.savings,
+                        prefix: '')),
               ],
             ),
 
-            // Carry-over info
+            // Carry-over
             if (summary.carryOver != 0) ...[
               const SizedBox(height: AppSpacing.sm),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.xs,
-                ),
+                    horizontal: AppSpacing.md, vertical: AppSpacing.xs),
                 decoration: BoxDecoration(
                   color: AppColors.brandPrimary.withValues(alpha: 0.06),
                   borderRadius: AppRadius.chip,
@@ -419,24 +540,22 @@ class _MonthCard extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Icons.replay_rounded,
-                      size: 14,
-                      color: AppColors.brandPrimary,
-                    ),
+                    Icon(Icons.replay_rounded,
+                        size: 14, color: AppColors.brandPrimary),
                     const SizedBox(width: 4),
                     Text(
                       'Devir: ${CurrencyFormatter.formatNoDecimal(summary.carryOver)}',
                       style: AppTypography.caption.copyWith(
-                        color: AppColors.brandPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                          color: AppColors.brandPrimary,
+                          fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(width: AppSpacing.sm),
-                    Text(
-                      '→ Kümülatif: ${CurrencyFormatter.formatNoDecimal(summary.netWithCarryOver)}',
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.textSecondary,
+                    Flexible(
+                      child: Text(
+                        '→ Kümülatif: ${CurrencyFormatter.formatNoDecimal(summary.netWithCarryOver)}',
+                        style: AppTypography.caption
+                            .copyWith(color: AppColors.textSecondary),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -450,51 +569,38 @@ class _MonthCard extends StatelessWidget {
   }
 }
 
-// ─── Mini Stat (used in month card) ─────────────────────────────────────────
-
 class _MiniStat extends StatelessWidget {
   final String label;
   final double amount;
   final Color color;
   final String prefix;
 
-  const _MiniStat({
-    required this.label,
-    required this.amount,
-    required this.color,
-    required this.prefix,
-  });
+  const _MiniStat(
+      {required this.label,
+      required this.amount,
+      required this.color,
+      required this.prefix});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: AppTypography.caption.copyWith(
-            color: AppColors.textTertiary,
-          ),
-        ),
+        Text(label,
+            style:
+                AppTypography.caption.copyWith(color: AppColors.textTertiary)),
         const SizedBox(height: 2),
-        Text(
-          '$prefix${CurrencyFormatter.formatNoDecimal(amount)}',
-          style: AppTypography.numericSmall.copyWith(
-            color: color,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
+        Text('$prefix${CurrencyFormatter.formatNoDecimal(amount)}',
+            style: AppTypography.numericSmall
+                .copyWith(color: color, fontWeight: FontWeight.w600)),
       ],
     );
   }
 }
 
-// ─── Health Icon helper ─────────────────────────────────────────────────────
-
 class _HealthIcon extends StatelessWidget {
   final int score;
   final double size;
-
   const _HealthIcon({required this.score, required this.size});
 
   @override
@@ -517,11 +623,8 @@ class _HealthIcon extends StatelessWidget {
   }
 }
 
-// ─── Future Projection Card ─────────────────────────────────────────────────
-
 class _FutureProjectionCard extends StatelessWidget {
   final VoidCallback onTap;
-
   const _FutureProjectionCard({required this.onTap});
 
   @override
@@ -549,11 +652,8 @@ class _FutureProjectionCard extends StatelessWidget {
                 color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: AppRadius.chip,
               ),
-              child: Icon(
-                LucideIcons.eye,
-                color: Colors.white,
-                size: 22,
-              ),
+              child:
+                  const Icon(LucideIcons.eye, color: Colors.white, size: 22),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -569,7 +669,7 @@ class _FutureProjectionCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Periyodik gelir/giderlerine gore 6 aylik projeksiyon',
+                    'Periyodik gelir/giderlerine göre 6 aylık projeksiyon',
                     style: AppTypography.caption.copyWith(
                       color: Colors.white.withValues(alpha: 0.7),
                     ),
@@ -577,11 +677,8 @@ class _FutureProjectionCard extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: Colors.white.withValues(alpha: 0.7),
-              size: 24,
-            ),
+            Icon(Icons.chevron_right_rounded,
+                color: Colors.white.withValues(alpha: 0.7), size: 24),
           ],
         ),
       ),

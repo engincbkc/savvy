@@ -203,7 +203,9 @@ List<MonthSummary> futureProjections(Ref ref) {
     double projIncome = 0;
     for (final i in recurringIncomes) {
       if (i.recurringEndDate != null &&
-          i.recurringEndDate!.isBefore(futureDate)) continue;
+          i.recurringEndDate!.isBefore(futureDate)) {
+        continue;
+      }
       projIncome += i.amount;
     }
     // One-time future incomes in this month
@@ -217,7 +219,9 @@ List<MonthSummary> futureProjections(Ref ref) {
     double projExpense = 0;
     for (final e in recurringExpenses) {
       if (e.recurringEndDate != null &&
-          e.recurringEndDate!.isBefore(futureDate)) continue;
+          e.recurringEndDate!.isBefore(futureDate)) {
+        continue;
+      }
       projExpense += e.amount;
     }
     // One-time future expenses in this month

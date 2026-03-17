@@ -11,6 +11,8 @@ class TransactionFormNotifier extends _$TransactionFormNotifier {
   @override
   FutureOr<void> build() {}
 
+  // ─── Add ─────────────────────────────────────────────────────────────
+
   Future<bool> addIncome(Income income) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
@@ -34,6 +36,34 @@ class TransactionFormNotifier extends _$TransactionFormNotifier {
     });
     return !state.hasError;
   }
+
+  // ─── Update ──────────────────────────────────────────────────────────
+
+  Future<bool> updateIncome(Income income) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(incomeRepositoryProvider).update(income);
+    });
+    return !state.hasError;
+  }
+
+  Future<bool> updateExpense(Expense expense) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(expenseRepositoryProvider).update(expense);
+    });
+    return !state.hasError;
+  }
+
+  Future<bool> updateSavings(Savings savings) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await ref.read(savingsRepositoryProvider).update(savings);
+    });
+    return !state.hasError;
+  }
+
+  // ─── Delete (soft) ───────────────────────────────────────────────────
 
   Future<bool> deleteIncome(String id) async {
     state = const AsyncLoading();
