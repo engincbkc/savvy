@@ -161,3 +161,101 @@ MonthSummary? monthSummary(Ref ref, String yearMonth) {
   final match = all.where((s) => s.yearMonth == yearMonth);
   return match.isEmpty ? null : match.first;
 }
+
+/// Future month projections based on recurring incomes/expenses.
+/// Projects 6 months ahead from current month.
+@riverpod
+List<MonthSummary> futureProjections(Ref ref) {
+  final allInc = ref.watch(allIncomesProvider).value ?? [];
+  final allExp = ref.watch(allExpensesProvider).value ?? [];
+  final summaries = ref.watch(allMonthSummariesProvider);
+
+  if (summaries.isEmpty) return [];
+
+  // Get the latest cumulative balance as starting carry-over
+  final latestCarryOver = summaries.first.netWithCarryOver;
+
+  // Find recurring incomes/expenses (active, not ended)
+  final now = DateTime.now();
+  final recurringIncomes = allInc.where((i) =>
+      i.isRecurring &&
+      (i.recurringEndDate == null || i.recurringEndDate!.isAfter(now)));
+  final recurringExpenses = allExp.where((e) =>
+      e.isRecurring &&
+      (e.recurringEndDate == null || e.recurringEndDate!.isAfter(now)));
+
+  // One-time future incomes/expenses
+  final futureOneTimeIncomes =
+      allInc.where((i) => !i.isRecurring && i.date.isAfter(now));
+  final futureOneTimeExpenses =
+      allExp.where((e) => !e.isRecurring && e.date.isAfter(now));
+
+  // Project 6 months ahead
+  double cumCarry = latestCarryOver;
+  final projections = <MonthSummary>[];
+
+  for (int m = 1; m <= 6; m++) {
+    final futureDate = DateTime(now.year, now.month + m, 1);
+    final ym = futureDate.toYearMonth();
+    final range = YearMonthRange.from(ym);
+
+    // Recurring incomes (check end date)
+    double projIncome = 0;
+    for (final i in recurringIncomes) {
+      if (i.recurringEndDate != null &&
+          i.recurringEndDate!.isBefore(futureDate)) continue;
+      projIncome += i.amount;
+    }
+    // One-time future incomes in this month
+    for (final i in futureOneTimeIncomes) {
+      if (!i.date.isBefore(range.start) && i.date.isBefore(range.end)) {
+        projIncome += i.amount;
+      }
+    }
+
+    // Recurring expenses (check end date)
+    double projExpense = 0;
+    for (final e in recurringExpenses) {
+      if (e.recurringEndDate != null &&
+          e.recurringEndDate!.isBefore(futureDate)) continue;
+      projExpense += e.amount;
+    }
+    // One-time future expenses in this month
+    for (final e in futureOneTimeExpenses) {
+      if (!e.date.isBefore(range.start) && e.date.isBefore(range.end)) {
+        projExpense += e.amount;
+      }
+    }
+
+    final netBalance = projIncome - projExpense;
+    final netWithCarry = netBalance + cumCarry;
+    final savingsRate = projIncome > 0
+        ? ((projIncome - projExpense) / projIncome).clamp(0.0, 1.0)
+        : 0.0;
+    final expenseRate =
+        projIncome > 0 ? (projExpense / projIncome).clamp(0.0, 2.0) : 0.0;
+
+    projections.add(MonthSummary(
+      yearMonth: ym,
+      totalIncome: projIncome,
+      totalExpense: projExpense,
+      totalSavings: 0,
+      netBalance: netBalance,
+      carryOver: cumCarry,
+      netWithCarryOver: netWithCarry,
+      savingsRate: savingsRate,
+      expenseRate: expenseRate,
+      healthScore: FinancialCalculator.financialHealthScore(
+        savingsRate: savingsRate,
+        expenseRatio: expenseRate,
+        netBalance: netBalance,
+        emergencyFundMonths: 0,
+      ),
+      updatedAt: DateTime.now(),
+    ));
+
+    cumCarry = netWithCarry;
+  }
+
+  return projections;
+}

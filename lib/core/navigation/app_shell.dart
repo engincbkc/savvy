@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
-import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/features/transactions/presentation/screens/add_income_sheet.dart';
 import 'package:savvy/features/transactions/presentation/screens/add_expense_sheet.dart';
 import 'package:savvy/features/transactions/presentation/screens/add_savings_sheet.dart';
@@ -41,38 +40,36 @@ class AppShell extends StatelessWidget {
         onAddSavings: () => _showSheet(context, const AddSavingsSheet()),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: SizedBox(
-        height: AppSpacing.bottomNavHeight + MediaQuery.of(context).padding.bottom,
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex(context),
-          onTap: (index) {
-            final routes = [
-              '/dashboard',
-              '/transactions',
-              '/simulate',
-              '/settings',
-            ];
-            context.go(routes[index]);
-          },
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(AppIcons.home),
-              label: 'Ana Sayfa',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(AppIcons.analytics),
-              label: 'İşlemler',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(AppIcons.simulate),
-              label: 'Simülasyon',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(AppIcons.settings),
-              label: 'Ayarlar',
-            ),
-          ],
-        ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: _currentIndex(context),
+        onTap: (index) {
+          final routes = [
+            '/dashboard',
+            '/transactions',
+            '/simulate',
+            '/settings',
+          ];
+          context.go(routes[index]);
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(AppIcons.home),
+            label: 'Ana Sayfa',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(AppIcons.analytics),
+            label: 'İşlemler',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(AppIcons.simulate),
+            label: 'Simülasyon',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(AppIcons.settings),
+            label: 'Ayarlar',
+          ),
+        ],
       ),
     );
   }

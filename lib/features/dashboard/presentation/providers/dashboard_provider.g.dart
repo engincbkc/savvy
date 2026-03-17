@@ -543,3 +543,58 @@ final class MonthSummaryFamily extends $Family
   @override
   String toString() => r'monthSummaryProvider';
 }
+
+/// Future month projections based on recurring incomes/expenses.
+/// Projects 6 months ahead from current month.
+
+@ProviderFor(futureProjections)
+final futureProjectionsProvider = FutureProjectionsProvider._();
+
+/// Future month projections based on recurring incomes/expenses.
+/// Projects 6 months ahead from current month.
+
+final class FutureProjectionsProvider
+    extends
+        $FunctionalProvider<
+          List<MonthSummary>,
+          List<MonthSummary>,
+          List<MonthSummary>
+        >
+    with $Provider<List<MonthSummary>> {
+  /// Future month projections based on recurring incomes/expenses.
+  /// Projects 6 months ahead from current month.
+  FutureProjectionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'futureProjectionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$futureProjectionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<MonthSummary>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<MonthSummary> create(Ref ref) {
+    return futureProjections(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<MonthSummary> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<MonthSummary>>(value),
+    );
+  }
+}
+
+String _$futureProjectionsHash() => r'e0124e2550313684351f6be806b13b354968abaa';

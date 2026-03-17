@@ -12,6 +12,7 @@ import 'package:savvy/core/utils/currency_formatter.dart';
 import 'package:savvy/core/utils/financial_calculator.dart';
 import 'package:savvy/features/dashboard/domain/models/month_summary.dart';
 import 'package:savvy/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:savvy/shared/widgets/loading_shimmer.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -101,6 +102,16 @@ class DashboardScreen extends ConsumerWidget {
                         cumulativeNet: cumulativeNet,
                         healthScore: overallHealth,
                         monthCount: summaries.length,
+                      ),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // ── Future Projection Card ──
+                      _FutureProjectionCard(
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          context.go('/dashboard/projections');
+                        },
                       ),
 
                       const SizedBox(height: AppSpacing.xl),
@@ -503,5 +514,77 @@ class _HealthIcon extends StatelessWidget {
       _ => AppColors.expense,
     };
     return Icon(icon, size: size, color: color);
+  }
+}
+
+// ─── Future Projection Card ─────────────────────────────────────────────────
+
+class _FutureProjectionCard extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _FutureProjectionCard({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.base),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF1E3A5F), Color(0xFF2563EB)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: AppRadius.card,
+          boxShadow: AppShadow.sm,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: AppRadius.chip,
+              ),
+              child: Icon(
+                LucideIcons.eye,
+                color: Colors.white,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Gelecek Tahminim',
+                    style: AppTypography.titleMedium.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Periyodik gelir/giderlerine gore 6 aylik projeksiyon',
+                    style: AppTypography.caption.copyWith(
+                      color: Colors.white.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: Colors.white.withValues(alpha: 0.7),
+              size: 24,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
