@@ -24,6 +24,18 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
   final _noteController = TextEditingController();
   SavingsCategory _category = SavingsCategory.emergency;
   DateTime _date = DateTime.now();
+  bool _amountOk = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController.addListener(_onAmountChanged);
+  }
+
+  void _onAmountChanged() {
+    final ok = isAmountValid(_amountController.text);
+    if (ok != _amountOk) setState(() => _amountOk = ok);
+  }
 
   @override
   void dispose() {
@@ -156,8 +168,6 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
               ),
               const SizedBox(height: AppSpacing.xl),
 
-              // Submit
-
                     ],
                   ),
                 ),
@@ -167,6 +177,7 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
                 isLoading: formState.isLoading,
                 label: 'Birikim Ekle',
                 color: c.savings,
+                enabled: _amountOk,
                 onPressed: _submit,
               ),
               const SizedBox(height: AppSpacing.sm),

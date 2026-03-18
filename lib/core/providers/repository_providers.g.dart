@@ -148,3 +148,51 @@ final class SavingsRepositoryProvider
 }
 
 String _$savingsRepositoryHash() => r'0d35a9adb75cce8722cde130a31544e22c7688bb';
+
+@ProviderFor(savingsGoalRepository)
+final savingsGoalRepositoryProvider = SavingsGoalRepositoryProvider._();
+
+final class SavingsGoalRepositoryProvider
+    extends
+        $FunctionalProvider<
+          SavingsGoalRepository,
+          SavingsGoalRepository,
+          SavingsGoalRepository
+        >
+    with $Provider<SavingsGoalRepository> {
+  SavingsGoalRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'savingsGoalRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$savingsGoalRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<SavingsGoalRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  SavingsGoalRepository create(Ref ref) {
+    return savingsGoalRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SavingsGoalRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SavingsGoalRepository>(value),
+    );
+  }
+}
+
+String _$savingsGoalRepositoryHash() =>
+    r'3691ba1b865169a0a42db3634e835acd16591e2d';

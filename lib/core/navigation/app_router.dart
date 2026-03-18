@@ -5,9 +5,10 @@ import 'package:savvy/core/navigation/app_shell.dart';
 import 'package:savvy/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:savvy/features/auth/presentation/screens/login_screen.dart';
 import 'package:savvy/features/auth/presentation/screens/register_screen.dart';
-import 'package:savvy/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:savvy/features/onboarding/presentation/screens/onboarding_gate.dart';
 import 'package:savvy/features/transactions/presentation/screens/transactions_screen.dart';
 import 'package:savvy/features/simulation/presentation/screens/simulation_screen.dart';
+import 'package:savvy/features/savings_goals/presentation/screens/goals_screen.dart';
 import 'package:savvy/features/dashboard/presentation/screens/month_detail_screen.dart';
 import 'package:savvy/features/settings/presentation/settings_screen.dart';
 
@@ -61,7 +62,7 @@ final appRouter = GoRouter(
         GoRoute(
           path: '/dashboard',
           pageBuilder: (context, state) => const NoTransitionPage(
-            child: DashboardScreen(),
+            child: OnboardingGate(),
           ),
           routes: [
             GoRoute(
@@ -76,6 +77,12 @@ final appRouter = GoRouter(
           path: '/transactions',
           pageBuilder: (context, state) => const NoTransitionPage(
             child: TransactionsScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/goals',
+          pageBuilder: (context, state) => const NoTransitionPage(
+            child: GoalsScreen(),
           ),
         ),
         GoRoute(

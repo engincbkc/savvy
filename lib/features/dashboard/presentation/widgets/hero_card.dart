@@ -6,16 +6,14 @@ import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_shadow.dart';
 import 'package:savvy/core/design/tokens/app_animation.dart';
 import 'package:savvy/core/utils/currency_formatter.dart';
-import 'package:savvy/core/utils/financial_calculator.dart';
+import 'package:savvy/shared/widgets/info_tooltip.dart';
 
 class HeroCard extends StatelessWidget {
   final double cumulativeNet;
-  final int healthScore;
 
   const HeroCard({
     super.key,
     required this.cumulativeNet,
-    required this.healthScore,
   });
 
   List<Color> get _gradient {
@@ -29,7 +27,6 @@ class HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = FinancialCalculator.healthScoreLabel(healthScore);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppSpacing.xl),
@@ -48,34 +45,18 @@ class HeroCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'TOPLAM BAKIYE',
+                'TOPLAM BAKİYE',
                 style: AppTypography.labelMedium.copyWith(
                   color: AppColors.textInverse.withValues(alpha: 0.7),
                   letterSpacing: 1.5,
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.textInverse.withValues(alpha: 0.15),
-                  borderRadius: AppRadius.pill,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    HealthIcon(score: healthScore, size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$label · $healthScore',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textInverse,
-                      ),
-                    ),
-                  ],
-                ),
+              InfoTooltip(
+                title: 'Toplam Bakiye',
+                description:
+                    'Tüm zamanların kümülatif bakiyesidir. Toplam gelirlerinizden toplam giderleriniz çıkarılarak hesaplanır.',
+                size: 16,
+                iconColor: AppColors.textInverse.withValues(alpha: 0.5),
               ),
             ],
           ),
@@ -101,30 +82,5 @@ class HeroCard extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class HealthIcon extends StatelessWidget {
-  final int score;
-  final double size;
-  const HealthIcon({super.key, required this.score, required this.size});
-
-  @override
-  Widget build(BuildContext context) {
-    final icon = switch (score) {
-      >= 80 => Icons.rocket_launch_rounded,
-      >= 65 => Icons.trending_up_rounded,
-      >= 50 => Icons.horizontal_rule_rounded,
-      >= 35 => Icons.trending_down_rounded,
-      _ => Icons.warning_rounded,
-    };
-    final color = switch (score) {
-      >= 80 => AppColors.income,
-      >= 65 => AppColors.brandPrimary,
-      >= 50 => AppColors.warning,
-      >= 35 => AppColors.savings,
-      _ => AppColors.expense,
-    };
-    return Icon(icon, size: size, color: color);
   }
 }

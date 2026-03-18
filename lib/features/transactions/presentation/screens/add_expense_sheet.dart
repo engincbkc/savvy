@@ -11,6 +11,7 @@ import 'package:savvy/core/utils/currency_formatter.dart';
 import 'package:savvy/features/transactions/domain/models/expense.dart';
 import 'package:savvy/features/transactions/presentation/providers/transaction_form_provider.dart';
 import 'package:savvy/features/transactions/presentation/widgets/form_shared_widgets.dart';
+import 'package:savvy/shared/widgets/info_tooltip.dart';
 import 'package:uuid/uuid.dart';
 
 class AddExpenseSheet extends ConsumerStatefulWidget {
@@ -30,6 +31,18 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
   DateTime _date = DateTime.now();
   bool _isRecurring = false;
   DateTime? _recurringEndDate;
+  bool _amountOk = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController.addListener(_onAmountChanged);
+  }
+
+  void _onAmountChanged() {
+    final ok = isAmountValid(_amountController.text);
+    if (ok != _amountOk) setState(() => _amountOk = ok);
+  }
 
   @override
   void dispose() {
@@ -139,8 +152,59 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
               ),
               const SizedBox(height: AppSpacing.xl),
 
-              // Expense type
-              FormSectionLabel(text: 'Gider Tipi', icon: Icons.tune_rounded),
+              // Category
+              FormSectionLabel(text: 'Kategori', icon: AppIcons.category),
+              const SizedBox(height: AppSpacing.sm),
+              CategoryChipSelector<ExpenseCategory>(
+                values: ExpenseCategory.values,
+                selected: _category,
+                labelOf: (cat) => cat.label,
+                iconOf: (cat) => cat.icon,
+                activeColor: c.expense,
+                onSelected: (cat) => setState(() => _category = cat),
+              ),
+              const SizedBox(height: AppSpacing.base),
+
+              // Recurring (moved below category)
+              RecurringToggle(
+                label: 'Periyodik Gider',
+                value: _isRecurring,
+                activeColor: c.expense,
+                onChanged: (v) => setState(() {
+                  _isRecurring = v;
+                  if (!v) _recurringEndDate = null;
+                }),
+              ),
+              if (_isRecurring) ...[
+                const SizedBox(height: AppSpacing.sm),
+                GestureDetector(
+                  onTap: _pickEndDate,
+                  child: FieldChip(
+                    icon: Icons.event_busy_rounded,
+                    label: _recurringEndDate != null
+                        ? 'Bitis: ${formatDateTR(_recurringEndDate!)}'
+                        : 'Bitis Tarihi (opsiyonel)',
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.xl),
+
+              // Expense type with InfoTooltips
+              Row(
+                children: [
+                  FormSectionLabel(text: 'Gider Tipi', icon: Icons.tune_rounded),
+                  const Spacer(),
+                  InfoTooltip(
+                    title: 'Gider Tipleri',
+                    description:
+                        'Sabit: Her ay düzenli tekrarlayan giderler (kira, fatura).\n\n'
+                        'Değişken: Aydan aya miktarı değişen giderler (market, ulaşım).\n\n'
+                        'İsteğe Bağlı: Zorunlu olmayan, kısılabilir harcamalar (eğlence, yeme-içme).\n\n'
+                        'İş/Yatırım: İş veya yatırım amaçlı yapılan giderler.',
+                    size: 14,
+                  ),
+                ],
+              ),
               const SizedBox(height: AppSpacing.sm),
               Row(
                 children: ExpenseType.values.map((type) {
@@ -192,19 +256,6 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
               ),
               const SizedBox(height: AppSpacing.xl),
 
-              // Category
-              FormSectionLabel(text: 'Kategori', icon: AppIcons.category),
-              const SizedBox(height: AppSpacing.sm),
-              CategoryChipSelector<ExpenseCategory>(
-                values: ExpenseCategory.values,
-                selected: _category,
-                labelOf: (cat) => cat.label,
-                iconOf: (cat) => cat.icon,
-                activeColor: c.expense,
-                onSelected: (cat) => setState(() => _category = cat),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
               // Date & Person
               FormSectionLabel(text: 'Detaylar', icon: AppIcons.info),
               const SizedBox(height: AppSpacing.sm),
@@ -249,33 +300,7 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
                   counterText: '',
                 ),
               ),
-              const SizedBox(height: AppSpacing.base),
-
-              // Recurring
-              RecurringToggle(
-                label: 'Periyodik Gider',
-                value: _isRecurring,
-                activeColor: c.expense,
-                onChanged: (v) => setState(() {
-                  _isRecurring = v;
-                  if (!v) _recurringEndDate = null;
-                }),
-              ),
-              if (_isRecurring) ...[
-                const SizedBox(height: AppSpacing.sm),
-                GestureDetector(
-                  onTap: _pickEndDate,
-                  child: FieldChip(
-                    icon: Icons.event_busy_rounded,
-                    label: _recurringEndDate != null
-                        ? 'Bitis: ${formatDateTR(_recurringEndDate!)}'
-                        : 'Bitis Tarihi (opsiyonel)',
-                  ),
-                ),
-              ],
               const SizedBox(height: AppSpacing.xl),
-
-              // Submit
 
                     ],
                   ),
@@ -286,6 +311,7 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
                 isLoading: formState.isLoading,
                 label: 'Gider Ekle',
                 color: c.expense,
+                enabled: _amountOk,
                 onPressed: _submit,
               ),
               const SizedBox(height: AppSpacing.sm),

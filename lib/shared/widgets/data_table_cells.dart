@@ -84,16 +84,19 @@ class DataTableCellValue extends StatelessWidget {
 class DataTableCumulativeCell extends StatelessWidget {
   final double value;
   final double height;
+  final double? goalTarget;
 
   const DataTableCumulativeCell({
     super.key,
     required this.value,
     this.height = 44,
+    this.goalTarget,
   });
 
   @override
   Widget build(BuildContext context) {
     final isPositive = value >= 0;
+    final reachedGoal = goalTarget != null && value >= goalTarget!;
     return Container(
       height: height,
       alignment: Alignment.center,
@@ -105,16 +108,42 @@ class DataTableCumulativeCell extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(
           bottom: Radius.circular(8),
         ),
+        border: reachedGoal
+            ? Border.all(
+                color: AppColors.of(context).savings.withValues(alpha: 0.5),
+                width: 1.5,
+              )
+            : null,
       ),
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Text(
-          CurrencyFormatter.formatNoDecimal(value),
-          style: AppTypography.numericSmall.copyWith(
-            color: isPositive ? AppColors.of(context).income : AppColors.of(context).expense,
-            fontWeight: FontWeight.w800,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              CurrencyFormatter.formatNoDecimal(value),
+              style: AppTypography.numericSmall.copyWith(
+                color: isPositive
+                    ? AppColors.of(context).income
+                    : AppColors.of(context).expense,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ),
-        ),
+          if (goalTarget != null && !reachedGoal)
+            Container(
+              margin: const EdgeInsets.only(top: 2),
+              width: 16,
+              height: 2,
+              decoration: BoxDecoration(
+                color: AppColors.of(context).savings.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(1),
+              ),
+            ),
+          if (reachedGoal)
+            Icon(Icons.flag_rounded,
+                size: 10, color: AppColors.of(context).savings),
+        ],
       ),
     );
   }

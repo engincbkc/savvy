@@ -6,6 +6,7 @@ import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/utils/currency_formatter.dart';
 import 'package:savvy/features/dashboard/domain/models/month_summary.dart';
+import 'package:savvy/shared/widgets/info_tooltip.dart';
 
 class QuickStatsRow extends StatelessWidget {
   final MonthSummary summary;
@@ -21,6 +22,8 @@ class QuickStatsRow extends StatelessWidget {
             amount: summary.totalIncome,
             color: AppColors.of(context).income,
             icon: AppIcons.income,
+            tooltipTitle: 'Aylık Gelir',
+            tooltipDesc: 'Bu ayki toplam gelir tutarıdır. Maaş, ek iş, freelance ve diğer tüm gelir kaynaklarını içerir.',
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -30,6 +33,8 @@ class QuickStatsRow extends StatelessWidget {
             amount: summary.totalExpense,
             color: AppColors.of(context).expense,
             icon: AppIcons.expense,
+            tooltipTitle: 'Aylık Gider',
+            tooltipDesc: 'Bu ayki toplam gider tutarıdır. Sabit, değişken ve isteğe bağlı tüm harcamaları içerir.',
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -39,6 +44,8 @@ class QuickStatsRow extends StatelessWidget {
             amount: summary.totalSavings,
             color: AppColors.of(context).savings,
             icon: AppIcons.savings,
+            tooltipTitle: 'Aylık Birikim',
+            tooltipDesc: 'Bu ayki toplam birikim tutarıdır. Acil durum fonu, altın, döviz ve diğer yatırımları içerir.',
           ),
         ),
       ],
@@ -51,6 +58,8 @@ class QuickStatCard extends StatelessWidget {
   final double amount;
   final Color color;
   final IconData icon;
+  final String? tooltipTitle;
+  final String? tooltipDesc;
 
   const QuickStatCard({
     super.key,
@@ -58,6 +67,8 @@ class QuickStatCard extends StatelessWidget {
     required this.amount,
     required this.color,
     required this.icon,
+    this.tooltipTitle,
+    this.tooltipDesc,
   });
 
   @override
@@ -84,13 +95,22 @@ class QuickStatCard extends StatelessWidget {
                 child: Icon(icon, size: 13, color: color),
               ),
               const SizedBox(width: 6),
-              Text(
-                label,
-                style: AppTypography.caption.copyWith(
-                  color: AppColors.of(context).textTertiary,
-                  fontWeight: FontWeight.w500,
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.of(context).textTertiary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (tooltipTitle != null && tooltipDesc != null)
+                InfoTooltip(
+                  title: tooltipTitle!,
+                  description: tooltipDesc!,
+                  size: 12,
+                ),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),

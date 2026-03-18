@@ -456,7 +456,7 @@ final class AllMonthSummariesProvider
   }
 }
 
-String _$allMonthSummariesHash() => r'320e505a87cd446544a55de57cead75fe454e14b';
+String _$allMonthSummariesHash() => r'1a45728cdd117c95ffe58f4108f74a7909911f36';
 
 /// Single month summary (used in detail screen)
 

@@ -11,6 +11,7 @@ import 'package:savvy/core/utils/currency_formatter.dart';
 import 'package:savvy/features/transactions/domain/models/expense.dart';
 import 'package:savvy/features/transactions/presentation/providers/transaction_form_provider.dart';
 import 'package:savvy/features/transactions/presentation/widgets/form_shared_widgets.dart';
+import 'package:savvy/shared/widgets/info_tooltip.dart';
 
 class EditExpenseSheet extends ConsumerStatefulWidget {
   final Expense expense;
@@ -31,6 +32,18 @@ class _EditExpenseSheetState extends ConsumerState<EditExpenseSheet> {
   late bool _isRecurring;
   DateTime? _recurringEndDate;
 
+  // Original values for change detection
+  late final String _origAmount;
+  late final String _origNote;
+  late final String _origPerson;
+  late final ExpenseCategory _origCategory;
+  late final ExpenseType _origExpenseType;
+  late final DateTime _origDate;
+  late final bool _origIsRecurring;
+  late final DateTime? _origRecurringEndDate;
+
+  bool _hasChanges = false;
+
   @override
   void initState() {
     super.initState();
@@ -43,6 +56,31 @@ class _EditExpenseSheetState extends ConsumerState<EditExpenseSheet> {
     _date = e.date;
     _isRecurring = e.isRecurring;
     _recurringEndDate = e.recurringEndDate;
+
+    _origAmount = _amountController.text;
+    _origNote = _noteController.text;
+    _origPerson = _personController.text;
+    _origCategory = e.category;
+    _origExpenseType = e.expenseType;
+    _origDate = e.date;
+    _origIsRecurring = e.isRecurring;
+    _origRecurringEndDate = e.recurringEndDate;
+
+    _amountController.addListener(_checkChanges);
+    _noteController.addListener(_checkChanges);
+    _personController.addListener(_checkChanges);
+  }
+
+  void _checkChanges() {
+    final changed = _amountController.text != _origAmount ||
+        _noteController.text != _origNote ||
+        _personController.text != _origPerson ||
+        _category != _origCategory ||
+        _expenseType != _origExpenseType ||
+        _date != _origDate ||
+        _isRecurring != _origIsRecurring ||
+        _recurringEndDate != _origRecurringEndDate;
+    if (changed != _hasChanges) setState(() => _hasChanges = changed);
   }
 
   @override
@@ -76,7 +114,7 @@ class _EditExpenseSheetState extends ConsumerState<EditExpenseSheet> {
       if (mounted) {
         showSuccessSnackbar(
           context,
-          'Gider guncellendi: ${CurrencyFormatter.formatNoDecimal(amount)}',
+          'Gider güncellendi: ${CurrencyFormatter.formatNoDecimal(amount)}',
           AppColors.of(context).expense,
         );
       }
@@ -116,8 +154,8 @@ class _EditExpenseSheetState extends ConsumerState<EditExpenseSheet> {
               const SheetHeader(
                 icon: AppIcons.edit,
                 gradient: [Color(0xFFC81E1E), Color(0xFFEF4444)],
-                title: 'Gider Duzenle',
-                subtitle: 'Mevcut gider kaydini guncelle',
+                title: 'Gider Düzenle',
+                subtitle: 'Mevcut gider kaydını güncelle',
               ),
               const SizedBox(height: AppSpacing.xl),
 
@@ -129,7 +167,76 @@ class _EditExpenseSheetState extends ConsumerState<EditExpenseSheet> {
               ),
               const SizedBox(height: AppSpacing.xl),
 
-              FormSectionLabel(text: 'Gider Tipi', icon: Icons.tune_rounded),
+              // Category
+              FormSectionLabel(text: 'Kategori', icon: AppIcons.category),
+              const SizedBox(height: AppSpacing.sm),
+              CategoryChipSelector<ExpenseCategory>(
+                values: ExpenseCategory.values,
+                selected: _category,
+                labelOf: (cat) => cat.label,
+                iconOf: (cat) => cat.icon,
+                activeColor: c.expense,
+                onSelected: (cat) {
+                  setState(() => _category = cat);
+                  _checkChanges();
+                },
+              ),
+              const SizedBox(height: AppSpacing.base),
+
+              // Recurring
+              RecurringToggle(
+                label: 'Periyodik Gider',
+                value: _isRecurring,
+                activeColor: c.expense,
+                onChanged: (v) {
+                  setState(() {
+                    _isRecurring = v;
+                    if (!v) _recurringEndDate = null;
+                  });
+                  _checkChanges();
+                },
+              ),
+              if (_isRecurring) ...[
+                const SizedBox(height: AppSpacing.sm),
+                GestureDetector(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _recurringEndDate ?? _date.add(const Duration(days: 365)),
+                      firstDate: _date,
+                      lastDate: DateTime.now().add(const Duration(days: 1825)),
+                    );
+                    if (picked != null) {
+                      setState(() => _recurringEndDate = picked);
+                      _checkChanges();
+                    }
+                  },
+                  child: FieldChip(
+                    icon: Icons.event_busy_rounded,
+                    label: _recurringEndDate != null
+                        ? 'Bitiş: ${formatDateTR(_recurringEndDate!)}'
+                        : 'Bitiş Tarihi (opsiyonel)',
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.xl),
+
+              // Expense type
+              Row(
+                children: [
+                  FormSectionLabel(text: 'Gider Tipi', icon: Icons.tune_rounded),
+                  const Spacer(),
+                  InfoTooltip(
+                    title: 'Gider Tipleri',
+                    description:
+                        'Sabit: Her ay düzenli tekrarlayan giderler (kira, fatura).\n\n'
+                        'Değişken: Aydan aya miktarı değişen giderler (market, ulaşım).\n\n'
+                        'İsteğe Bağlı: Zorunlu olmayan, kısılabilir harcamalar (eğlence, yeme-içme).\n\n'
+                        'İş/Yatırım: İş veya yatırım amaçlı yapılan giderler.',
+                    size: 14,
+                  ),
+                ],
+              ),
               const SizedBox(height: AppSpacing.sm),
               Row(
                 children: ExpenseType.values.map((type) {
@@ -139,6 +246,7 @@ class _EditExpenseSheetState extends ConsumerState<EditExpenseSheet> {
                       onTap: () {
                         HapticFeedback.selectionClick();
                         setState(() => _expenseType = type);
+                        _checkChanges();
                       },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
@@ -167,18 +275,7 @@ class _EditExpenseSheetState extends ConsumerState<EditExpenseSheet> {
               ),
               const SizedBox(height: AppSpacing.xl),
 
-              FormSectionLabel(text: 'Kategori', icon: AppIcons.category),
-              const SizedBox(height: AppSpacing.sm),
-              CategoryChipSelector<ExpenseCategory>(
-                values: ExpenseCategory.values,
-                selected: _category,
-                labelOf: (cat) => cat.label,
-                iconOf: (cat) => cat.icon,
-                activeColor: c.expense,
-                onSelected: (cat) => setState(() => _category = cat),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
+              // Date & Person
               FormSectionLabel(text: 'Detaylar', icon: AppIcons.info),
               const SizedBox(height: AppSpacing.sm),
               Row(
@@ -192,7 +289,10 @@ class _EditExpenseSheetState extends ConsumerState<EditExpenseSheet> {
                           firstDate: DateTime(2020),
                           lastDate: DateTime.now().add(const Duration(days: 366)),
                         );
-                        if (picked != null) setState(() => _date = picked);
+                        if (picked != null) {
+                          setState(() => _date = picked);
+                          _checkChanges();
+                        }
                       },
                       child: FieldChip(icon: AppIcons.calendar, label: formatDateTR(_date)),
                     ),
@@ -202,7 +302,7 @@ class _EditExpenseSheetState extends ConsumerState<EditExpenseSheet> {
                     child: TextFormField(
                       controller: _personController,
                       decoration: InputDecoration(
-                        hintText: 'Kisi',
+                        hintText: 'Kişi',
                         prefixIcon: const Icon(AppIcons.person, size: 18),
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md, vertical: AppSpacing.md),
@@ -223,51 +323,21 @@ class _EditExpenseSheetState extends ConsumerState<EditExpenseSheet> {
                   counterText: '',
                 ),
               ),
-              const SizedBox(height: AppSpacing.base),
-
-              RecurringToggle(
-                label: 'Periyodik Gider',
-                value: _isRecurring,
-                activeColor: c.expense,
-                onChanged: (v) => setState(() {
-                  _isRecurring = v;
-                  if (!v) _recurringEndDate = null;
-                }),
-              ),
-              if (_isRecurring) ...[
-                const SizedBox(height: AppSpacing.sm),
-                GestureDetector(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _recurringEndDate ?? _date.add(const Duration(days: 365)),
-                      firstDate: _date,
-                      lastDate: DateTime.now().add(const Duration(days: 1825)),
-                    );
-                    if (picked != null) setState(() => _recurringEndDate = picked);
-                  },
-                  child: FieldChip(
-                    icon: Icons.event_busy_rounded,
-                    label: _recurringEndDate != null
-                        ? 'Bitis: ${formatDateTR(_recurringEndDate!)}'
-                        : 'Bitis Tarihi (opsiyonel)',
-                  ),
-                ),
-              ],
               const SizedBox(height: AppSpacing.xl),
-
 
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.base),
-              FormSubmitButton(
-                isLoading: formState.isLoading,
-                label: 'Kaydet',
-                color: c.expense,
-                onPressed: _submit,
-              ),
+              if (_hasChanges) ...[
+                const SizedBox(height: AppSpacing.base),
+                FormSubmitButton(
+                  isLoading: formState.isLoading,
+                  label: 'Kaydet',
+                  color: c.expense,
+                  onPressed: _submit,
+                ),
+              ],
               const SizedBox(height: AppSpacing.sm),
             ],
           ),

@@ -14,6 +14,8 @@ import 'package:savvy/features/dashboard/presentation/widgets/quick_stats_row.da
 import 'package:savvy/features/dashboard/presentation/widgets/savings_toggle.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/monthly_flow_table.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/trend_chart.dart';
+import 'package:savvy/features/dashboard/presentation/widgets/goals_summary.dart';
+import 'package:savvy/features/savings_goals/presentation/providers/goals_provider.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -34,10 +36,10 @@ class DashboardScreen extends ConsumerWidget {
     final includeSavings = ref.watch(includeSavingsInProjectionProvider);
     final totalSavings = ref.watch(totalSavingsAmountProvider);
 
+    final goals = ref.watch(allGoalsProvider).value ?? [];
+
     final cumulativeNet =
         summaries.isNotEmpty ? summaries.first.netWithCarryOver : 0.0;
-    final overallHealth =
-        summaries.isNotEmpty ? summaries.first.healthScore : 0;
     final currentMonth = summaries.isNotEmpty ? summaries.first : null;
 
     return SafeArea(
@@ -101,7 +103,6 @@ class DashboardScreen extends ConsumerWidget {
                       // 1) Hero Card
                       HeroCard(
                         cumulativeNet: cumulativeNet,
-                        healthScore: overallHealth,
                       ),
 
                       const SizedBox(height: AppSpacing.base),
@@ -133,6 +134,16 @@ class DashboardScreen extends ConsumerWidget {
                         summaries: summaries,
                         projections: projections,
                         includeSavings: includeSavings,
+                        nearestGoalTarget: goals.isNotEmpty
+                            ? goals
+                                .where((g) => g.status.name == 'active')
+                                .fold<double?>(null, (nearest, g) {
+                                  if (nearest == null) return g.targetAmount;
+                                  return g.targetAmount < nearest
+                                      ? g.targetAmount
+                                      : nearest;
+                                })
+                            : null,
                         onMonthTap: (ym) {
                           HapticFeedback.lightImpact();
                           context.go('/dashboard/month/$ym');
@@ -141,9 +152,21 @@ class DashboardScreen extends ConsumerWidget {
 
                       const SizedBox(height: AppSpacing.xl),
 
-                      // 5) Trend grafiği
+                      // 5) Hedefler özeti
+                      if (goals.isNotEmpty) ...[
+                        GoalsSummary(goals: goals),
+                        const SizedBox(height: AppSpacing.xl),
+                      ],
+
+                      // 6) Trend grafiği
                       if (projections.isNotEmpty)
-                        TrendChart(projections: projections),
+                        TrendChart(
+                          projections: projections,
+                          goalTargets: goals
+                              .where((g) => g.status.name == 'active')
+                              .map((g) => g.targetAmount)
+                              .toList(),
+                        ),
 
                       const SizedBox(height: 100),
                     ]),

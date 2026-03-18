@@ -28,6 +28,17 @@ class _EditIncomeSheetState extends ConsumerState<EditIncomeSheet> {
   late bool _isRecurring;
   DateTime? _recurringEndDate;
 
+  // Original values for change detection
+  late final String _origAmount;
+  late final String _origNote;
+  late final String _origPerson;
+  late final IncomeCategory _origCategory;
+  late final DateTime _origDate;
+  late final bool _origIsRecurring;
+  late final DateTime? _origRecurringEndDate;
+
+  bool _hasChanges = false;
+
   @override
   void initState() {
     super.initState();
@@ -39,6 +50,30 @@ class _EditIncomeSheetState extends ConsumerState<EditIncomeSheet> {
     _date = i.date;
     _isRecurring = i.isRecurring;
     _recurringEndDate = i.recurringEndDate;
+
+    // Store originals
+    _origAmount = _amountController.text;
+    _origNote = _noteController.text;
+    _origPerson = _personController.text;
+    _origCategory = i.category;
+    _origDate = i.date;
+    _origIsRecurring = i.isRecurring;
+    _origRecurringEndDate = i.recurringEndDate;
+
+    _amountController.addListener(_checkChanges);
+    _noteController.addListener(_checkChanges);
+    _personController.addListener(_checkChanges);
+  }
+
+  void _checkChanges() {
+    final changed = _amountController.text != _origAmount ||
+        _noteController.text != _origNote ||
+        _personController.text != _origPerson ||
+        _category != _origCategory ||
+        _date != _origDate ||
+        _isRecurring != _origIsRecurring ||
+        _recurringEndDate != _origRecurringEndDate;
+    if (changed != _hasChanges) setState(() => _hasChanges = changed);
   }
 
   @override
@@ -71,7 +106,7 @@ class _EditIncomeSheetState extends ConsumerState<EditIncomeSheet> {
       if (mounted) {
         showSuccessSnackbar(
           context,
-          'Gelir guncellendi: ${CurrencyFormatter.formatNoDecimal(amount)}',
+          'Gelir güncellendi: ${CurrencyFormatter.formatNoDecimal(amount)}',
           AppColors.of(context).income,
         );
       }
@@ -111,8 +146,8 @@ class _EditIncomeSheetState extends ConsumerState<EditIncomeSheet> {
               const SheetHeader(
                 icon: AppIcons.edit,
                 gradient: [Color(0xFF059669), Color(0xFF10B981)],
-                title: 'Gelir Duzenle',
-                subtitle: 'Mevcut gelir kaydini guncelle',
+                title: 'Gelir Düzenle',
+                subtitle: 'Mevcut gelir kaydını güncelle',
               ),
               const SizedBox(height: AppSpacing.xl),
 
@@ -132,8 +167,48 @@ class _EditIncomeSheetState extends ConsumerState<EditIncomeSheet> {
                 labelOf: (cat) => cat.label,
                 iconOf: (cat) => cat.icon,
                 activeColor: c.income,
-                onSelected: (cat) => setState(() => _category = cat),
+                onSelected: (cat) {
+                  setState(() => _category = cat);
+                  _checkChanges();
+                },
               ),
+              const SizedBox(height: AppSpacing.base),
+
+              RecurringToggle(
+                label: 'Periyodik Gelir',
+                value: _isRecurring,
+                activeColor: c.income,
+                onChanged: (v) {
+                  setState(() {
+                    _isRecurring = v;
+                    if (!v) _recurringEndDate = null;
+                  });
+                  _checkChanges();
+                },
+              ),
+              if (_isRecurring) ...[
+                const SizedBox(height: AppSpacing.sm),
+                GestureDetector(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _recurringEndDate ?? _date.add(const Duration(days: 365)),
+                      firstDate: _date,
+                      lastDate: DateTime.now().add(const Duration(days: 1825)),
+                    );
+                    if (picked != null) {
+                      setState(() => _recurringEndDate = picked);
+                      _checkChanges();
+                    }
+                  },
+                  child: FieldChip(
+                    icon: Icons.event_busy_rounded,
+                    label: _recurringEndDate != null
+                        ? 'Bitiş: ${formatDateTR(_recurringEndDate!)}'
+                        : 'Bitiş Tarihi (opsiyonel)',
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.xl),
 
               FormSectionLabel(text: 'Detaylar', icon: AppIcons.info),
@@ -149,7 +224,10 @@ class _EditIncomeSheetState extends ConsumerState<EditIncomeSheet> {
                           firstDate: DateTime(2020),
                           lastDate: DateTime.now().add(const Duration(days: 366)),
                         );
-                        if (picked != null) setState(() => _date = picked);
+                        if (picked != null) {
+                          setState(() => _date = picked);
+                          _checkChanges();
+                        }
                       },
                       child: FieldChip(
                         icon: AppIcons.calendar,
@@ -162,7 +240,7 @@ class _EditIncomeSheetState extends ConsumerState<EditIncomeSheet> {
                     child: TextFormField(
                       controller: _personController,
                       decoration: InputDecoration(
-                        hintText: 'Kisi',
+                        hintText: 'Kişi',
                         prefixIcon: const Icon(AppIcons.person, size: 18),
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md, vertical: AppSpacing.md),
@@ -183,51 +261,21 @@ class _EditIncomeSheetState extends ConsumerState<EditIncomeSheet> {
                   counterText: '',
                 ),
               ),
-              const SizedBox(height: AppSpacing.base),
-
-              RecurringToggle(
-                label: 'Periyodik Gelir',
-                value: _isRecurring,
-                activeColor: c.income,
-                onChanged: (v) => setState(() {
-                  _isRecurring = v;
-                  if (!v) _recurringEndDate = null;
-                }),
-              ),
-              if (_isRecurring) ...[
-                const SizedBox(height: AppSpacing.sm),
-                GestureDetector(
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _recurringEndDate ?? _date.add(const Duration(days: 365)),
-                      firstDate: _date,
-                      lastDate: DateTime.now().add(const Duration(days: 1825)),
-                    );
-                    if (picked != null) setState(() => _recurringEndDate = picked);
-                  },
-                  child: FieldChip(
-                    icon: Icons.event_busy_rounded,
-                    label: _recurringEndDate != null
-                        ? 'Bitis: ${formatDateTR(_recurringEndDate!)}'
-                        : 'Bitis Tarihi (opsiyonel)',
-                  ),
-                ),
-              ],
               const SizedBox(height: AppSpacing.xl),
-
 
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.base),
-              FormSubmitButton(
-                isLoading: formState.isLoading,
-                label: 'Kaydet',
-                color: c.income,
-                onPressed: _submit,
-              ),
+              if (_hasChanges) ...[
+                const SizedBox(height: AppSpacing.base),
+                FormSubmitButton(
+                  isLoading: formState.isLoading,
+                  label: 'Kaydet',
+                  color: c.income,
+                  onPressed: _submit,
+                ),
+              ],
               const SizedBox(height: AppSpacing.sm),
             ],
           ),

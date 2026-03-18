@@ -25,6 +25,14 @@ class _EditSavingsSheetState extends ConsumerState<EditSavingsSheet> {
   late SavingsCategory _category;
   late DateTime _date;
 
+  // Original values for change detection
+  late final String _origAmount;
+  late final String _origNote;
+  late final SavingsCategory _origCategory;
+  late final DateTime _origDate;
+
+  bool _hasChanges = false;
+
   @override
   void initState() {
     super.initState();
@@ -33,6 +41,22 @@ class _EditSavingsSheetState extends ConsumerState<EditSavingsSheet> {
     _noteController = TextEditingController(text: s.note ?? '');
     _category = s.category;
     _date = s.date;
+
+    _origAmount = _amountController.text;
+    _origNote = _noteController.text;
+    _origCategory = s.category;
+    _origDate = s.date;
+
+    _amountController.addListener(_checkChanges);
+    _noteController.addListener(_checkChanges);
+  }
+
+  void _checkChanges() {
+    final changed = _amountController.text != _origAmount ||
+        _noteController.text != _origNote ||
+        _category != _origCategory ||
+        _date != _origDate;
+    if (changed != _hasChanges) setState(() => _hasChanges = changed);
   }
 
   @override
@@ -61,7 +85,7 @@ class _EditSavingsSheetState extends ConsumerState<EditSavingsSheet> {
       if (mounted) {
         showSuccessSnackbar(
           context,
-          'Birikim guncellendi: ${CurrencyFormatter.formatNoDecimal(amount)}',
+          'Birikim güncellendi: ${CurrencyFormatter.formatNoDecimal(amount)}',
           AppColors.of(context).savings,
         );
       }
@@ -101,8 +125,8 @@ class _EditSavingsSheetState extends ConsumerState<EditSavingsSheet> {
               const SheetHeader(
                 icon: AppIcons.edit,
                 gradient: [Color(0xFFB45309), Color(0xFFD97706)],
-                title: 'Birikim Duzenle',
-                subtitle: 'Mevcut birikim kaydini guncelle',
+                title: 'Birikim Düzenle',
+                subtitle: 'Mevcut birikim kaydını güncelle',
               ),
               const SizedBox(height: AppSpacing.xl),
 
@@ -122,7 +146,10 @@ class _EditSavingsSheetState extends ConsumerState<EditSavingsSheet> {
                 labelOf: (cat) => cat.label,
                 iconOf: (cat) => cat.icon,
                 activeColor: c.savings,
-                onSelected: (cat) => setState(() => _category = cat),
+                onSelected: (cat) {
+                  setState(() => _category = cat);
+                  _checkChanges();
+                },
               ),
               const SizedBox(height: AppSpacing.xl),
 
@@ -136,7 +163,10 @@ class _EditSavingsSheetState extends ConsumerState<EditSavingsSheet> {
                     firstDate: DateTime(2020),
                     lastDate: DateTime.now().add(const Duration(days: 366)),
                   );
-                  if (picked != null) setState(() => _date = picked);
+                  if (picked != null) {
+                    setState(() => _date = picked);
+                    _checkChanges();
+                  }
                 },
                 child: FieldChip(icon: AppIcons.calendar, label: formatDateTR(_date)),
               ),
@@ -153,18 +183,19 @@ class _EditSavingsSheetState extends ConsumerState<EditSavingsSheet> {
               ),
               const SizedBox(height: AppSpacing.xl),
 
-
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.base),
-              FormSubmitButton(
-                isLoading: formState.isLoading,
-                label: 'Kaydet',
-                color: c.savings,
-                onPressed: _submit,
-              ),
+              if (_hasChanges) ...[
+                const SizedBox(height: AppSpacing.base),
+                FormSubmitButton(
+                  isLoading: formState.isLoading,
+                  label: 'Kaydet',
+                  color: c.savings,
+                  onPressed: _submit,
+                ),
+              ],
               const SizedBox(height: AppSpacing.sm),
             ],
           ),

@@ -9,6 +9,7 @@ import 'package:savvy/features/transactions/presentation/widgets/income_tab.dart
 import 'package:savvy/features/transactions/presentation/widgets/expense_tab.dart';
 import 'package:savvy/features/transactions/presentation/widgets/savings_tab.dart';
 import 'package:savvy/features/transactions/presentation/widgets/transaction_shared_widgets.dart';
+import 'package:savvy/features/transactions/presentation/widgets/filter_bar.dart';
 import 'package:savvy/shared/widgets/loading_shimmer.dart';
 
 
@@ -27,6 +28,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String? _selectedMonth; // null = Tümü
+  TransactionFilters _filters = const TransactionFilters();
 
   @override
   void initState() {
@@ -39,6 +41,50 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  // Apply filters to any list of items
+  List<T> _applyFilters<T>(
+    List<T> items, {
+    required DateTime Function(T) dateOf,
+    required double Function(T) amountOf,
+    required String Function(T) categoryOf,
+    required String? Function(T) noteOf,
+  }) {
+    var result = items;
+
+    // Date range
+    if (_filters.dateFrom != null) {
+      result = result.where((i) => !dateOf(i).isBefore(_filters.dateFrom!)).toList();
+    }
+    if (_filters.dateTo != null) {
+      final end = _filters.dateTo!.add(const Duration(days: 1));
+      result = result.where((i) => dateOf(i).isBefore(end)).toList();
+    }
+    // Amount range
+    if (_filters.amountMin != null) {
+      result = result.where((i) => amountOf(i) >= _filters.amountMin!).toList();
+    }
+    if (_filters.amountMax != null) {
+      result = result.where((i) => amountOf(i) <= _filters.amountMax!).toList();
+    }
+    // Categories
+    if (_filters.categories.isNotEmpty) {
+      result = result
+          .where((i) => _filters.categories.contains(categoryOf(i)))
+          .toList();
+    }
+    // Search
+    if (_filters.searchQuery.isNotEmpty) {
+      final q = _filters.searchQuery.toLowerCase();
+      result = result.where((i) {
+        final note = noteOf(i)?.toLowerCase() ?? '';
+        final cat = categoryOf(i).toLowerCase();
+        return note.contains(q) || cat.contains(q);
+      }).toList();
+    }
+
+    return result;
   }
 
   @override
@@ -69,16 +115,39 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
     months.add(DateTime.now().toYearMonth());
     final sortedMonths = months.toList()..sort((a, b) => b.compareTo(a));
 
-    // Filtreleme
-    final incomes = _selectedMonth == null
+    // Month filtering
+    var incomes = _selectedMonth == null
         ? allIncomes
         : allIncomes.where((i) => i.date.toYearMonth() == _selectedMonth).toList();
-    final expenses = _selectedMonth == null
+    var expenses = _selectedMonth == null
         ? allExpenses
         : allExpenses.where((e) => e.date.toYearMonth() == _selectedMonth).toList();
-    final savings = _selectedMonth == null
+    var savings = _selectedMonth == null
         ? allSavings
         : allSavings.where((s) => s.date.toYearMonth() == _selectedMonth).toList();
+
+    // Advanced filters
+    incomes = _applyFilters(
+      incomes,
+      dateOf: (i) => i.date,
+      amountOf: (i) => i.amount,
+      categoryOf: (i) => i.category.label,
+      noteOf: (i) => i.note,
+    );
+    expenses = _applyFilters(
+      expenses,
+      dateOf: (e) => e.date,
+      amountOf: (e) => e.amount,
+      categoryOf: (e) => e.category.label,
+      noteOf: (e) => e.note,
+    );
+    savings = _applyFilters(
+      savings,
+      dateOf: (s) => s.date,
+      amountOf: (s) => s.amount,
+      categoryOf: (s) => s.category.label,
+      noteOf: (s) => s.note,
+    );
 
     // Sırala
     incomes.sort((a, b) => b.date.compareTo(a.date));
@@ -148,6 +217,18 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
 
           const SizedBox(height: AppSpacing.sm),
 
+          // Filter bar
+          Padding(
+            padding: AppSpacing.screenH,
+            child: FilterBar(
+              filters: _filters,
+              activeTabIndex: _tabController.index,
+              onChanged: (f) => setState(() => _filters = f),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.sm),
+
           // Tab Bar
           Padding(
             padding: AppSpacing.screenH,
@@ -163,7 +244,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
 
           const SizedBox(height: AppSpacing.xs),
 
-          // Tab içerikleri + FAB
+          // Tab içerikleri
           Expanded(
             child: Stack(
               children: [
@@ -204,7 +285,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
                       ),
                     ],
                   ),
-
               ],
             ),
           ),

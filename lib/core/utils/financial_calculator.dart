@@ -181,6 +181,66 @@ class FinancialCalculator {
     };
   }
 
+  // ─── Brüt → Net Maaş Hesaplama (2026 Türkiye) ─────────────────
+
+  /// 2026 Türkiye gelir vergisi dilimleri
+  static const _taxBrackets2026 = [
+    (limit: 158000.0, rate: 0.15),
+    (limit: 350000.0, rate: 0.20),
+    (limit: 900000.0, rate: 0.27),
+    (limit: 1900000.0, rate: 0.35),
+    (limit: double.infinity, rate: 0.40),
+  ];
+
+  static const sgkWorkerRate = 0.14;
+  static const unemploymentInsuranceRate = 0.01;
+
+  /// Brüt yıllık maaştan gelir vergisi hesapla (kümülatif dilim)
+  static double _annualIncomeTax(double annualTaxBase) {
+    double tax = 0;
+    double remaining = annualTaxBase;
+    double prevLimit = 0;
+
+    for (final bracket in _taxBrackets2026) {
+      final taxable = (remaining).clamp(0.0, bracket.limit - prevLimit);
+      tax += taxable * bracket.rate;
+      remaining -= taxable;
+      prevLimit = bracket.limit;
+      if (remaining <= 0) break;
+    }
+    return tax;
+  }
+
+  /// Brüt aylık maaştan net maaş ve kesinti detaylarını hesapla
+  static SalaryBreakdown grossToNet({required double grossMonthly}) {
+    final grossAnnual = grossMonthly * 12;
+
+    // SGK işçi payı (brüt üzerinden, tavan kontrolü basitlik için yok)
+    final sgkMonthly = grossMonthly * sgkWorkerRate;
+    final unemploymentMonthly = grossMonthly * unemploymentInsuranceRate;
+
+    // Gelir vergisi matrahı (yıllık)
+    final annualTaxBase = grossAnnual - (sgkMonthly * 12) - (unemploymentMonthly * 12);
+    final annualTax = _annualIncomeTax(annualTaxBase);
+    final monthlyTax = annualTax / 12;
+
+    // Damga vergisi (%0.759)
+    final stampTax = grossMonthly * 0.00759;
+
+    final totalDeductions = sgkMonthly + unemploymentMonthly + monthlyTax + stampTax;
+    final netMonthly = grossMonthly - totalDeductions;
+
+    return SalaryBreakdown(
+      grossMonthly: grossMonthly,
+      sgk: sgkMonthly,
+      unemploymentInsurance: unemploymentMonthly,
+      incomeTax: monthlyTax,
+      stampTax: stampTax,
+      totalDeductions: totalDeductions,
+      netMonthly: netMonthly,
+    );
+  }
+
   // ─── Projections ─────────────────────────────────────────────────
 
   static double projectedSavings({
@@ -189,4 +249,25 @@ class FinancialCalculator {
     required int months,
   }) =>
       currentSavings + (monthlySavings * months);
+}
+
+/// Brüt → Net maaş hesaplama sonucu
+class SalaryBreakdown {
+  final double grossMonthly;
+  final double sgk;
+  final double unemploymentInsurance;
+  final double incomeTax;
+  final double stampTax;
+  final double totalDeductions;
+  final double netMonthly;
+
+  const SalaryBreakdown({
+    required this.grossMonthly,
+    required this.sgk,
+    required this.unemploymentInsurance,
+    required this.incomeTax,
+    required this.stampTax,
+    required this.totalDeductions,
+    required this.netMonthly,
+  });
 }

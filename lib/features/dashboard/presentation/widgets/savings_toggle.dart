@@ -6,6 +6,7 @@ import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_animation.dart';
 import 'package:savvy/core/utils/currency_formatter.dart';
+import 'package:savvy/shared/widgets/info_tooltip.dart';
 
 class SavingsToggle extends StatelessWidget {
   final bool isEnabled;
@@ -49,12 +50,22 @@ class SavingsToggle extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Birikimi Dahil Et',
-                    style: AppTypography.labelMedium.copyWith(
-                      color: AppColors.of(context).textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        'Birikimi Dahil Et',
+                        style: AppTypography.labelMedium.copyWith(
+                          color: AppColors.of(context).textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const InfoTooltip(
+                        title: 'Birikimi Dahil Et',
+                        description:
+                            'Açıkken birikimler bakiyeye eklenir, kapalıyken sadece nakit akışı görünür.',
+                        size: 14,
+                      ),
+                    ],
                   ),
                   Text(
                     '${CurrencyFormatter.formatNoDecimal(totalSavings)} gelir olarak ekle',
