@@ -1,43 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
-import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/utils/year_month_helper.dart';
 import 'package:savvy/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:savvy/features/transactions/presentation/screens/add_income_sheet.dart';
-import 'package:savvy/features/transactions/presentation/screens/add_expense_sheet.dart';
-import 'package:savvy/features/transactions/presentation/screens/add_savings_sheet.dart';
 import 'package:savvy/features/transactions/presentation/widgets/income_tab.dart';
 import 'package:savvy/features/transactions/presentation/widgets/expense_tab.dart';
 import 'package:savvy/features/transactions/presentation/widgets/savings_tab.dart';
 import 'package:savvy/features/transactions/presentation/widgets/transaction_shared_widgets.dart';
 import 'package:savvy/shared/widgets/loading_shimmer.dart';
 
-// ─── Ay isimleri ────────────────────────────────────────────────────────
-const _aylar = [
-  '',
-  'Ocak',
-  'Şubat',
-  'Mart',
-  'Nisan',
-  'Mayıs',
-  'Haziran',
-  'Temmuz',
-  'Ağustos',
-  'Eylül',
-  'Ekim',
-  'Kasım',
-  'Aralık',
-];
-
-String _kisaAy(String yearMonth) {
-  final parts = yearMonth.split('-');
-  final month = int.parse(parts[1]);
-  return _aylar[month].substring(0, 3);
-}
 
 // ═══════════════════════════════════════════════════════════════════════
 // Ana Ekran
@@ -66,27 +39,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
-  }
-
-  void _openAddSheet(BuildContext context) {
-    HapticFeedback.mediumImpact();
-    final sheet = switch (_tabController.index) {
-      0 => const AddIncomeSheet(),
-      1 => const AddExpenseSheet(),
-      _ => const AddSavingsSheet(),
-    };
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceCard,
-          borderRadius: AppRadius.bottomSheet,
-        ),
-        child: sheet,
-      ),
-    );
   }
 
   @override
@@ -149,7 +101,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
                 Text(
                   'İşlemler',
                   style: AppTypography.headlineMedium.copyWith(
-                    color: AppColors.textPrimary,
+                    color: AppColors.of(context).textPrimary,
                   ),
                 ),
                 const Spacer(),
@@ -184,7 +136,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
                 return Padding(
                   padding: const EdgeInsets.only(right: AppSpacing.sm),
                   child: MonthChip(
-                    label: _kisaAy(ym),
+                    label: MonthLabels.shortName(ym),
                     year: ym.split('-')[0],
                     isSelected: isSelected,
                     onTap: () => setState(() => _selectedMonth = ym),
@@ -202,9 +154,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
             child: ModernTabBar(
               controller: _tabController,
               tabs: [
-                TabData('Gelir', totalIncome, AppColors.income),
-                TabData('Gider', totalExpense, AppColors.expense),
-                TabData('Birikim', totalSavings, AppColors.savings),
+                TabData('Gelir', totalIncome, AppColors.of(context).income),
+                TabData('Gider', totalExpense, AppColors.of(context).expense),
+                TabData('Birikim', totalSavings, AppColors.of(context).savings),
               ],
             ),
           ),
@@ -253,16 +205,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
                     ],
                   ),
 
-                // Per-tab FAB
-                if (!isLoading)
-                  Positioned(
-                    right: AppSpacing.lg,
-                    bottom: AppSpacing.lg,
-                    child: TabFab(
-                      tabIndex: _tabController.index,
-                      onTap: () => _openAddSheet(context),
-                    ),
-                  ),
               ],
             ),
           ),

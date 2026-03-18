@@ -10,6 +10,7 @@ import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/features/transactions/domain/models/expense.dart';
 import 'package:savvy/features/transactions/presentation/providers/transaction_form_provider.dart';
 import 'package:savvy/features/transactions/presentation/screens/edit_expense_sheet.dart';
+import 'package:savvy/features/transactions/presentation/widgets/transaction_detail_sheet.dart';
 import 'package:savvy/features/transactions/presentation/widgets/category_icons.dart';
 import 'package:savvy/features/transactions/presentation/widgets/monthly_category_table.dart';
 import 'package:savvy/features/transactions/presentation/widgets/swipeable_transaction_tile.dart';
@@ -69,7 +70,7 @@ class ExpenseTab extends ConsumerWidget {
         SummaryCard(
           title: 'Toplam Gider',
           total: total,
-          color: AppColors.expense,
+          color: AppColors.of(context).expense,
           gradient: const [Color(0xFFC81E1E), Color(0xFFEF4444)],
           icon: AppIcons.expense,
           itemCount: expenses.length,
@@ -84,7 +85,7 @@ class ExpenseTab extends ConsumerWidget {
         if (monthlyData.months.length > 1)
           MonthlyCategoryTable(
             data: monthlyData,
-            color: AppColors.expense,
+            color: AppColors.of(context).expense,
             prefix: '-',
           ),
         if (monthlyData.months.length > 1)
@@ -99,13 +100,13 @@ class ExpenseTab extends ConsumerWidget {
               subtitle: e.note,
               amount: e.amount,
               date: e.date,
-              color: AppColors.expense,
+              color: AppColors.of(context).expense,
               icon: expenseIcon(e.category),
               prefix: '-',
               isRecurring: e.isRecurring,
               person: e.person,
               onDelete: () => _confirmDelete(context, ref, e.id),
-              onTap: () => _showEditExpense(context, e),
+              onTap: () => _showDetail(context, e),
             )),
 
         const SizedBox(height: AppSpacing.lg),
@@ -113,7 +114,7 @@ class ExpenseTab extends ConsumerWidget {
         CategoryAccordion(
           title: 'Kategorilere G\u00f6re',
           count: grouped.length,
-          color: AppColors.expense,
+          color: AppColors.of(context).expense,
           children: sortedCats.map((entry) {
             final catTotal = entry.value.fold(0.0, (s, e) => s + e.amount);
             return CategoryRow(
@@ -121,7 +122,7 @@ class ExpenseTab extends ConsumerWidget {
               label: entry.key.label,
               amount: catTotal,
               percentage: total > 0 ? catTotal / total : 0.0,
-              color: AppColors.expense,
+              color: AppColors.of(context).expense,
               count: entry.value.length,
             );
           }).toList(),
@@ -137,15 +138,15 @@ class ExpenseTab extends ConsumerWidget {
         shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
         title: Text('Gider Sil',
             style: AppTypography.headlineSmall
-                .copyWith(color: AppColors.textPrimary)),
+                .copyWith(color: AppColors.of(context).textPrimary)),
         content: Text('Bu gideri silmek istedi\u011fine emin misin?',
             style: AppTypography.bodyMedium
-                .copyWith(color: AppColors.textSecondary)),
+                .copyWith(color: AppColors.of(context).textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('\u0130ptal',
-                style: TextStyle(color: AppColors.textSecondary)),
+            child: Text('\u0130ptal',
+                style: TextStyle(color: AppColors.of(context).textSecondary)),
           ),
           TextButton(
             onPressed: () {
@@ -153,21 +154,51 @@ class ExpenseTab extends ConsumerWidget {
               HapticFeedback.mediumImpact();
               ref.read(transactionFormProvider.notifier).deleteExpense(id);
             },
-            child: const Text('Sil', style: TextStyle(color: AppColors.expense)),
+            child: Text('Sil', style: TextStyle(color: AppColors.of(context).expense)),
           ),
         ],
       ),
     );
   }
 
-  void _showEditExpense(BuildContext context, Expense expense) {
+  void _showDetail(BuildContext context, Expense expense) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceCard,
+      builder: (sheetCtx) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.of(sheetCtx).surfaceCard,
+          borderRadius: AppRadius.bottomSheet,
+        ),
+        child: TransactionDetailSheet(
+          title: 'Gider',
+          categoryLabel: expense.category.label,
+          categoryIcon: expenseIcon(expense.category),
+          amount: expense.amount,
+          date: expense.date,
+          color: AppColors.of(context).expense,
+          gradient: const [Color(0xFFC81E1E), Color(0xFFEF4444)],
+          note: expense.note,
+          person: expense.person,
+          isRecurring: expense.isRecurring,
+          recurringEndDate: expense.recurringEndDate,
+          extraLabel: 'Gider Tipi',
+          extraValue: expense.expenseType.label,
+          onEdit: () => _showEdit(context, expense),
+        ),
+      ),
+    );
+  }
+
+  void _showEdit(BuildContext context, Expense expense) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.of(sheetCtx).surfaceCard,
           borderRadius: AppRadius.bottomSheet,
         ),
         child: EditExpenseSheet(expense: expense),

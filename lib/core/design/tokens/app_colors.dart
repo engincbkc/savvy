@@ -1,7 +1,15 @@
+import 'package:flutter/material.dart';
 import 'color_primitives.dart';
+import 'savvy_colors.dart';
 
-/// Semantic color tokens - widgets ONLY use this class for colors.
-abstract class AppColors {
+/// Semantic color tokens.
+///
+/// For theme-aware colors (dark mode), use `AppColors.of(context).textPrimary`.
+/// Static constants are kept for backward compatibility and default to light theme.
+class AppColors {
+  /// Returns theme-aware colors based on current brightness.
+  static SavvyColors of(BuildContext context) => context.savvyColors;
+
   // ─── Brand ───────────────────────────────────────────────────────
   static const brandPrimary = ColorPrimitives.blue700;
   static const brandPrimaryDim = ColorPrimitives.blue800;

@@ -14,9 +14,20 @@ import 'package:savvy/features/settings/presentation/settings_screen.dart';
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
+/// Listenable that fires when Firebase auth state changes,
+/// triggering GoRouter to re-evaluate its redirect.
+class _AuthStateListenable extends ChangeNotifier {
+  _AuthStateListenable() {
+    FirebaseAuth.instance.authStateChanges().listen((_) => notifyListeners());
+  }
+}
+
+final _authListenable = _AuthStateListenable();
+
 final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/dashboard',
+  refreshListenable: _authListenable,
   redirect: (context, state) {
     final loggedIn = FirebaseAuth.instance.currentUser != null;
     final isAuthRoute = state.matchedLocation == '/login' ||

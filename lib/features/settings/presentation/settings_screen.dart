@@ -28,12 +28,12 @@ class SettingsScreen extends ConsumerWidget {
           // ─── Header ──────────────────────────────────────────────────
           SliverAppBar(
             floating: true,
-            backgroundColor: AppColors.surfaceBackground,
+            backgroundColor: AppColors.of(context).surfaceBackground,
             surfaceTintColor: Colors.transparent,
             title: Text(
               'Ayarlar',
               style: AppTypography.headlineMedium.copyWith(
-                color: AppColors.textPrimary,
+                color: AppColors.of(context).textPrimary,
               ),
             ),
             centerTitle: false,
@@ -83,8 +83,8 @@ class SettingsScreen extends ConsumerWidget {
                   children: [
                     ModernTile(
                       icon: AppIcons.download,
-                      iconColor: AppColors.income,
-                      iconBgColor: AppColors.income,
+                      iconColor: AppColors.of(context).income,
+                      iconBgColor: AppColors.of(context).income,
                       title: 'Veriyi Dışa Aktar',
                       subtitle: 'CSV formatında paylaş',
                       onTap: () {
@@ -92,11 +92,11 @@ class SettingsScreen extends ConsumerWidget {
                         exportData(context, ref);
                       },
                     ),
-                    tileDivider(),
+                    tileDivider(color: AppColors.of(context).borderDefault.withValues(alpha: 0.3)),
                     ModernTile(
                       icon: LucideIcons.shield,
-                      iconColor: AppColors.brandPrimary,
-                      iconBgColor: AppColors.brandPrimary,
+                      iconColor: AppColors.of(context).brandPrimary,
+                      iconBgColor: AppColors.of(context).brandPrimary,
                       title: 'Gizlilik & Güvenlik',
                       subtitle: 'Veriler cihazında güvende',
                       onTap: () {
@@ -117,8 +117,8 @@ class SettingsScreen extends ConsumerWidget {
                   children: [
                     ModernTile(
                       icon: AppIcons.info,
-                      iconColor: AppColors.savings,
-                      iconBgColor: AppColors.savings,
+                      iconColor: AppColors.of(context).savings,
+                      iconBgColor: AppColors.of(context).savings,
                       title: 'Hakkında',
                       subtitle: 'Savvy v1.0.0',
                       onTap: () {
@@ -140,10 +140,10 @@ class SettingsScreen extends ConsumerWidget {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: AppSpacing.base),
                     decoration: BoxDecoration(
-                      color: AppColors.expense.withValues(alpha: 0.08),
+                      color: AppColors.of(context).expense.withValues(alpha: 0.08),
                       borderRadius: AppRadius.card,
                       border: Border.all(
-                        color: AppColors.expense.withValues(alpha: 0.15),
+                        color: AppColors.of(context).expense.withValues(alpha: 0.15),
                       ),
                     ),
                     child: Row(
@@ -151,14 +151,14 @@ class SettingsScreen extends ConsumerWidget {
                       children: [
                         Icon(
                           AppIcons.logout,
-                          color: AppColors.expense,
+                          color: AppColors.of(context).expense,
                           size: 20,
                         ),
                         const SizedBox(width: AppSpacing.sm),
                         Text(
                           'Çıkış Yap',
                           style: AppTypography.titleMedium.copyWith(
-                            color: AppColors.expense,
+                            color: AppColors.of(context).expense,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -176,7 +176,7 @@ class SettingsScreen extends ConsumerWidget {
                       Text(
                         'Savvy',
                         style: AppTypography.titleMedium.copyWith(
-                          color: AppColors.textTertiary,
+                          color: AppColors.of(context).textTertiary,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -184,7 +184,7 @@ class SettingsScreen extends ConsumerWidget {
                       Text(
                         'Finansal özgürlüğün yol arkadaşı',
                         style: AppTypography.caption.copyWith(
-                          color: AppColors.textTertiary.withValues(alpha: 0.6),
+                          color: AppColors.of(context).textTertiary.withValues(alpha: 0.6),
                         ),
                       ),
                     ],

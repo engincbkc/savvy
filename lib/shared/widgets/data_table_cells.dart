@@ -27,7 +27,7 @@ class DataTableRowLabel extends StatelessWidget {
         child: Text(
           text,
           style: AppTypography.labelSmall.copyWith(
-            color: color ?? AppColors.textSecondary,
+            color: color ?? AppColors.of(context).textSecondary,
             fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
@@ -68,7 +68,7 @@ class DataTableCellValue extends StatelessWidget {
             child: Text(
               text,
               style: AppTypography.numericSmall.copyWith(
-                color: value == 0 ? AppColors.textTertiary : color,
+                color: value == 0 ? AppColors.of(context).textTertiary : color,
                 fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
                 fontSize: 12,
               ),
@@ -100,8 +100,8 @@ class DataTableCumulativeCell extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: isPositive
-            ? AppColors.income.withValues(alpha: 0.08)
-            : AppColors.expense.withValues(alpha: 0.08),
+            ? AppColors.of(context).income.withValues(alpha: 0.08)
+            : AppColors.of(context).expense.withValues(alpha: 0.08),
         borderRadius: const BorderRadius.vertical(
           bottom: Radius.circular(8),
         ),
@@ -111,7 +111,7 @@ class DataTableCumulativeCell extends StatelessWidget {
         child: Text(
           CurrencyFormatter.formatNoDecimal(value),
           style: AppTypography.numericSmall.copyWith(
-            color: isPositive ? AppColors.income : AppColors.expense,
+            color: isPositive ? AppColors.of(context).income : AppColors.of(context).expense,
             fontWeight: FontWeight.w800,
           ),
         ),

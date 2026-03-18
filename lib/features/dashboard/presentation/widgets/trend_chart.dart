@@ -7,7 +7,7 @@ import 'package:savvy/core/design/tokens/app_shadow.dart';
 import 'package:savvy/core/design/tokens/app_animation.dart';
 import 'package:savvy/core/utils/currency_formatter.dart';
 import 'package:savvy/features/dashboard/domain/models/month_summary.dart';
-import 'package:savvy/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:savvy/core/utils/year_month_helper.dart';
 
 class TrendChart extends StatelessWidget {
   final List<MonthSummary> projections;
@@ -30,14 +30,14 @@ class TrendChart extends StatelessWidget {
             Text(
               'Kümülatif Trend',
               style: AppTypography.headlineSmall.copyWith(
-                color: AppColors.textPrimary,
+                color: AppColors.of(context).textPrimary,
               ),
             ),
             const Spacer(),
             Text(
               '12 ay',
               style: AppTypography.caption.copyWith(
-                color: AppColors.textTertiary,
+                color: AppColors.of(context).textTertiary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -47,7 +47,7 @@ class TrendChart extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(AppSpacing.base),
           decoration: BoxDecoration(
-            color: AppColors.surfaceCard,
+            color: AppColors.of(context).surfaceCard,
             borderRadius: AppRadius.card,
             boxShadow: AppShadow.sm,
           ),
@@ -78,8 +78,8 @@ class TrendChart extends StatelessWidget {
                                   p.netWithCarryOver),
                               style: AppTypography.caption.copyWith(
                                 color: isPositive
-                                    ? AppColors.income
-                                    : AppColors.expense,
+                                    ? AppColors.of(context).income
+                                    : AppColors.of(context).expense,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 10,
                               ),
@@ -96,14 +96,14 @@ class TrendChart extends StatelessWidget {
                             gradient: LinearGradient(
                               colors: isPositive
                                   ? [
-                                      AppColors.income
+                                      AppColors.of(context).income
                                           .withValues(alpha: 0.4),
-                                      AppColors.income,
+                                      AppColors.of(context).income,
                                     ]
                                   : [
-                                      AppColors.expense
+                                      AppColors.of(context).expense
                                           .withValues(alpha: 0.4),
-                                      AppColors.expense,
+                                      AppColors.of(context).expense,
                                     ],
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
@@ -115,10 +115,10 @@ class TrendChart extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          DashboardScreen.shortMonthLabel(p.yearMonth)
+                          MonthLabels.short(p.yearMonth)
                               .split(' ')[0],
                           style: AppTypography.caption.copyWith(
-                            color: AppColors.textTertiary,
+                            color: AppColors.of(context).textTertiary,
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                           ),

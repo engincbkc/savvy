@@ -5,7 +5,7 @@ import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:savvy/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:savvy/core/utils/year_month_helper.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/detail_hero_card.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/breakdown_section.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/rates_card.dart';
@@ -23,7 +23,7 @@ class MonthDetailScreen extends ConsumerWidget {
     final expensesAsync = ref.watch(monthExpensesProvider(yearMonth));
     final savingsAsync = ref.watch(monthSavingsProvider(yearMonth));
 
-    final label = DashboardScreen.monthLabel(yearMonth);
+    final label = MonthLabels.full(yearMonth);
 
     return SafeArea(
       child: summary == null
@@ -35,7 +35,7 @@ class MonthDetailScreen extends ConsumerWidget {
                   title: Text(
                     label,
                     style: AppTypography.headlineSmall.copyWith(
-                      color: AppColors.textPrimary,
+                      color: AppColors.of(context).textPrimary,
                     ),
                   ),
                   centerTitle: false,
@@ -82,7 +82,7 @@ class MonthDetailScreen extends ConsumerWidget {
                   Text(
                     'İşlemler',
                     style: AppTypography.headlineSmall.copyWith(
-                      color: AppColors.textPrimary,
+                      color: AppColors.of(context).textPrimary,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),

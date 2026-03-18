@@ -65,13 +65,13 @@ class TransactionTile extends StatelessWidget {
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.only(left: AppSpacing.lg),
         color: AppColors.brandPrimary,
-        child: const Icon(AppIcons.edit, color: AppColors.textInverse),
+        child: Icon(AppIcons.edit, color: AppColors.textInverse),
       ),
       secondaryBackground: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: AppSpacing.lg),
         color: AppColors.expense,
-        child: const Icon(AppIcons.delete, color: AppColors.textInverse),
+        child: Icon(AppIcons.delete, color: AppColors.textInverse),
       ),
       child: InkWell(
         onTap: onTap,

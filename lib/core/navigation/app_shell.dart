@@ -28,9 +28,9 @@ class AppShell extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceCard,
+      builder: (sheetCtx) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.of(sheetCtx).surfaceCard,
           borderRadius: AppRadius.bottomSheet,
         ),
         child: sheet,
@@ -44,9 +44,9 @@ class AppShell extends StatelessWidget {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        margin: const EdgeInsets.all(AppSpacing.lg),
+        margin: EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.surfaceCard,
+          color: AppColors.of(ctx).surfaceCard,
           borderRadius: AppRadius.card,
         ),
         child: Column(
@@ -56,7 +56,7 @@ class AppShell extends StatelessWidget {
             Text(
               'İşlem Ekle',
               style: AppTypography.headlineSmall.copyWith(
-                color: AppColors.textPrimary,
+                color: AppColors.of(ctx).textPrimary,
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -68,11 +68,13 @@ class AppShell extends StatelessWidget {
                     child: _AddOption(
                       icon: AppIcons.income,
                       label: 'Gelir',
-                      color: AppColors.income,
+                      color: AppColors.of(ctx).income,
                       gradient: const [Color(0xFF059669), Color(0xFF10B981)],
                       onTap: () {
                         Navigator.pop(ctx);
-                        _showSheet(context, const AddIncomeSheet());
+                        Future.delayed(const Duration(milliseconds: 300), () {
+                          if (context.mounted) _showSheet(context, const AddIncomeSheet());
+                        });
                       },
                     ),
                   ),
@@ -81,11 +83,13 @@ class AppShell extends StatelessWidget {
                     child: _AddOption(
                       icon: AppIcons.expense,
                       label: 'Gider',
-                      color: AppColors.expense,
+                      color: AppColors.of(ctx).expense,
                       gradient: const [Color(0xFFC81E1E), Color(0xFFEF4444)],
                       onTap: () {
                         Navigator.pop(ctx);
-                        _showSheet(context, const AddExpenseSheet());
+                        Future.delayed(const Duration(milliseconds: 300), () {
+                          if (context.mounted) _showSheet(context, const AddExpenseSheet());
+                        });
                       },
                     ),
                   ),
@@ -94,11 +98,13 @@ class AppShell extends StatelessWidget {
                     child: _AddOption(
                       icon: AppIcons.savings,
                       label: 'Birikim',
-                      color: AppColors.savings,
+                      color: AppColors.of(ctx).savings,
                       gradient: const [Color(0xFFB45309), Color(0xFFD97706)],
                       onTap: () {
                         Navigator.pop(ctx);
-                        _showSheet(context, const AddSavingsSheet());
+                        Future.delayed(const Duration(milliseconds: 300), () {
+                          if (context.mounted) _showSheet(context, const AddSavingsSheet());
+                        });
                       },
                     ),
                   ),
@@ -121,7 +127,7 @@ class AppShell extends StatelessWidget {
       extendBody: true,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: AppColors.surfaceCard,
+          color: AppColors.of(context).surfaceCard,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.06),
@@ -170,7 +176,7 @@ class AppShell extends StatelessWidget {
                             boxShadow: [
                               BoxShadow(
                                 color:
-                                    AppColors.brandPrimary.withValues(alpha: 0.4),
+                                    AppColors.of(context).brandPrimary.withValues(alpha: 0.4),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -236,24 +242,24 @@ class _NavItem extends StatelessWidget {
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
                 color: isActive
-                    ? AppColors.brandPrimary.withValues(alpha: 0.1)
+                    ? AppColors.of(context).brandPrimary.withValues(alpha: 0.1)
                     : Colors.transparent,
                 borderRadius: AppRadius.pill,
               ),
               child: Icon(
                 icon,
                 size: 22,
-                color: isActive ? AppColors.brandPrimary : AppColors.textTertiary,
+                color: isActive ? AppColors.of(context).brandPrimary : AppColors.of(context).textTertiary,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               label,
               style: AppTypography.caption.copyWith(
-                color: isActive ? AppColors.brandPrimary : AppColors.textTertiary,
+                color: isActive ? AppColors.of(context).brandPrimary : AppColors.of(context).textTertiary,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                 fontSize: 10,
               ),

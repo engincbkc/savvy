@@ -15,10 +15,10 @@ class SavvyShimmer extends StatelessWidget {
     return Shimmer.fromColors(
       baseColor: isDark
           ? AppColors.darkSurfaceElevated
-          : AppColors.surfaceOverlay,
+          : AppColors.of(context).surfaceOverlay,
       highlightColor: isDark
           ? AppColors.darkSurfaceCard
-          : AppColors.surfaceCard,
+          : AppColors.of(context).surfaceCard,
       child: child,
     );
   }
@@ -42,7 +42,7 @@ class ShimmerBox extends StatelessWidget {
       height: height,
       width: width,
       decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
+        color: AppColors.of(context).surfaceCard,
         borderRadius: BorderRadius.circular(radius),
       ),
     );

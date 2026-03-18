@@ -6,7 +6,7 @@ import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_animation.dart';
 import 'package:savvy/features/dashboard/domain/models/month_summary.dart';
-import 'package:savvy/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:savvy/core/utils/year_month_helper.dart';
 import 'package:savvy/shared/widgets/data_table_cells.dart';
 
 class MonthlyFlowTable extends StatefulWidget {
@@ -37,7 +37,7 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
   static const _headerH = 40.0;
   static const _rowH = 34.0;
   static const _netH = 36.0;
-  static const _cumH = 40.0;
+  static const _cumH = 44.0;
   static const _dividerH = 1.0;
 
   @override
@@ -70,10 +70,10 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
     if (allMonths.isEmpty) return const SizedBox.shrink();
 
     final rows = <FlowRowConfig>[
-      const FlowRowConfig('Gelir', AppIcons.income, AppColors.income),
-      const FlowRowConfig('Gider', AppIcons.expense, AppColors.expense),
+      FlowRowConfig('Gelir', AppIcons.income, AppColors.of(context).income),
+      FlowRowConfig('Gider', AppIcons.expense, AppColors.of(context).expense),
       if (widget.includeSavings)
-        const FlowRowConfig('Birikim', AppIcons.savings, AppColors.savings),
+        FlowRowConfig('Birikim', AppIcons.savings, AppColors.of(context).savings),
     ];
 
     final totalH =
@@ -89,31 +89,31 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
             Text(
               'Aylık Akış',
               style: AppTypography.headlineSmall.copyWith(
-                color: AppColors.textPrimary,
+                color: AppColors.of(context).textPrimary,
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: AppColors.surfaceOverlay,
+                color: AppColors.of(context).surfaceOverlay,
                 borderRadius: AppRadius.pill,
               ),
               child: Text(
                 '${pastSorted.length} geçmiş · ${widget.projections.length} tahmini',
                 style: AppTypography.caption.copyWith(
-                  color: AppColors.textTertiary,
+                  color: AppColors.of(context).textTertiary,
                   fontSize: 10,
                 ),
               ),
             ),
             const Spacer(),
-            Icon(Icons.swipe_rounded, size: 14, color: AppColors.textTertiary),
+            Icon(Icons.swipe_rounded, size: 14, color: AppColors.of(context).textTertiary),
             const SizedBox(width: 4),
             Text(
               'Kaydır',
               style: AppTypography.caption.copyWith(
-                color: AppColors.textTertiary,
+                color: AppColors.of(context).textTertiary,
               ),
             ),
           ],
@@ -147,7 +147,7 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                       collapsed: _collapsed,
                       icon: AppIcons.balance,
                       label: 'Aylık Net',
-                      color: AppColors.textPrimary,
+                      color: AppColors.of(context).textPrimary,
                       height: _netH,
                       bold: true,
                     ),
@@ -155,7 +155,7 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                       collapsed: _collapsed,
                       icon: AppIcons.networth,
                       label: 'Kümülatif',
-                      color: AppColors.brandPrimary,
+                      color: AppColors.of(context).brandPrimary,
                       height: _cumH,
                       bold: true,
                     ),
@@ -186,20 +186,13 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                           margin: const EdgeInsets.only(right: 2),
                           decoration: BoxDecoration(
                             color: isCurrent
-                                ? AppColors.brandPrimary
+                                ? AppColors.of(context).brandPrimary
                                     .withValues(alpha: 0.05)
                                 : !isPast
-                                    ? AppColors.surfaceOverlay
+                                    ? AppColors.of(context).surfaceOverlay
                                         .withValues(alpha: 0.4)
                                     : Colors.transparent,
                             borderRadius: AppRadius.input,
-                            border: isCurrent
-                                ? Border.all(
-                                    color: AppColors.brandPrimary
-                                        .withValues(alpha: 0.25),
-                                    width: 1.5,
-                                  )
-                                : null,
                           ),
                           child: Column(
                             children: [
@@ -210,15 +203,15 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
-                                      DashboardScreen.shortMonthLabel(
+                                      MonthLabels.short(
                                           s.yearMonth),
                                       style:
                                           AppTypography.labelSmall.copyWith(
                                         color: isCurrent
-                                            ? AppColors.brandPrimary
+                                            ? AppColors.of(context).brandPrimary
                                             : isPast
-                                                ? AppColors.textPrimary
-                                                : AppColors.textTertiary,
+                                                ? AppColors.of(context).textPrimary
+                                                : AppColors.of(context).textTertiary,
                                         fontWeight: isCurrent
                                             ? FontWeight.w800
                                             : FontWeight.w600,
@@ -230,7 +223,7 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                                         'tahmini',
                                         style:
                                             AppTypography.caption.copyWith(
-                                          color: AppColors.textTertiary,
+                                          color: AppColors.of(context).textTertiary,
                                           fontSize: 8,
                                         ),
                                       ),
@@ -241,14 +234,14 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                               // Gelir
                               DataTableCellValue(
                                 value: s.totalIncome,
-                                color: AppColors.income,
+                                color: AppColors.of(context).income,
                                 height: _rowH,
                                 prefix: '+',
                               ),
                               // Gider
                               DataTableCellValue(
                                 value: s.totalExpense,
-                                color: AppColors.expense,
+                                color: AppColors.of(context).expense,
                                 height: _rowH,
                                 prefix: '-',
                               ),
@@ -256,7 +249,7 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                               if (widget.includeSavings)
                                 DataTableCellValue(
                                   value: s.totalSavings,
-                                  color: AppColors.savings,
+                                  color: AppColors.of(context).savings,
                                   height: _rowH,
                                 ),
                               const Divider(height: _dividerH),
@@ -264,8 +257,8 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                               DataTableCellValue(
                                 value: displayNet,
                                 color: displayNet >= 0
-                                    ? AppColors.income
-                                    : AppColors.expense,
+                                    ? AppColors.of(context).income
+                                    : AppColors.of(context).expense,
                                 height: _netH,
                                 bold: true,
                               ),

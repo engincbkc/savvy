@@ -57,7 +57,7 @@ class SwipeableTransactionTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 4),
         padding: const EdgeInsets.only(right: AppSpacing.lg),
         decoration: BoxDecoration(
-          color: AppColors.expense,
+          color: AppColors.of(context).expense,
           borderRadius: AppRadius.chip,
         ),
         child: const Icon(AppIcons.delete, color: Colors.white, size: 20),
@@ -72,7 +72,7 @@ class SwipeableTransactionTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
           decoration: BoxDecoration(
-            color: AppColors.surfaceCard,
+            color: AppColors.of(context).surfaceCard,
             borderRadius: AppRadius.chip,
           ),
           child: Row(
@@ -96,7 +96,7 @@ class SwipeableTransactionTile extends StatelessWidget {
                         Flexible(
                           child: Text(title,
                               style: AppTypography.titleSmall
-                                  .copyWith(color: AppColors.textPrimary),
+                                  .copyWith(color: AppColors.of(context).textPrimary),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis),
                         ),
@@ -108,7 +108,7 @@ class SwipeableTransactionTile extends StatelessWidget {
                     ),
                     Text(parts.join(' · '),
                         style: AppTypography.caption
-                            .copyWith(color: AppColors.textTertiary),
+                            .copyWith(color: AppColors.of(context).textTertiary),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis),
                   ],
@@ -121,7 +121,7 @@ class SwipeableTransactionTile extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.xs),
               Icon(Icons.chevron_right_rounded,
-                  size: 18, color: AppColors.textTertiary),
+                  size: 18, color: AppColors.of(context).textTertiary),
             ],
           ),
         ),

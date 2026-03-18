@@ -53,7 +53,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   .read(authProvider.notifier)
                   .mapFirebaseError(next.error!),
             ),
-            backgroundColor: AppColors.expense,
+            backgroundColor: AppColors.of(context).expense,
           ),
         );
       }
@@ -168,12 +168,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ElevatedButton(
                   onPressed: authState.isLoading ? null : _submit,
                   child: authState.isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: AppColors.textInverse,
+                            color: AppColors.of(context).textInverse,
                           ),
                         )
                       : const Text('Kayıt Ol'),
@@ -188,7 +188,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     Text(
                       'Zaten hesabın var mı? ',
                       style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
+                        color: AppColors.of(context).textSecondary,
                       ),
                     ),
                     GestureDetector(
@@ -196,7 +196,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       child: Text(
                         'Giriş Yap',
                         style: AppTypography.labelLarge.copyWith(
-                          color: AppColors.brandPrimary,
+                          color: AppColors.of(context).brandPrimary,
                         ),
                       ),
                     ),

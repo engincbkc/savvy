@@ -7,28 +7,6 @@ import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/utils/year_month_helper.dart';
 import 'package:savvy/shared/widgets/data_table_cells.dart';
 
-// ─── Ay isimleri ────────────────────────────────────────────────────────
-const _aylar = [
-  '',
-  'Ocak',
-  'Şubat',
-  'Mart',
-  'Nisan',
-  'Mayıs',
-  'Haziran',
-  'Temmuz',
-  'Ağustos',
-  'Eylül',
-  'Ekim',
-  'Kasım',
-  'Aralık',
-];
-
-String kisaAy(String yearMonth) {
-  final parts = yearMonth.split('-');
-  final month = int.parse(parts[1]);
-  return _aylar[month].substring(0, 3);
-}
 
 // ─── Data Models ─────────────────────────────────────────────────────────
 
@@ -192,17 +170,17 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
             Text(
               'Aylık Dağılım',
               style: AppTypography.titleSmall.copyWith(
-                color: AppColors.textPrimary,
+                color: AppColors.of(context).textPrimary,
               ),
             ),
             const Spacer(),
             Icon(Icons.swipe_rounded,
-                size: 12, color: AppColors.textTertiary),
+                size: 12, color: AppColors.of(context).textTertiary),
             const SizedBox(width: 4),
             Text(
               'Kaydır',
               style: AppTypography.caption.copyWith(
-                color: AppColors.textTertiary,
+                color: AppColors.of(context).textTertiary,
                 fontSize: 10,
               ),
             ),
@@ -212,10 +190,10 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
 
         Container(
           decoration: BoxDecoration(
-            color: AppColors.surfaceCard,
+            color: AppColors.of(context).surfaceCard,
             borderRadius: AppRadius.card,
             border: Border.all(
-              color: AppColors.borderDefault.withValues(alpha: 0.5),
+              color: AppColors.of(context).borderDefault.withValues(alpha: 0.5),
             ),
           ),
           clipBehavior: Clip.antiAlias,
@@ -255,7 +233,7 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
                                         cat.label,
                                         style:
                                             AppTypography.caption.copyWith(
-                                          color: AppColors.textSecondary,
+                                          color: AppColors.of(context).textSecondary,
                                           fontWeight: FontWeight.w500,
                                           fontSize: 10,
                                         ),
@@ -316,10 +294,10 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
                                 height: _headerH,
                                 child: Center(
                                   child: Text(
-                                    kisaAy(ym),
+                                    MonthLabels.shortName(ym),
                                     style:
                                         AppTypography.labelSmall.copyWith(
-                                      color: AppColors.textPrimary,
+                                      color: AppColors.of(context).textPrimary,
                                       fontWeight: FontWeight.w600,
                                       fontSize: 11,
                                     ),

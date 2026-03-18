@@ -10,6 +10,7 @@ import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/features/savings/domain/models/savings.dart';
 import 'package:savvy/features/transactions/presentation/providers/transaction_form_provider.dart';
 import 'package:savvy/features/transactions/presentation/screens/edit_savings_sheet.dart';
+import 'package:savvy/features/transactions/presentation/widgets/transaction_detail_sheet.dart';
 import 'package:savvy/features/transactions/presentation/widgets/category_icons.dart';
 import 'package:savvy/features/transactions/presentation/widgets/monthly_category_table.dart';
 import 'package:savvy/features/transactions/presentation/widgets/swipeable_transaction_tile.dart';
@@ -64,7 +65,7 @@ class SavingsTab extends ConsumerWidget {
         SummaryCard(
           title: 'Toplam Birikim',
           total: total,
-          color: AppColors.savings,
+          color: AppColors.of(context).savings,
           gradient: const [Color(0xFFB45309), Color(0xFFD97706)],
           icon: AppIcons.savings,
           itemCount: savings.length,
@@ -76,7 +77,7 @@ class SavingsTab extends ConsumerWidget {
         if (monthlyData.months.length > 1)
           MonthlyCategoryTable(
             data: monthlyData,
-            color: AppColors.savings,
+            color: AppColors.of(context).savings,
             prefix: '',
           ),
         if (monthlyData.months.length > 1)
@@ -91,13 +92,13 @@ class SavingsTab extends ConsumerWidget {
               subtitle: s.note,
               amount: s.amount,
               date: s.date,
-              color: AppColors.savings,
+              color: AppColors.of(context).savings,
               icon: savingsIcon(s.category),
               prefix: '',
               isRecurring: false,
               person: null,
               onDelete: () => _confirmDelete(context, ref, s.id),
-              onTap: () => _showEditSavings(context, s),
+              onTap: () => _showDetail(context, s),
             )),
 
         const SizedBox(height: AppSpacing.lg),
@@ -105,7 +106,7 @@ class SavingsTab extends ConsumerWidget {
         CategoryAccordion(
           title: 'Kategorilere G\u00f6re',
           count: sortedCats.length,
-          color: AppColors.savings,
+          color: AppColors.of(context).savings,
           children: sortedCats.map((entry) {
             final catTotal = entry.value.fold(0.0, (s, i) => s + i.amount);
             return CategoryRow(
@@ -113,7 +114,7 @@ class SavingsTab extends ConsumerWidget {
               label: entry.key.label,
               amount: catTotal,
               percentage: total > 0 ? catTotal / total : 0.0,
-              color: AppColors.savings,
+              color: AppColors.of(context).savings,
               count: entry.value.length,
             );
           }).toList(),
@@ -129,15 +130,15 @@ class SavingsTab extends ConsumerWidget {
         shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
         title: Text('Birikim Sil',
             style: AppTypography.headlineSmall
-                .copyWith(color: AppColors.textPrimary)),
+                .copyWith(color: AppColors.of(context).textPrimary)),
         content: Text('Bu birikimi silmek istedi\u011fine emin misin?',
             style: AppTypography.bodyMedium
-                .copyWith(color: AppColors.textSecondary)),
+                .copyWith(color: AppColors.of(context).textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('\u0130ptal',
-                style: TextStyle(color: AppColors.textSecondary)),
+            child: Text('\u0130ptal',
+                style: TextStyle(color: AppColors.of(context).textSecondary)),
           ),
           TextButton(
             onPressed: () {
@@ -145,21 +146,46 @@ class SavingsTab extends ConsumerWidget {
               HapticFeedback.mediumImpact();
               ref.read(transactionFormProvider.notifier).deleteSavings(id);
             },
-            child: const Text('Sil', style: TextStyle(color: AppColors.expense)),
+            child: Text('Sil', style: TextStyle(color: AppColors.of(context).expense)),
           ),
         ],
       ),
     );
   }
 
-  void _showEditSavings(BuildContext context, Savings s) {
+  void _showDetail(BuildContext context, Savings s) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceCard,
+      builder: (sheetCtx) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.of(sheetCtx).surfaceCard,
+          borderRadius: AppRadius.bottomSheet,
+        ),
+        child: TransactionDetailSheet(
+          title: 'Birikim',
+          categoryLabel: s.category.label,
+          categoryIcon: savingsIcon(s.category),
+          amount: s.amount,
+          date: s.date,
+          color: AppColors.of(context).savings,
+          gradient: const [Color(0xFFB45309), Color(0xFFD97706)],
+          note: s.note,
+          onEdit: () => _showEdit(context, s),
+        ),
+      ),
+    );
+  }
+
+  void _showEdit(BuildContext context, Savings s) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.of(sheetCtx).surfaceCard,
           borderRadius: AppRadius.bottomSheet,
         ),
         child: EditSavingsSheet(savings: s),

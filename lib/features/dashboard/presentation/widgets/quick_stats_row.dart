@@ -19,7 +19,7 @@ class QuickStatsRow extends StatelessWidget {
           child: QuickStatCard(
             label: 'Gelir',
             amount: summary.totalIncome,
-            color: AppColors.income,
+            color: AppColors.of(context).income,
             icon: AppIcons.income,
           ),
         ),
@@ -28,7 +28,7 @@ class QuickStatsRow extends StatelessWidget {
           child: QuickStatCard(
             label: 'Gider',
             amount: summary.totalExpense,
-            color: AppColors.expense,
+            color: AppColors.of(context).expense,
             icon: AppIcons.expense,
           ),
         ),
@@ -37,7 +37,7 @@ class QuickStatsRow extends StatelessWidget {
           child: QuickStatCard(
             label: 'Birikim',
             amount: summary.totalSavings,
-            color: AppColors.savings,
+            color: AppColors.of(context).savings,
             icon: AppIcons.savings,
           ),
         ),
@@ -65,7 +65,7 @@ class QuickStatCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
+        color: AppColors.of(context).surfaceCard,
         borderRadius: AppRadius.input,
         border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
@@ -87,7 +87,7 @@ class QuickStatCard extends StatelessWidget {
               Text(
                 label,
                 style: AppTypography.caption.copyWith(
-                  color: AppColors.textTertiary,
+                  color: AppColors.of(context).textTertiary,
                   fontWeight: FontWeight.w500,
                 ),
               ),

@@ -75,7 +75,7 @@ class MonthTransactions extends StatelessWidget {
           child: Text(
             'Bu ay henüz işlem yok',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textTertiary,
+              color: AppColors.of(context).textTertiary,
             ),
           ),
         ),
@@ -85,9 +85,9 @@ class MonthTransactions extends StatelessWidget {
     return Column(
       children: allItems.map((item) {
         final iconColor = switch (item.type) {
-          TxType.income => AppColors.income,
-          TxType.expense => AppColors.expense,
-          TxType.savings => AppColors.savings,
+          TxType.income => AppColors.of(context).income,
+          TxType.expense => AppColors.of(context).expense,
+          TxType.savings => AppColors.of(context).savings,
         };
         final icon = switch (item.type) {
           TxType.income => AppIcons.income,
@@ -107,7 +107,7 @@ class MonthTransactions extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: AppSpacing.xs),
           padding: AppSpacing.listTile,
           decoration: BoxDecoration(
-            color: AppColors.surfaceCard,
+            color: AppColors.of(context).surfaceCard,
             borderRadius: AppRadius.card,
           ),
           child: Row(
@@ -119,7 +119,7 @@ class MonthTransactions extends StatelessWidget {
                   color: iconColor,
                   borderRadius: AppRadius.chip,
                 ),
-                child: Icon(icon, color: AppColors.textInverse, size: 18),
+                child: Icon(icon, color: AppColors.of(context).textInverse, size: 18),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -129,7 +129,7 @@ class MonthTransactions extends StatelessWidget {
                     Text(
                       item.title,
                       style: AppTypography.titleSmall.copyWith(
-                        color: AppColors.textPrimary,
+                        color: AppColors.of(context).textPrimary,
                       ),
                     ),
                     Text(
@@ -137,7 +137,7 @@ class MonthTransactions extends StatelessWidget {
                           ? '$dateStr · ${item.note}'
                           : dateStr,
                       style: AppTypography.caption.copyWith(
-                        color: AppColors.textTertiary,
+                        color: AppColors.of(context).textTertiary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,

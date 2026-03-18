@@ -25,7 +25,7 @@ class RatesCard extends StatelessWidget {
     return Container(
       padding: AppSpacing.card,
       decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
+        color: AppColors.of(context).surfaceCard,
         borderRadius: AppRadius.card,
         boxShadow: AppShadow.sm,
       ),
@@ -35,7 +35,7 @@ class RatesCard extends StatelessWidget {
           Text(
             'Finansal Oranlar',
             style: AppTypography.titleLarge.copyWith(
-              color: AppColors.textPrimary,
+              color: AppColors.of(context).textPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.base),
@@ -44,7 +44,7 @@ class RatesCard extends StatelessWidget {
           ProgressRow(
             label: 'Tasarruf Oranı',
             value: savingsRate,
-            color: AppColors.savings,
+            color: AppColors.of(context).savings,
             target: 0.20,
             hint: 'Hedef: ≥%20',
           ),
@@ -56,10 +56,10 @@ class RatesCard extends StatelessWidget {
             label: 'Harcama Oranı',
             value: expenseRate.clamp(0.0, 1.0),
             color: expenseRate > 0.80
-                ? AppColors.expense
+                ? AppColors.of(context).expense
                 : expenseRate > 0.60
-                    ? AppColors.warning
-                    : AppColors.income,
+                    ? AppColors.of(context).warning
+                    : AppColors.of(context).income,
             target: 0.70,
             hint: 'Hedef: ≤%70',
           ),
@@ -101,7 +101,7 @@ class ProgressRow extends StatelessWidget {
             Text(
               label,
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: AppColors.of(context).textSecondary,
               ),
             ),
             Text(
@@ -121,7 +121,7 @@ class ProgressRow extends StatelessWidget {
               Container(
                 height: 10,
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceOverlay,
+                  color: AppColors.of(context).surfaceOverlay,
                 ),
               ),
               AnimatedContainer(
@@ -146,7 +146,7 @@ class ProgressRow extends StatelessWidget {
         Text(
           hint,
           style: AppTypography.caption.copyWith(
-            color: AppColors.textTertiary,
+            color: AppColors.of(context).textTertiary,
           ),
         ),
       ],
@@ -163,11 +163,11 @@ class HealthScoreBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = FinancialCalculator.healthScoreLabel(score);
     final color = switch (score) {
-      >= 80 => AppColors.income,
-      >= 65 => AppColors.brandPrimary,
-      >= 50 => AppColors.warning,
-      >= 35 => AppColors.savings,
-      _ => AppColors.expense,
+      >= 80 => AppColors.of(context).income,
+      >= 65 => AppColors.of(context).brandPrimary,
+      >= 50 => AppColors.of(context).warning,
+      >= 35 => AppColors.of(context).savings,
+      _ => AppColors.of(context).expense,
     };
 
     return Column(
@@ -179,7 +179,7 @@ class HealthScoreBar extends StatelessWidget {
             Text(
               'Finansal Sağlık',
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+                color: AppColors.of(context).textSecondary,
               ),
             ),
             Container(
@@ -208,7 +208,7 @@ class HealthScoreBar extends StatelessWidget {
             children: [
               Container(
                 height: 10,
-                color: AppColors.surfaceOverlay,
+                color: AppColors.of(context).surfaceOverlay,
               ),
               AnimatedContainer(
                 duration: AppDuration.slow,

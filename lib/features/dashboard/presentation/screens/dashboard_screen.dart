@@ -18,36 +18,6 @@ import 'package:savvy/features/dashboard/presentation/widgets/trend_chart.dart';
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
-  static const _months = [
-    '',
-    'Ocak',
-    'Şubat',
-    'Mart',
-    'Nisan',
-    'Mayıs',
-    'Haziran',
-    'Temmuz',
-    'Ağustos',
-    'Eylül',
-    'Ekim',
-    'Kasım',
-    'Aralık',
-  ];
-
-  static String monthLabel(String yearMonth) {
-    final parts = yearMonth.split('-');
-    final year = parts[0];
-    final month = int.parse(parts[1]);
-    return '${_months[month]} $year';
-  }
-
-  static String shortMonthLabel(String yearMonth) {
-    final parts = yearMonth.split('-');
-    final month = int.parse(parts[1]);
-    final name = _months[month];
-    final short = name.length > 3 ? name.substring(0, 3) : name;
-    return '$short \'${parts[0].substring(2)}';
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -76,7 +46,7 @@ class DashboardScreen extends ConsumerWidget {
         slivers: [
           SliverAppBar(
             floating: true,
-            backgroundColor: AppColors.surfaceBackground,
+            backgroundColor: AppColors.of(context).surfaceBackground,
             surfaceTintColor: Colors.transparent,
             title: Row(
               children: [
@@ -96,7 +66,7 @@ class DashboardScreen extends ConsumerWidget {
                 Text(
                   'Savvy',
                   style: AppTypography.headlineMedium.copyWith(
-                    color: AppColors.brandPrimary,
+                    color: AppColors.of(context).brandPrimary,
                   ),
                 ),
               ],

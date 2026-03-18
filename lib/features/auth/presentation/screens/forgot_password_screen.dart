@@ -49,7 +49,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   .read(authProvider.notifier)
                   .mapFirebaseError(next.error!),
             ),
-            backgroundColor: AppColors.expense,
+            backgroundColor: AppColors.of(context).expense,
           ),
         );
       }
@@ -82,7 +82,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           Text(
             'E-posta adresini gir, sıfırlama bağlantısı gönderelim.',
             style: AppTypography.bodyLarge.copyWith(
-              color: AppColors.textSecondary,
+              color: AppColors.of(context).textSecondary,
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -105,12 +105,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           ElevatedButton(
             onPressed: authState.isLoading ? null : _submit,
             child: authState.isLoading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: AppColors.textInverse,
+                      color: AppColors.of(context).textInverse,
                     ),
                   )
                 : const Text('Sıfırlama Bağlantısı Gönder'),
@@ -124,23 +124,23 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(
+        Icon(
           AppIcons.check,
           size: 64,
-          color: AppColors.success,
+          color: AppColors.of(context).success,
         ),
         const SizedBox(height: AppSpacing.xl),
         Text(
           'E-posta gönderildi!',
           style: AppTypography.headlineMedium.copyWith(
-            color: AppColors.textPrimary,
+            color: AppColors.of(context).textPrimary,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
           'Gelen kutunu kontrol et ve şifreni sıfırla.',
           style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+            color: AppColors.of(context).textSecondary,
           ),
           textAlign: TextAlign.center,
         ),

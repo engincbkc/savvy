@@ -32,18 +32,18 @@ class SavingsToggle extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isEnabled
-              ? AppColors.savings.withValues(alpha: 0.08)
-              : AppColors.surfaceCard,
+              ? AppColors.of(context).savings.withValues(alpha: 0.08)
+              : AppColors.of(context).surfaceCard,
           borderRadius: AppRadius.card,
           border: Border.all(
             color: isEnabled
-                ? AppColors.savings.withValues(alpha: 0.4)
-                : AppColors.borderDefault,
+                ? AppColors.of(context).savings.withValues(alpha: 0.4)
+                : AppColors.of(context).borderDefault,
           ),
         ),
         child: Row(
           children: [
-            Icon(LucideIcons.piggyBank, size: 20, color: AppColors.savings),
+            Icon(LucideIcons.piggyBank, size: 20, color: AppColors.of(context).savings),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
@@ -52,14 +52,14 @@ class SavingsToggle extends StatelessWidget {
                   Text(
                     'Birikimi Dahil Et',
                     style: AppTypography.labelMedium.copyWith(
-                      color: AppColors.textPrimary,
+                      color: AppColors.of(context).textPrimary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
                     '${CurrencyFormatter.formatNoDecimal(totalSavings)} gelir olarak ekle',
                     style: AppTypography.caption.copyWith(
-                      color: AppColors.textTertiary,
+                      color: AppColors.of(context).textTertiary,
                     ),
                   ),
                 ],
@@ -71,7 +71,7 @@ class SavingsToggle extends StatelessWidget {
               width: 44,
               height: 26,
               decoration: BoxDecoration(
-                color: isEnabled ? AppColors.savings : AppColors.surfaceOverlay,
+                color: isEnabled ? AppColors.of(context).savings : AppColors.of(context).surfaceOverlay,
                 borderRadius: AppRadius.pill,
               ),
               child: AnimatedAlign(

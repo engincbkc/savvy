@@ -19,7 +19,7 @@ class SectionHeader extends StatelessWidget {
       child: Text(
         title.toUpperCase(),
         style: AppTypography.labelMedium.copyWith(
-          color: AppColors.textTertiary,
+          color: AppColors.of(context).textTertiary,
           letterSpacing: 1.2,
           fontWeight: FontWeight.w600,
         ),
@@ -38,10 +38,10 @@ class SettingsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
+        color: AppColors.of(context).surfaceCard,
         borderRadius: AppRadius.card,
         border: Border.all(
-          color: AppColors.borderDefault.withValues(alpha: 0.3),
+          color: AppColors.of(context).borderDefault.withValues(alpha: 0.3),
         ),
       ),
       clipBehavior: Clip.antiAlias,
@@ -100,7 +100,7 @@ class ModernTile extends StatelessWidget {
                   Text(
                     title,
                     style: AppTypography.titleMedium.copyWith(
-                      color: AppColors.textPrimary,
+                      color: AppColors.of(context).textPrimary,
                     ),
                   ),
                   if (subtitle != null) ...[
@@ -108,7 +108,7 @@ class ModernTile extends StatelessWidget {
                     Text(
                       subtitle!,
                       style: AppTypography.caption.copyWith(
-                        color: AppColors.textTertiary,
+                        color: AppColors.of(context).textTertiary,
                       ),
                     ),
                   ],
@@ -121,7 +121,7 @@ class ModernTile extends StatelessWidget {
               Icon(
                 AppIcons.forward,
                 size: 16,
-                color: AppColors.textTertiary,
+                color: AppColors.of(context).textTertiary,
               ),
           ],
         ),
@@ -195,17 +195,17 @@ class PrivacyItem extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: AppColors.income.withValues(alpha: 0.1),
+            color: AppColors.of(context).income.withValues(alpha: 0.1),
             borderRadius: AppRadius.chip,
           ),
-          child: Icon(icon, size: 18, color: AppColors.income),
+          child: Icon(icon, size: 18, color: AppColors.of(context).income),
         ),
         const SizedBox(width: AppSpacing.md),
         Expanded(
           child: Text(
             text,
             style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textSecondary,
+              color: AppColors.of(context).textSecondary,
             ),
           ),
         ),
@@ -216,12 +216,12 @@ class PrivacyItem extends StatelessWidget {
 
 // ─── Tile Divider ────────────────────────────────────────────────────────────
 
-Widget tileDivider() {
+Widget tileDivider({Color? color}) {
   return Padding(
     padding: const EdgeInsets.only(left: 56),
     child: Divider(
       height: 1,
-      color: AppColors.borderDefault.withValues(alpha: 0.3),
+      color: color ?? AppColors.borderDefault.withValues(alpha: 0.3),
     ),
   );
 }

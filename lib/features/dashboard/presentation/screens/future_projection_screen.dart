@@ -5,7 +5,7 @@ import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:savvy/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:savvy/core/utils/year_month_helper.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/projection_info_card.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/projection_trend_card.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/projection_card.dart';
@@ -28,7 +28,7 @@ class FutureProjectionScreen extends ConsumerWidget {
             title: Text(
               'Gelecek Tahminim',
               style: AppTypography.headlineSmall.copyWith(
-                color: AppColors.textPrimary,
+                color: AppColors.of(context).textPrimary,
               ),
             ),
             centerTitle: false,
@@ -64,7 +64,7 @@ class FutureProjectionScreen extends ConsumerWidget {
                   Text(
                     'Aylık Projeksiyon',
                     style: AppTypography.headlineSmall.copyWith(
-                      color: AppColors.textPrimary,
+                      color: AppColors.of(context).textPrimary,
                     ),
                   ),
 
@@ -75,7 +75,7 @@ class FutureProjectionScreen extends ConsumerWidget {
                         padding: const EdgeInsets.only(bottom: AppSpacing.md),
                         child: ProjectionCard(
                           summary: p,
-                          label: DashboardScreen.monthLabel(p.yearMonth),
+                          label: MonthLabels.full(p.yearMonth),
                         ),
                       )),
                 ],

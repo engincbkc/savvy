@@ -118,13 +118,13 @@ class AuthNotifier extends _$AuthNotifier {
   }
 
   Future<void> signOut() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      try {
-        await GoogleSignIn.instance.disconnect();
-      } catch (_) {}
-      await ref.read(firebaseAuthProvider).signOut();
-    });
+    // Use FirebaseAuth.instance directly to avoid ref disposal race condition.
+    // When signOut triggers authStateChanges, the router redirects and
+    // this provider gets disposed before the await completes.
+    try {
+      await GoogleSignIn.instance.disconnect();
+    } catch (_) {}
+    await FirebaseAuth.instance.signOut();
   }
 
   String mapFirebaseError(Object error) {

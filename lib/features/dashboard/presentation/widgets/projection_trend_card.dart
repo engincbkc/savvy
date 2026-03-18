@@ -8,7 +8,7 @@ import 'package:savvy/core/design/tokens/app_shadow.dart';
 import 'package:savvy/core/design/tokens/app_animation.dart';
 import 'package:savvy/core/utils/currency_formatter.dart';
 import 'package:savvy/features/dashboard/domain/models/month_summary.dart';
-import 'package:savvy/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:savvy/core/utils/year_month_helper.dart';
 
 class ProjectionTrendCard extends StatelessWidget {
   final List<MonthSummary> projections;
@@ -29,7 +29,7 @@ class ProjectionTrendCard extends StatelessWidget {
     return Container(
       padding: AppSpacing.card,
       decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
+        color: AppColors.of(context).surfaceCard,
         borderRadius: AppRadius.card,
         boxShadow: AppShadow.sm,
       ),
@@ -39,7 +39,7 @@ class ProjectionTrendCard extends StatelessWidget {
           Text(
             '6 Ay Sonra Tahmini Bakiye',
             style: AppTypography.titleMedium.copyWith(
-              color: AppColors.textSecondary,
+              color: AppColors.of(context).textSecondary,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -50,7 +50,7 @@ class ProjectionTrendCard extends StatelessWidget {
             builder: (context, value, child) => Text(
               CurrencyFormatter.formatNoDecimal(value),
               style: AppTypography.numericHero.copyWith(
-                color: endBalance >= 0 ? AppColors.income : AppColors.expense,
+                color: endBalance >= 0 ? AppColors.of(context).income : AppColors.of(context).expense,
                 fontSize: 32,
               ),
             ),
@@ -65,8 +65,8 @@ class ProjectionTrendCard extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               color: isPositive
-                  ? AppColors.incomeSurface
-                  : AppColors.expenseSurface,
+                  ? AppColors.of(context).incomeSurface
+                  : AppColors.of(context).expenseSurface,
               borderRadius: AppRadius.pill,
             ),
             child: Row(
@@ -77,13 +77,13 @@ class ProjectionTrendCard extends StatelessWidget {
                       ? LucideIcons.trendingUp
                       : LucideIcons.trendingDown,
                   size: 14,
-                  color: isPositive ? AppColors.income : AppColors.expense,
+                  color: isPositive ? AppColors.of(context).income : AppColors.of(context).expense,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   '${isPositive ? '+' : ''}${CurrencyFormatter.formatNoDecimal(diff)} bugunle kıyasla',
                   style: AppTypography.caption.copyWith(
-                    color: isPositive ? AppColors.income : AppColors.expense,
+                    color: isPositive ? AppColors.of(context).income : AppColors.of(context).expense,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -122,7 +122,7 @@ class ProjectionMiniBarChart extends StatelessWidget {
           final ratio =
               maxVal > 0 ? (p.netWithCarryOver.abs() / maxVal) : 0.0;
           final isPositive = p.netWithCarryOver >= 0;
-          final monthName = DashboardScreen.monthLabel(p.yearMonth).split(' ')[0];
+          final monthName = MonthLabels.full(p.yearMonth).split(' ')[0];
           // First 3 chars
           final shortMonth =
               monthName.length > 3 ? monthName.substring(0, 3) : monthName;
@@ -136,7 +136,7 @@ class ProjectionMiniBarChart extends StatelessWidget {
                   Text(
                     CurrencyFormatter.compact(p.netWithCarryOver),
                     style: AppTypography.caption.copyWith(
-                      color: isPositive ? AppColors.income : AppColors.expense,
+                      color: isPositive ? AppColors.of(context).income : AppColors.of(context).expense,
                       fontWeight: FontWeight.w600,
                       fontSize: 9,
                     ),
@@ -150,12 +150,12 @@ class ProjectionMiniBarChart extends StatelessWidget {
                       gradient: LinearGradient(
                         colors: isPositive
                             ? [
-                                AppColors.income.withValues(alpha: 0.6),
-                                AppColors.income,
+                                AppColors.of(context).income.withValues(alpha: 0.6),
+                                AppColors.of(context).income,
                               ]
                             : [
-                                AppColors.expense.withValues(alpha: 0.6),
-                                AppColors.expense,
+                                AppColors.of(context).expense.withValues(alpha: 0.6),
+                                AppColors.of(context).expense,
                               ],
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
@@ -169,7 +169,7 @@ class ProjectionMiniBarChart extends StatelessWidget {
                   Text(
                     shortMonth,
                     style: AppTypography.caption.copyWith(
-                      color: AppColors.textTertiary,
+                      color: AppColors.of(context).textTertiary,
                       fontSize: 10,
                     ),
                   ),

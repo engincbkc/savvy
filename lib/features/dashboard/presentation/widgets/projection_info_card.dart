@@ -110,20 +110,20 @@ class ProjectionEmptyState extends StatelessWidget {
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppColors.brandLight,
+              color: AppColors.of(context).brandLight,
               shape: BoxShape.circle,
             ),
             child: Icon(
               LucideIcons.calendarOff,
               size: 36,
-              color: AppColors.brandPrimary,
+              color: AppColors.of(context).brandPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
             'Henuz projeksiyon yok',
             style: AppTypography.titleLarge.copyWith(
-              color: AppColors.textPrimary,
+              color: AppColors.of(context).textPrimary,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -133,7 +133,7 @@ class ProjectionEmptyState extends StatelessWidget {
               'Periyodik gelir veya gider eklediginde gelecek ayların tahmini burada gozukecek.',
               textAlign: TextAlign.center,
               style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textTertiary,
+                color: AppColors.of(context).textTertiary,
               ),
             ),
           ),

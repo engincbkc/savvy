@@ -1,3 +1,6 @@
+import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+
 enum IncomeCategory {
   salary,
   sideJob,
@@ -19,6 +22,18 @@ enum IncomeCategory {
         rentalIncome => 'Kira Geliri',
         investment => 'Yatırım',
         other => 'Diğer',
+      };
+
+  IconData get icon => switch (this) {
+        salary => LucideIcons.briefcase,
+        sideJob => LucideIcons.hammer,
+        freelance => LucideIcons.laptop,
+        transfer => LucideIcons.arrowLeftRight,
+        debtCollection => LucideIcons.banknote,
+        refund => LucideIcons.undo2,
+        rentalIncome => LucideIcons.building2,
+        investment => LucideIcons.lineChart,
+        other => LucideIcons.circle,
       };
 }
 
@@ -58,6 +73,25 @@ enum ExpenseCategory {
         tax => 'Vergi',
         other => 'Diğer',
       };
+
+  IconData get icon => switch (this) {
+        rent => LucideIcons.building2,
+        market => LucideIcons.shoppingCart,
+        transport => LucideIcons.car,
+        bills => LucideIcons.zap,
+        creditCard => LucideIcons.creditCard,
+        loanInstallment => LucideIcons.banknote,
+        health => LucideIcons.heartPulse,
+        education => LucideIcons.graduationCap,
+        food => LucideIcons.utensils,
+        entertainment => LucideIcons.gamepad2,
+        clothing => LucideIcons.shirt,
+        subscription => LucideIcons.rss,
+        advertising => LucideIcons.megaphone,
+        businessTool => LucideIcons.wrench,
+        tax => LucideIcons.receipt,
+        other => LucideIcons.circle,
+      };
 }
 
 enum ExpenseType {
@@ -95,6 +129,18 @@ enum SavingsCategory {
         deposit => 'Vadeli Mevduat',
         retirement => 'Emeklilik',
         other => 'Diğer',
+      };
+
+  IconData get icon => switch (this) {
+        emergency => LucideIcons.shieldCheck,
+        goal => LucideIcons.target,
+        gold => LucideIcons.coins,
+        forex => LucideIcons.dollarSign,
+        stock => LucideIcons.candlestickChart,
+        fund => LucideIcons.pieChart,
+        deposit => LucideIcons.landmark,
+        retirement => LucideIcons.sunMedium,
+        other => LucideIcons.circle,
       };
 }
 

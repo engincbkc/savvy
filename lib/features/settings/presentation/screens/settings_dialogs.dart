@@ -1,13 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
-import 'package:savvy/features/auth/presentation/providers/auth_provider.dart';
 import 'package:savvy/features/settings/presentation/widgets/settings_shared_widgets.dart';
 
 // ─── Privacy Info ──────────────────────────────────────────────────────────
@@ -278,10 +278,10 @@ void confirmLogout(BuildContext context, WidgetRef ref) {
                   child: ElevatedButton(
                     onPressed: () async {
                       Navigator.of(ctx).pop();
-                      await ref.read(authProvider.notifier).signOut();
-                      if (context.mounted) {
-                        context.go('/login');
-                      }
+                      try {
+                        await GoogleSignIn.instance.disconnect();
+                      } catch (_) {}
+                      await FirebaseAuth.instance.signOut();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.expense,

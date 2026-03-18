@@ -90,7 +90,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                 ),
               ],
             ),
-            backgroundColor: AppColors.expense,
+            backgroundColor: AppColors.of(context).expense,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: AppRadius.chip),
             margin: const EdgeInsets.all(AppSpacing.base),
@@ -205,7 +205,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         Text(
           'Savvy',
           style: AppTypography.numericHero.copyWith(
-            color: AppColors.brandPrimary,
+            color: AppColors.of(context).brandPrimary,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -213,7 +213,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         Text(
           'Finansal geleceğini kontrol et',
           style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+            color: AppColors.of(context).textSecondary,
           ),
         ),
       ],
@@ -272,7 +272,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               gradient: LinearGradient(
                 colors: [
                   Colors.transparent,
-                  AppColors.borderDefault.withValues(alpha: 0.4),
+                  AppColors.of(context).borderDefault.withValues(alpha: 0.4),
                 ],
               ),
             ),
@@ -283,7 +283,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           child: Text(
             'veya e-posta ile',
             style: AppTypography.caption.copyWith(
-              color: AppColors.textTertiary,
+              color: AppColors.of(context).textTertiary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -294,7 +294,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppColors.borderDefault.withValues(alpha: 0.4),
+                  AppColors.of(context).borderDefault.withValues(alpha: 0.4),
                   Colors.transparent,
                 ],
               ),
@@ -344,7 +344,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ? LucideIcons.eyeOff
                     : LucideIcons.eye,
                 size: 18,
-                color: AppColors.textTertiary,
+                color: AppColors.of(context).textTertiary,
               ),
             ),
             validator: (v) {
@@ -364,7 +364,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
               child: Text(
                 'Şifremi Unuttum?',
                 style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.brandPrimary,
+                  color: AppColors.of(context).brandPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -380,13 +380,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             child: ElevatedButton(
               onPressed: authState.isLoading ? null : _submit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.brandPrimary,
+                backgroundColor: AppColors.of(context).brandPrimary,
                 foregroundColor: Colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: AppRadius.input,
                 ),
-                shadowColor: AppColors.brandPrimary.withValues(alpha: 0.3),
+                shadowColor: AppColors.of(context).brandPrimary.withValues(alpha: 0.3),
               ),
               child: authState.isLoading
                   ? const SizedBox(
@@ -420,7 +420,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         Text(
           'Hesabın yok mu? ',
           style: AppTypography.bodySmall.copyWith(
-            color: AppColors.textTertiary,
+            color: AppColors.of(context).textTertiary,
           ),
         ),
         GestureDetector(
@@ -431,7 +431,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           child: Text(
             'Kayıt Ol',
             style: AppTypography.labelMedium.copyWith(
-              color: AppColors.brandPrimary,
+              color: AppColors.of(context).brandPrimary,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -475,16 +475,16 @@ class _ModernInput extends StatelessWidget {
       textInputAction: textInputAction,
       onFieldSubmitted: onFieldSubmitted,
       style: AppTypography.bodyMedium.copyWith(
-        color: AppColors.textPrimary,
+        color: AppColors.of(context).textPrimary,
       ),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: AppTypography.bodyMedium.copyWith(
-          color: AppColors.textTertiary.withValues(alpha: 0.6),
+          color: AppColors.of(context).textTertiary.withValues(alpha: 0.6),
         ),
         prefixIcon: Padding(
-          padding: const EdgeInsets.only(left: 16, right: 12),
-          child: Icon(icon, size: 18, color: AppColors.textTertiary),
+          padding: EdgeInsets.only(left: 16, right: 12),
+          child: Icon(icon, size: 18, color: AppColors.of(context).textTertiary),
         ),
         prefixIconConstraints: const BoxConstraints(
           minWidth: 0,
@@ -509,32 +509,32 @@ class _ModernInput extends StatelessWidget {
         border: OutlineInputBorder(
           borderRadius: AppRadius.input,
           borderSide: BorderSide(
-            color: AppColors.borderDefault.withValues(alpha: 0.3),
+            color: AppColors.of(context).borderDefault.withValues(alpha: 0.3),
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: AppRadius.input,
           borderSide: BorderSide(
-            color: AppColors.borderDefault.withValues(alpha: 0.3),
+            color: AppColors.of(context).borderDefault.withValues(alpha: 0.3),
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppRadius.input,
-          borderSide: const BorderSide(
-            color: AppColors.brandPrimary,
+          borderSide: BorderSide(
+            color: AppColors.of(context).brandPrimary,
             width: 1.5,
           ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: AppRadius.input,
-          borderSide: const BorderSide(
-            color: AppColors.expense,
+          borderSide: BorderSide(
+            color: AppColors.of(context).expense,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: AppRadius.input,
-          borderSide: const BorderSide(
-            color: AppColors.expense,
+          borderSide: BorderSide(
+            color: AppColors.of(context).expense,
             width: 1.5,
           ),
         ),
@@ -571,7 +571,7 @@ class _SocialButton extends StatelessWidget {
           side: BorderSide(
             color: isDark
                 ? Colors.transparent
-                : AppColors.borderDefault.withValues(alpha: 0.3),
+                : AppColors.of(context).borderDefault.withValues(alpha: 0.3),
           ),
           shape: RoundedRectangleBorder(
             borderRadius: AppRadius.input,
@@ -586,7 +586,7 @@ class _SocialButton extends StatelessWidget {
             Text(
               label,
               style: AppTypography.labelLarge.copyWith(
-                color: isDark ? Colors.white : AppColors.textPrimary,
+                color: isDark ? Colors.white : AppColors.of(context).textPrimary,
                 fontWeight: FontWeight.w600,
               ),
             ),

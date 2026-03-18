@@ -25,11 +25,11 @@ class ProjectionCard extends StatelessWidget {
     return Container(
       padding: AppSpacing.card,
       decoration: BoxDecoration(
-        color: AppColors.surfaceCard,
+        color: AppColors.of(context).surfaceCard,
         borderRadius: AppRadius.card,
         boxShadow: AppShadow.sm,
         border: Border.all(
-          color: AppColors.borderDefault.withValues(alpha: 0.5),
+          color: AppColors.of(context).borderDefault.withValues(alpha: 0.5),
           width: 1,
         ),
       ),
@@ -43,12 +43,12 @@ class ProjectionCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                  color: AppColors.of(context).brandPrimary.withValues(alpha: 0.1),
                   borderRadius: AppRadius.chip,
                 ),
                 child: Icon(
                   LucideIcons.calendar,
-                  color: const Color(0xFF2563EB),
+                  color: AppColors.of(context).brandPrimary,
                   size: 20,
                 ),
               ),
@@ -60,7 +60,7 @@ class ProjectionCard extends StatelessWidget {
                     Text(
                       label,
                       style: AppTypography.titleLarge.copyWith(
-                        color: AppColors.textPrimary,
+                        color: AppColors.of(context).textPrimary,
                       ),
                     ),
                     Row(
@@ -71,13 +71,13 @@ class ProjectionCard extends StatelessWidget {
                             vertical: 1,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2563EB).withValues(alpha: 0.1),
+                            color: AppColors.of(context).brandPrimary.withValues(alpha: 0.1),
                             borderRadius: AppRadius.pill,
                           ),
                           child: Text(
                             'Tahmini',
                             style: AppTypography.caption.copyWith(
-                              color: const Color(0xFF2563EB),
+                              color: AppColors.of(context).brandPrimary,
                               fontWeight: FontWeight.w600,
                               fontSize: 10,
                             ),
@@ -87,7 +87,7 @@ class ProjectionCard extends StatelessWidget {
                         Text(
                           'Saglık: ${summary.healthScore}',
                           style: AppTypography.caption.copyWith(
-                            color: AppColors.textTertiary,
+                            color: AppColors.of(context).textTertiary,
                           ),
                         ),
                       ],
@@ -103,14 +103,14 @@ class ProjectionCard extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: isPositive
-                      ? AppColors.incomeSurface
-                      : AppColors.expenseSurface,
+                      ? AppColors.of(context).incomeSurface
+                      : AppColors.of(context).expenseSurface,
                   borderRadius: AppRadius.pill,
                 ),
                 child: Text(
                   '${isPositive ? '+' : ''}${CurrencyFormatter.formatNoDecimal(summary.netBalance)}',
                   style: AppTypography.numericSmall.copyWith(
-                    color: isPositive ? AppColors.income : AppColors.expense,
+                    color: isPositive ? AppColors.of(context).income : AppColors.of(context).expense,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -128,7 +128,7 @@ class ProjectionCard extends StatelessWidget {
                   icon: LucideIcons.trendingUp,
                   label: 'Tahmini Gelir',
                   amount: summary.totalIncome,
-                  color: AppColors.income,
+                  color: AppColors.of(context).income,
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
@@ -137,7 +137,7 @@ class ProjectionCard extends StatelessWidget {
                   icon: LucideIcons.trendingDown,
                   label: 'Tahmini Gider',
                   amount: summary.totalExpense,
-                  color: AppColors.expense,
+                  color: AppColors.of(context).expense,
                 ),
               ),
             ],
@@ -151,8 +151,8 @@ class ProjectionCard extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: summary.netWithCarryOver >= 0
-                  ? AppColors.incomeSurfaceDim
-                  : AppColors.expenseSurfaceDim,
+                  ? AppColors.of(context).incomeSurfaceDim
+                  : AppColors.of(context).expenseSurfaceDim,
               borderRadius: AppRadius.chip,
             ),
             child: Row(
@@ -164,14 +164,14 @@ class ProjectionCard extends StatelessWidget {
                       LucideIcons.wallet,
                       size: 16,
                       color: summary.netWithCarryOver >= 0
-                          ? AppColors.income
-                          : AppColors.expense,
+                          ? AppColors.of(context).income
+                          : AppColors.of(context).expense,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       'Kumulatif Bakiye',
                       style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                        color: AppColors.of(context).textSecondary,
                       ),
                     ),
                   ],
@@ -180,8 +180,8 @@ class ProjectionCard extends StatelessWidget {
                   CurrencyFormatter.formatNoDecimal(summary.netWithCarryOver),
                   style: AppTypography.numericSmall.copyWith(
                     color: summary.netWithCarryOver >= 0
-                        ? AppColors.income
-                        : AppColors.expense,
+                        ? AppColors.of(context).income
+                        : AppColors.of(context).expense,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -239,7 +239,7 @@ class ProjStat extends StatelessWidget {
             child: Text(
               CurrencyFormatter.formatNoDecimal(amount),
               style: AppTypography.numericSmall.copyWith(
-                color: AppColors.textPrimary,
+                color: AppColors.of(context).textPrimary,
                 fontWeight: FontWeight.w700,
               ),
             ),
