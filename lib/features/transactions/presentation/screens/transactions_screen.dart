@@ -18,6 +18,10 @@ import 'package:savvy/features/savings/domain/models/savings.dart';
 import 'package:savvy/features/transactions/presentation/providers/transaction_form_provider.dart';
 import 'package:savvy/shared/widgets/loading_shimmer.dart';
 import 'package:savvy/shared/widgets/empty_state.dart';
+import 'package:savvy/shared/widgets/data_table_cells.dart';
+import 'package:savvy/features/transactions/presentation/screens/add_income_sheet.dart';
+import 'package:savvy/features/transactions/presentation/screens/add_expense_sheet.dart';
+import 'package:savvy/features/transactions/presentation/screens/add_savings_sheet.dart';
 
 // ─── Ay isimleri ────────────────────────────────────────────────────────
 const _aylar = [
@@ -69,6 +73,27 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
   void dispose() {
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _openAddSheet(BuildContext context) {
+    HapticFeedback.mediumImpact();
+    final sheet = switch (_tabController.index) {
+      0 => const AddIncomeSheet(),
+      1 => const AddExpenseSheet(),
+      _ => const AddSavingsSheet(),
+    };
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        decoration: const BoxDecoration(
+          color: AppColors.surfaceCard,
+          borderRadius: AppRadius.bottomSheet,
+        ),
+        child: sheet,
+      ),
+    );
   }
 
   @override
@@ -144,7 +169,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
 
           // Ay seçici
           SizedBox(
-            height: 40,
+            height: 44,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -193,10 +218,12 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
 
           const SizedBox(height: AppSpacing.xs),
 
-          // Tab içerikleri
+          // Tab içerikleri + FAB
           Expanded(
-            child: isLoading
-                ? const Padding(
+            child: Stack(
+              children: [
+                if (isLoading)
+                  const Padding(
                     padding: AppSpacing.screenH,
                     child: SavvyShimmer(
                       child: Column(
@@ -211,14 +238,40 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
                       ),
                     ),
                   )
-                : TabBarView(
+                else
+                  TabBarView(
                     controller: _tabController,
                     children: [
-                      _IncomeTab(incomes: incomes, total: totalIncome),
-                      _ExpenseTab(expenses: expenses, total: totalExpense),
-                      _SavingsTab(savings: savings, total: totalSavings),
+                      _IncomeTab(
+                        incomes: incomes,
+                        allIncomes: allIncomes,
+                        total: totalIncome,
+                      ),
+                      _ExpenseTab(
+                        expenses: expenses,
+                        allExpenses: allExpenses,
+                        total: totalExpense,
+                      ),
+                      _SavingsTab(
+                        savings: savings,
+                        allSavings: allSavings,
+                        total: totalSavings,
+                      ),
                     ],
                   ),
+
+                // Per-tab FAB
+                if (!isLoading)
+                  Positioned(
+                    right: AppSpacing.lg,
+                    bottom: AppSpacing.lg,
+                    child: _TabFab(
+                      tabIndex: _tabController.index,
+                      onTap: () => _openAddSheet(context),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
       ),
@@ -260,26 +313,16 @@ class _MonthChip extends StatelessWidget {
                 : AppColors.borderDefault.withValues(alpha: 0.5),
           ),
         ),
-        child: Column(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              label,
+              year != null ? '$label \'${year!.substring(2)}' : label,
               style: AppTypography.labelSmall.copyWith(
                 color: isSelected ? Colors.white : AppColors.textSecondary,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
-            if (year != null)
-              Text(
-                year!,
-                style: TextStyle(
-                  fontSize: 8,
-                  color: isSelected
-                      ? Colors.white.withValues(alpha: 0.7)
-                      : AppColors.textTertiary,
-                ),
-              ),
           ],
         ),
       ),
@@ -375,22 +418,7 @@ class _ModernTabBar extends StatelessWidget {
                 color: isSelected ? tab.color : AppColors.textTertiary,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(tab.label),
-                  if (isSelected && tab.total > 0) ...[
-                    const SizedBox(width: 4),
-                    Text(
-                      CurrencyFormatter.compact(tab.total),
-                      style: AppTypography.caption.copyWith(
-                        color: tab.color.withValues(alpha: 0.7),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+              child: Text(tab.label),
             ),
           );
         }),
@@ -405,9 +433,14 @@ class _ModernTabBar extends StatelessWidget {
 
 class _IncomeTab extends ConsumerWidget {
   final List<Income> incomes;
+  final List<Income> allIncomes;
   final double total;
 
-  const _IncomeTab({required this.incomes, required this.total});
+  const _IncomeTab({
+    required this.incomes,
+    required this.allIncomes,
+    required this.total,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -431,6 +464,15 @@ class _IncomeTab extends ConsumerWidget {
         return bT.compareTo(aT);
       });
 
+    // Monthly breakdown data
+    final monthlyData = _buildMonthlyCategoryData<Income>(
+      allIncomes,
+      (i) => i.category.label,
+      (i) => _incomeIcon(i.category),
+      (i) => i.date,
+      (i) => i.amount,
+    );
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 100),
@@ -446,21 +488,15 @@ class _IncomeTab extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
 
-        _SectionHeader(title: 'Kategorilere Göre', count: grouped.length),
-        const SizedBox(height: AppSpacing.sm),
-        ...sortedCats.map((entry) {
-          final catTotal = entry.value.fold(0.0, (s, i) => s + i.amount);
-          return _CategoryRow(
-            icon: _incomeIcon(entry.key),
-            label: entry.key.label,
-            amount: catTotal,
-            percentage: total > 0 ? catTotal / total : 0.0,
+        // Aylık kategori tablosu
+        if (monthlyData.months.length > 1)
+          _MonthlyCategoryTable(
+            data: monthlyData,
             color: AppColors.income,
-            count: entry.value.length,
-          );
-        }),
-
-        const SizedBox(height: AppSpacing.xl),
+            prefix: '+',
+          ),
+        if (monthlyData.months.length > 1)
+          const SizedBox(height: AppSpacing.xl),
 
         _SectionHeader(title: 'Tüm Gelirler', count: incomes.length),
         const SizedBox(height: AppSpacing.sm),
@@ -479,6 +515,26 @@ class _IncomeTab extends ConsumerWidget {
               onDelete: () => _confirmDelete(context, ref, i.id, 'gelir'),
               onTap: () => _showEditIncome(context, i),
             )),
+
+        const SizedBox(height: AppSpacing.lg),
+
+        // Kategoriler — Akordiyon
+        _CategoryAccordion(
+          title: 'Kategorilere Göre',
+          count: grouped.length,
+          color: AppColors.income,
+          children: sortedCats.map((entry) {
+            final catTotal = entry.value.fold(0.0, (s, i) => s + i.amount);
+            return _CategoryRow(
+              icon: _incomeIcon(entry.key),
+              label: entry.key.label,
+              amount: catTotal,
+              percentage: total > 0 ? catTotal / total : 0.0,
+              color: AppColors.income,
+              count: entry.value.length,
+            );
+          }).toList(),
+        ),
       ],
     );
   }
@@ -549,9 +605,14 @@ class _IncomeTab extends ConsumerWidget {
 
 class _ExpenseTab extends ConsumerWidget {
   final List<Expense> expenses;
+  final List<Expense> allExpenses;
   final double total;
 
-  const _ExpenseTab({required this.expenses, required this.total});
+  const _ExpenseTab({
+    required this.expenses,
+    required this.allExpenses,
+    required this.total,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -579,6 +640,14 @@ class _ExpenseTab extends ConsumerWidget {
       byType[e.expenseType] = (byType[e.expenseType] ?? 0) + e.amount;
     }
 
+    final monthlyData = _buildMonthlyCategoryData<Expense>(
+      allExpenses,
+      (e) => e.category.label,
+      (e) => _expenseIcon(e.category),
+      (e) => e.date,
+      (e) => e.amount,
+    );
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 100),
@@ -597,21 +666,15 @@ class _ExpenseTab extends ConsumerWidget {
         _ExpenseTypeRow(byType: byType, total: total),
         const SizedBox(height: AppSpacing.lg),
 
-        _SectionHeader(title: 'Kategorilere Göre', count: grouped.length),
-        const SizedBox(height: AppSpacing.sm),
-        ...sortedCats.map((entry) {
-          final catTotal = entry.value.fold(0.0, (s, e) => s + e.amount);
-          return _CategoryRow(
-            icon: _expenseIcon(entry.key),
-            label: entry.key.label,
-            amount: catTotal,
-            percentage: total > 0 ? catTotal / total : 0.0,
+        // Aylık kategori tablosu
+        if (monthlyData.months.length > 1)
+          _MonthlyCategoryTable(
+            data: monthlyData,
             color: AppColors.expense,
-            count: entry.value.length,
-          );
-        }),
-
-        const SizedBox(height: AppSpacing.xl),
+            prefix: '-',
+          ),
+        if (monthlyData.months.length > 1)
+          const SizedBox(height: AppSpacing.xl),
 
         _SectionHeader(title: 'Tüm Giderler', count: expenses.length),
         const SizedBox(height: AppSpacing.sm),
@@ -630,6 +693,25 @@ class _ExpenseTab extends ConsumerWidget {
               onDelete: () => _confirmDelete(context, ref, e.id),
               onTap: () => _showEditExpense(context, e),
             )),
+
+        const SizedBox(height: AppSpacing.lg),
+
+        _CategoryAccordion(
+          title: 'Kategorilere Göre',
+          count: grouped.length,
+          color: AppColors.expense,
+          children: sortedCats.map((entry) {
+            final catTotal = entry.value.fold(0.0, (s, e) => s + e.amount);
+            return _CategoryRow(
+              icon: _expenseIcon(entry.key),
+              label: entry.key.label,
+              amount: catTotal,
+              percentage: total > 0 ? catTotal / total : 0.0,
+              color: AppColors.expense,
+              count: entry.value.length,
+            );
+          }).toList(),
+        ),
       ],
     );
   }
@@ -705,9 +787,14 @@ class _ExpenseTab extends ConsumerWidget {
 
 class _SavingsTab extends ConsumerWidget {
   final List<Savings> savings;
+  final List<Savings> allSavings;
   final double total;
 
-  const _SavingsTab({required this.savings, required this.total});
+  const _SavingsTab({
+    required this.savings,
+    required this.allSavings,
+    required this.total,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -730,6 +817,14 @@ class _SavingsTab extends ConsumerWidget {
         return bT.compareTo(aT);
       });
 
+    final monthlyData = _buildMonthlyCategoryData<Savings>(
+      allSavings,
+      (s) => s.category.label,
+      (s) => _savingsIcon(s.category),
+      (s) => s.date,
+      (s) => s.amount,
+    );
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 100),
@@ -745,21 +840,15 @@ class _SavingsTab extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
 
-        _SectionHeader(title: 'Kategorilere Göre', count: grouped.length),
-        const SizedBox(height: AppSpacing.sm),
-        ...sortedCats.map((entry) {
-          final catTotal = entry.value.fold(0.0, (s, i) => s + i.amount);
-          return _CategoryRow(
-            icon: _savingsIcon(entry.key),
-            label: entry.key.label,
-            amount: catTotal,
-            percentage: total > 0 ? catTotal / total : 0.0,
+        // Aylık kategori tablosu
+        if (monthlyData.months.length > 1)
+          _MonthlyCategoryTable(
+            data: monthlyData,
             color: AppColors.savings,
-            count: entry.value.length,
-          );
-        }),
-
-        const SizedBox(height: AppSpacing.xl),
+            prefix: '',
+          ),
+        if (monthlyData.months.length > 1)
+          const SizedBox(height: AppSpacing.xl),
 
         _SectionHeader(title: 'Tüm Birikimler', count: savings.length),
         const SizedBox(height: AppSpacing.sm),
@@ -778,6 +867,25 @@ class _SavingsTab extends ConsumerWidget {
               onDelete: () => _confirmDelete(context, ref, s.id),
               onTap: () => _showEditSavings(context, s),
             )),
+
+        const SizedBox(height: AppSpacing.lg),
+
+        _CategoryAccordion(
+          title: 'Kategorilere Göre',
+          count: sortedCats.length,
+          color: AppColors.savings,
+          children: sortedCats.map((entry) {
+            final catTotal = entry.value.fold(0.0, (s, i) => s + i.amount);
+            return _CategoryRow(
+              icon: _savingsIcon(entry.key),
+              label: entry.key.label,
+              amount: catTotal,
+              percentage: total > 0 ? catTotal / total : 0.0,
+              color: AppColors.savings,
+              count: entry.value.length,
+            );
+          }).toList(),
+        ),
       ],
     );
   }
@@ -952,6 +1060,72 @@ class _MiniChip extends StatelessWidget {
       child: Text(label,
           style: AppTypography.caption
               .copyWith(color: textColor, fontWeight: FontWeight.w500)),
+    );
+  }
+}
+
+class _CategoryAccordion extends StatelessWidget {
+  final String title;
+  final int count;
+  final Color color;
+  final List<Widget> children;
+
+  const _CategoryAccordion({
+    required this.title,
+    required this.count,
+    required this.color,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (children.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: AppRadius.card,
+        border: Border.all(
+          color: AppColors.borderDefault.withValues(alpha: 0.5),
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.base,
+            vertical: AppSpacing.xs,
+          ),
+          childrenPadding: const EdgeInsets.fromLTRB(
+            AppSpacing.sm, 0, AppSpacing.sm, AppSpacing.sm,
+          ),
+          leading: Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              borderRadius: AppRadius.chip,
+            ),
+            child: Icon(AppIcons.analytics, size: 17, color: color),
+          ),
+          title: Text(
+            title,
+            style: AppTypography.titleSmall.copyWith(
+              color: AppColors.textPrimary,
+            ),
+          ),
+          subtitle: Text(
+            '$count kategori',
+            style: AppTypography.caption.copyWith(
+              color: AppColors.textTertiary,
+            ),
+          ),
+          iconColor: AppColors.textTertiary,
+          collapsedIconColor: AppColors.textTertiary,
+          children: children,
+        ),
+      ),
     );
   }
 }
@@ -2184,6 +2358,371 @@ class _EditFieldChip extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Per-Tab FAB
+// ═══════════════════════════════════════════════════════════════════════
+
+class _TabFab extends StatelessWidget {
+  final int tabIndex;
+  final VoidCallback onTap;
+
+  const _TabFab({required this.tabIndex, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final config = switch (tabIndex) {
+      0 => (AppColors.income, 'Gelir Ekle'),
+      1 => (AppColors.expense, 'Gider Ekle'),
+      _ => (AppColors.savings, 'Birikim Ekle'),
+    };
+
+    return FloatingActionButton.extended(
+      heroTag: 'txn_fab',
+      onPressed: onTap,
+      backgroundColor: config.$1,
+      foregroundColor: Colors.white,
+      elevation: 4,
+      icon: const Icon(AppIcons.add, size: 20),
+      label: Text(
+        config.$2,
+        style: AppTypography.labelMedium.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// Monthly Category Breakdown Table (Excel-like, horizontal scroll)
+// ═══════════════════════════════════════════════════════════════════════
+
+/// Data model for monthly category breakdown.
+class _MonthlyCategoryData {
+  final List<String> months; // sorted chronologically
+  final List<_CategoryRowData> categories;
+  final Map<String, double> monthTotals; // yearMonth → total
+
+  const _MonthlyCategoryData({
+    required this.months,
+    required this.categories,
+    required this.monthTotals,
+  });
+}
+
+class _CategoryRowData {
+  final String label;
+  final IconData icon;
+  final Map<String, double> monthAmounts; // yearMonth → amount
+  final double grandTotal;
+
+  const _CategoryRowData({
+    required this.label,
+    required this.icon,
+    required this.monthAmounts,
+    required this.grandTotal,
+  });
+}
+
+/// Builds monthly category data from a list of transactions.
+_MonthlyCategoryData _buildMonthlyCategoryData<T>(
+  List<T> items,
+  String Function(T) getCategory,
+  IconData Function(T) getIcon,
+  DateTime Function(T) getDate,
+  double Function(T) getAmount,
+) {
+  if (items.isEmpty) {
+    return const _MonthlyCategoryData(
+      months: [],
+      categories: [],
+      monthTotals: {},
+    );
+  }
+
+  // Collect all months and group by category + month
+  final months = <String>{};
+  final catMap = <String, Map<String, double>>{}; // label → {ym → sum}
+  final catIcons = <String, IconData>{};
+  final monthTotals = <String, double>{};
+
+  for (final item in items) {
+    final ym = getDate(item).toYearMonth();
+    final cat = getCategory(item);
+    final amount = getAmount(item);
+
+    months.add(ym);
+    catMap.putIfAbsent(cat, () => {});
+    catMap[cat]![ym] = (catMap[cat]![ym] ?? 0) + amount;
+    catIcons[cat] = getIcon(item);
+    monthTotals[ym] = (monthTotals[ym] ?? 0) + amount;
+  }
+
+  final sortedMonths = months.toList()..sort();
+
+  // Build category rows sorted by grand total desc
+  final categories = catMap.entries.map((e) {
+    final grandTotal = e.value.values.fold(0.0, (s, v) => s + v);
+    return _CategoryRowData(
+      label: e.key,
+      icon: catIcons[e.key]!,
+      monthAmounts: e.value,
+      grandTotal: grandTotal,
+    );
+  }).toList()
+    ..sort((a, b) => b.grandTotal.compareTo(a.grandTotal));
+
+  return _MonthlyCategoryData(
+    months: sortedMonths,
+    categories: categories,
+    monthTotals: monthTotals,
+  );
+}
+
+/// Horizontally scrollable category × month breakdown table.
+class _MonthlyCategoryTable extends StatefulWidget {
+  final _MonthlyCategoryData data;
+  final Color color;
+  final String prefix;
+
+  const _MonthlyCategoryTable({
+    required this.data,
+    required this.color,
+    this.prefix = '',
+  });
+
+  @override
+  State<_MonthlyCategoryTable> createState() => _MonthlyCategoryTableState();
+}
+
+class _MonthlyCategoryTableState extends State<_MonthlyCategoryTable> {
+  late ScrollController _scrollController;
+  bool _collapsed = false;
+
+  static const _colW = 72.0;
+  static const _labelW = 80.0;
+  static const _labelCollapsedW = 36.0;
+  static const _headerH = 36.0;
+  static const _rowH = 32.0;
+  static const _totalH = 36.0;
+  static const _dividerH = 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    final len = widget.data.months.length;
+    final initialOffset = len > 3 ? (len - 3) * _colW : 0.0;
+    _collapsed = initialOffset > 20;
+    _scrollController = ScrollController(initialScrollOffset: initialOffset);
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    final shouldCollapse = _scrollController.offset > 20;
+    if (_collapsed != shouldCollapse) {
+      setState(() => _collapsed = shouldCollapse);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final data = widget.data;
+    if (data.months.isEmpty || data.categories.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final tableH = _headerH +
+        _dividerH +
+        (data.categories.length * _rowH) +
+        _dividerH +
+        _totalH;
+    final labelW = _collapsed ? _labelCollapsedW : _labelW;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Aylık Dağılım',
+              style: AppTypography.titleSmall.copyWith(
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const Spacer(),
+            Icon(Icons.swipe_rounded,
+                size: 12, color: AppColors.textTertiary),
+            const SizedBox(width: 4),
+            Text(
+              'Kaydır',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.textTertiary,
+                fontSize: 10,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.surfaceCard,
+            borderRadius: AppRadius.card,
+            border: Border.all(
+              color: AppColors.borderDefault.withValues(alpha: 0.5),
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: SizedBox(
+            height: tableH,
+            child: Row(
+              children: [
+                // Left labels
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  curve: Curves.easeInOut,
+                  width: labelW,
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: _headerH),
+                      const Divider(height: _dividerH),
+                      ...data.categories.map((cat) => SizedBox(
+                            height: _rowH,
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 200),
+                              child: _collapsed
+                                  ? Tooltip(
+                                      key: const ValueKey('icon'),
+                                      message: cat.label,
+                                      child: Center(
+                                        child: Icon(cat.icon,
+                                            size: 13,
+                                            color: widget.color),
+                                      ),
+                                    )
+                                  : Align(
+                                      key: const ValueKey('text'),
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        cat.label,
+                                        style:
+                                            AppTypography.caption.copyWith(
+                                          color: AppColors.textSecondary,
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 10,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
+                                    ),
+                            ),
+                          )),
+                      const Divider(height: _dividerH),
+                      SizedBox(
+                        height: _totalH,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          child: _collapsed
+                              ? Tooltip(
+                                  key: const ValueKey('icon'),
+                                  message: 'Toplam',
+                                  child: Center(
+                                    child: Icon(AppIcons.balance,
+                                        size: 14,
+                                        color: widget.color),
+                                  ),
+                                )
+                              : Align(
+                                  key: const ValueKey('text'),
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    'Toplam',
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: widget.color,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Scrollable month columns
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: Row(
+                      children: data.months.map((ym) {
+                        final monthTotal = data.monthTotals[ym] ?? 0;
+                        return SizedBox(
+                          width: _colW,
+                          child: Column(
+                            children: [
+                              // Month header
+                              SizedBox(
+                                height: _headerH,
+                                child: Center(
+                                  child: Text(
+                                    _kisaAy(ym),
+                                    style:
+                                        AppTypography.labelSmall.copyWith(
+                                      color: AppColors.textPrimary,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const Divider(height: _dividerH),
+                              // Category values
+                              ...data.categories.map((cat) {
+                                final val = cat.monthAmounts[ym] ?? 0;
+                                return DataTableCellValue(
+                                  value: val,
+                                  color: widget.color,
+                                  height: _rowH,
+                                  prefix: val > 0 ? widget.prefix : null,
+                                );
+                              }),
+                              const Divider(height: _dividerH),
+                              // Monthly total
+                              DataTableCellValue(
+                                value: monthTotal,
+                                color: widget.color,
+                                height: _totalH,
+                                prefix: widget.prefix,
+                                bold: true,
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

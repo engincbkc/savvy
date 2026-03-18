@@ -162,13 +162,33 @@ MonthSummary? monthSummary(Ref ref, String yearMonth) {
   return match.isEmpty ? null : match.first;
 }
 
+/// Toggle: include current savings as one-time income in projections.
+@riverpod
+class IncludeSavingsInProjection extends _$IncludeSavingsInProjection {
+  @override
+  bool build() => false;
+
+  void toggle() => state = !state;
+}
+
+/// Total savings amount across all time.
+@riverpod
+double totalSavingsAmount(Ref ref) {
+  final allSav = ref.watch(allSavingsProvider).value ?? [];
+  return allSav.fold(0.0, (sum, s) => sum + s.amount);
+}
+
 /// Future month projections based on recurring incomes/expenses.
-/// Projects 6 months ahead from current month.
+/// Projects 12 months ahead from current month.
+/// When includeSavings is true, total savings is added as one-time income
+/// in month 1.
 @riverpod
 List<MonthSummary> futureProjections(Ref ref) {
   final allInc = ref.watch(allIncomesProvider).value ?? [];
   final allExp = ref.watch(allExpensesProvider).value ?? [];
   final summaries = ref.watch(allMonthSummariesProvider);
+  final includeSavings = ref.watch(includeSavingsInProjectionProvider);
+  final totalSavings = ref.watch(totalSavingsAmountProvider);
 
   if (summaries.isEmpty) return [];
 
@@ -190,11 +210,11 @@ List<MonthSummary> futureProjections(Ref ref) {
   final futureOneTimeExpenses =
       allExp.where((e) => !e.isRecurring && e.date.isAfter(now));
 
-  // Project 6 months ahead
+  // Project 12 months ahead
   double cumCarry = latestCarryOver;
   final projections = <MonthSummary>[];
 
-  for (int m = 1; m <= 6; m++) {
+  for (int m = 1; m <= 12; m++) {
     final futureDate = DateTime(now.year, now.month + m, 1);
     final ym = futureDate.toYearMonth();
     final range = YearMonthRange.from(ym);
@@ -213,6 +233,11 @@ List<MonthSummary> futureProjections(Ref ref) {
       if (!i.date.isBefore(range.start) && i.date.isBefore(range.end)) {
         projIncome += i.amount;
       }
+    }
+
+    // Add savings as one-time income in month 1 only
+    if (includeSavings && m == 1 && totalSavings > 0) {
+      projIncome += totalSavings;
     }
 
     // Recurring expenses (check end date)

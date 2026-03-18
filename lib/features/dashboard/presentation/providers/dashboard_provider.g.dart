@@ -544,14 +544,125 @@ final class MonthSummaryFamily extends $Family
   String toString() => r'monthSummaryProvider';
 }
 
+/// Toggle: include current savings as one-time income in projections.
+
+@ProviderFor(IncludeSavingsInProjection)
+final includeSavingsInProjectionProvider =
+    IncludeSavingsInProjectionProvider._();
+
+/// Toggle: include current savings as one-time income in projections.
+final class IncludeSavingsInProjectionProvider
+    extends $NotifierProvider<IncludeSavingsInProjection, bool> {
+  /// Toggle: include current savings as one-time income in projections.
+  IncludeSavingsInProjectionProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'includeSavingsInProjectionProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$includeSavingsInProjectionHash();
+
+  @$internal
+  @override
+  IncludeSavingsInProjection create() => IncludeSavingsInProjection();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(bool value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<bool>(value),
+    );
+  }
+}
+
+String _$includeSavingsInProjectionHash() =>
+    r'c5c23f59a163688fd31d05eabba2c59b32d416f5';
+
+/// Toggle: include current savings as one-time income in projections.
+
+abstract class _$IncludeSavingsInProjection extends $Notifier<bool> {
+  bool build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<bool, bool>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<bool, bool>,
+              bool,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
+/// Total savings amount across all time.
+
+@ProviderFor(totalSavingsAmount)
+final totalSavingsAmountProvider = TotalSavingsAmountProvider._();
+
+/// Total savings amount across all time.
+
+final class TotalSavingsAmountProvider
+    extends $FunctionalProvider<double, double, double>
+    with $Provider<double> {
+  /// Total savings amount across all time.
+  TotalSavingsAmountProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'totalSavingsAmountProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$totalSavingsAmountHash();
+
+  @$internal
+  @override
+  $ProviderElement<double> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  double create(Ref ref) {
+    return totalSavingsAmount(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(double value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<double>(value),
+    );
+  }
+}
+
+String _$totalSavingsAmountHash() =>
+    r'389a9eed80faafc81de85fdfac8b554ed6dc59d2';
+
 /// Future month projections based on recurring incomes/expenses.
-/// Projects 6 months ahead from current month.
+/// Projects 12 months ahead from current month.
+/// When includeSavings is true, total savings is added as one-time income
+/// in month 1.
 
 @ProviderFor(futureProjections)
 final futureProjectionsProvider = FutureProjectionsProvider._();
 
 /// Future month projections based on recurring incomes/expenses.
-/// Projects 6 months ahead from current month.
+/// Projects 12 months ahead from current month.
+/// When includeSavings is true, total savings is added as one-time income
+/// in month 1.
 
 final class FutureProjectionsProvider
     extends
@@ -562,7 +673,9 @@ final class FutureProjectionsProvider
         >
     with $Provider<List<MonthSummary>> {
   /// Future month projections based on recurring incomes/expenses.
-  /// Projects 6 months ahead from current month.
+  /// Projects 12 months ahead from current month.
+  /// When includeSavings is true, total savings is added as one-time income
+  /// in month 1.
   FutureProjectionsProvider._()
     : super(
         from: null,
@@ -597,4 +710,4 @@ final class FutureProjectionsProvider
   }
 }
 
-String _$futureProjectionsHash() => r'ccf08c03abc9fd3294337387832bf34991c377e4';
+String _$futureProjectionsHash() => r'72a27902e6e68a624243ac130a574b931413094b';

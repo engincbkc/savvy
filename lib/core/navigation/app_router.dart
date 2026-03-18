@@ -9,7 +9,6 @@ import 'package:savvy/features/dashboard/presentation/screens/dashboard_screen.d
 import 'package:savvy/features/transactions/presentation/screens/transactions_screen.dart';
 import 'package:savvy/features/simulation/presentation/screens/simulation_screen.dart';
 import 'package:savvy/features/dashboard/presentation/screens/month_detail_screen.dart';
-import 'package:savvy/features/dashboard/presentation/screens/future_projection_screen.dart';
 import 'package:savvy/features/settings/presentation/settings_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -59,10 +58,6 @@ final appRouter = GoRouter(
               builder: (context, state) => MonthDetailScreen(
                 yearMonth: state.pathParameters['yearMonth']!,
               ),
-            ),
-            GoRoute(
-              path: 'projections',
-              builder: (context, state) => const FutureProjectionScreen(),
             ),
           ],
         ),

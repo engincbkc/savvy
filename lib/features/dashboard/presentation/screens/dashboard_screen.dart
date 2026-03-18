@@ -14,6 +14,7 @@ import 'package:savvy/core/utils/financial_calculator.dart';
 import 'package:savvy/features/dashboard/domain/models/month_summary.dart';
 import 'package:savvy/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:savvy/shared/widgets/data_table_cells.dart';
 import 'package:savvy/shared/widgets/loading_shimmer.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -42,6 +43,14 @@ class DashboardScreen extends ConsumerWidget {
     return '${_months[month]} $year';
   }
 
+  static String shortMonthLabel(String yearMonth) {
+    final parts = yearMonth.split('-');
+    final month = int.parse(parts[1]);
+    final name = _months[month];
+    final short = name.length > 3 ? name.substring(0, 3) : name;
+    return '$short \'${parts[0].substring(2)}';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final allIncomesAsync = ref.watch(allIncomesProvider);
@@ -53,13 +62,14 @@ class DashboardScreen extends ConsumerWidget {
         allSavingsAsync.isLoading;
 
     final summaries = ref.watch(allMonthSummariesProvider);
+    final projections = ref.watch(futureProjectionsProvider);
+    final includeSavings = ref.watch(includeSavingsInProjectionProvider);
+    final totalSavings = ref.watch(totalSavingsAmountProvider);
 
     final cumulativeNet =
         summaries.isNotEmpty ? summaries.first.netWithCarryOver : 0.0;
     final overallHealth =
         summaries.isNotEmpty ? summaries.first.healthScore : 0;
-
-    // Current month summary for quick stats
     final currentMonth = summaries.isNotEmpty ? summaries.first : null;
 
     return SafeArea(
@@ -81,7 +91,8 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                     borderRadius: AppRadius.chip,
                   ),
-                  child: const Icon(LucideIcons.wallet, color: Colors.white, size: 18),
+                  child: const Icon(LucideIcons.wallet,
+                      color: Colors.white, size: 18),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
@@ -94,7 +105,6 @@ class DashboardScreen extends ConsumerWidget {
             ),
             centerTitle: false,
           ),
-
           SliverPadding(
             padding: AppSpacing.screenH,
             sliver: isLoading
@@ -120,74 +130,52 @@ class DashboardScreen extends ConsumerWidget {
                     delegate: SliverChildListDelegate([
                       const SizedBox(height: AppSpacing.sm),
 
-                      // Hero Card
-                      _OverallHeroCard(
+                      // 1) Hero Card
+                      _HeroCard(
                         cumulativeNet: cumulativeNet,
                         healthScore: overallHealth,
-                        monthCount: summaries.length,
                       ),
 
                       const SizedBox(height: AppSpacing.base),
 
-                      // Quick Stats Row (current month)
+                      // 2) Quick Stats
                       if (currentMonth != null) ...[
                         _QuickStatsRow(summary: currentMonth),
                         const SizedBox(height: AppSpacing.base),
                       ],
 
-                      // Future Projection
-                      _FutureProjectionCard(
-                        onTap: () {
+                      // 3) Birikim toggle
+                      if (totalSavings > 0) ...[
+                        _SavingsToggle(
+                          isEnabled: includeSavings,
+                          totalSavings: totalSavings,
+                          onToggle: () {
+                            HapticFeedback.selectionClick();
+                            ref
+                                .read(
+                                    includeSavingsInProjectionProvider.notifier)
+                                .toggle();
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.xl),
+                      ],
+
+                      // 4) Aylık Akış tablosu
+                      _MonthlyFlowTable(
+                        summaries: summaries,
+                        projections: projections,
+                        includeSavings: includeSavings,
+                        onMonthTap: (ym) {
                           HapticFeedback.lightImpact();
-                          context.go('/dashboard/projections');
+                          context.go('/dashboard/month/$ym');
                         },
                       ),
 
                       const SizedBox(height: AppSpacing.xl),
 
-                      // Section header
-                      Row(
-                        children: [
-                          Text(
-                            'Aylık Özet',
-                            style: AppTypography.headlineSmall.copyWith(
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceOverlay,
-                              borderRadius: AppRadius.pill,
-                            ),
-                            child: Text(
-                              '${summaries.length} ay',
-                              style: AppTypography.caption.copyWith(
-                                color: AppColors.textTertiary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: AppSpacing.md),
-
-                      // Month cards
-                      ...summaries.map((s) => Padding(
-                            padding:
-                                const EdgeInsets.only(bottom: AppSpacing.sm),
-                            child: _MonthCard(
-                              summary: s,
-                              monthLabel: monthLabel(s.yearMonth),
-                              onTap: () {
-                                HapticFeedback.lightImpact();
-                                context.go('/dashboard/month/${s.yearMonth}');
-                              },
-                            ),
-                          )),
+                      // 5) Trend grafiği
+                      if (projections.isNotEmpty)
+                        _TrendChart(projections: projections),
 
                       const SizedBox(height: 100),
                     ]),
@@ -199,7 +187,104 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-// ─── Quick Stats Row ────────────────────────────────────────────────────────
+// ─── Hero Card ───────────────────────────────────────────────────────────────
+
+class _HeroCard extends StatelessWidget {
+  final double cumulativeNet;
+  final int healthScore;
+
+  const _HeroCard({
+    required this.cumulativeNet,
+    required this.healthScore,
+  });
+
+  List<Color> get _gradient {
+    if (cumulativeNet > 0) {
+      return [const Color(0xFF064E3B), const Color(0xFF059669)];
+    } else if (cumulativeNet < 0) {
+      return [const Color(0xFF7F1D1D), const Color(0xFFDC2626)];
+    }
+    return [AppColors.brandPrimaryDim, AppColors.brandPrimary];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final label = FinancialCalculator.healthScoreLabel(healthScore);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: _gradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: AppRadius.cardLg,
+        boxShadow: AppShadow.hero,
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'TOPLAM BAKIYE',
+                style: AppTypography.labelMedium.copyWith(
+                  color: AppColors.textInverse.withValues(alpha: 0.7),
+                  letterSpacing: 1.5,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.textInverse.withValues(alpha: 0.15),
+                  borderRadius: AppRadius.pill,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _HealthIcon(score: healthScore, size: 14),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$label · $healthScore',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.textInverse,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: cumulativeNet),
+            duration: AppDuration.countUp,
+            curve: AppCurve.decelerate,
+            builder: (context, value, child) => Text(
+              CurrencyFormatter.formatNoDecimal(value),
+              style: AppTypography.numericHero.copyWith(
+                color: AppColors.textInverse,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Tüm zamanların kümülatif bakiyesi',
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textInverse.withValues(alpha: 0.6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Quick Stats Row ─────────────────────────────────────────────────────────
 
 class _QuickStatsRow extends StatelessWidget {
   final MonthSummary summary;
@@ -260,9 +345,7 @@ class _QuickStatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceCard,
         borderRadius: AppRadius.input,
-        border: Border.all(
-          color: color.withValues(alpha: 0.15),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -289,118 +372,15 @@ class _QuickStatCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text(
-            CurrencyFormatter.formatNoDecimal(amount),
-            style: AppTypography.numericSmall.copyWith(
-              color: color,
-              fontWeight: FontWeight.w700,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Overall Hero Card ──────────────────────────────────────────────────────
-
-class _OverallHeroCard extends StatelessWidget {
-  final double cumulativeNet;
-  final int healthScore;
-  final int monthCount;
-
-  const _OverallHeroCard({
-    required this.cumulativeNet,
-    required this.healthScore,
-    required this.monthCount,
-  });
-
-  List<Color> get _gradient {
-    if (cumulativeNet > 0) {
-      return [const Color(0xFF064E3B), const Color(0xFF059669)];
-    } else if (cumulativeNet < 0) {
-      return [const Color(0xFF7F1D1D), const Color(0xFFDC2626)];
-    } else {
-      return [AppColors.brandPrimaryDim, AppColors.brandPrimary];
-    }
-  }
-
-  String get _healthLabel => FinancialCalculator.healthScoreLabel(healthScore);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: _gradient,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: AppRadius.cardLg,
-        boxShadow: AppShadow.hero,
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'TOPLAM BAKIYE',
-                style: AppTypography.labelMedium.copyWith(
-                  color: AppColors.textInverse.withValues(alpha: 0.7),
-                  letterSpacing: 1.5,
-                ),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              CurrencyFormatter.formatNoDecimal(amount),
+              style: AppTypography.numericSmall.copyWith(
+                color: color,
+                fontWeight: FontWeight.w700,
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.xs,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.textInverse.withValues(alpha: 0.15),
-                  borderRadius: AppRadius.pill,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _HealthIcon(score: healthScore, size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$_healthLabel · $healthScore',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textInverse,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: AppSpacing.xl),
-
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: cumulativeNet),
-            duration: AppDuration.countUp,
-            curve: AppCurve.decelerate,
-            builder: (context, value, child) => Text(
-              CurrencyFormatter.formatNoDecimal(value),
-              style: AppTypography.numericHero.copyWith(
-                color: AppColors.textInverse,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.sm),
-
-          Text(
-            'Tüm zamanların kümülatif bakiyesi',
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textInverse.withValues(alpha: 0.6),
             ),
           ),
         ],
@@ -409,159 +389,97 @@ class _OverallHeroCard extends StatelessWidget {
   }
 }
 
-// ─── Month Card ─────────────────────────────────────────────────────────────
+// ─── Savings Toggle ──────────────────────────────────────────────────────────
 
-class _MonthCard extends StatelessWidget {
-  final MonthSummary summary;
-  final String monthLabel;
-  final VoidCallback onTap;
+class _SavingsToggle extends StatelessWidget {
+  final bool isEnabled;
+  final double totalSavings;
+  final VoidCallback onToggle;
 
-  const _MonthCard({
-    required this.summary,
-    required this.monthLabel,
-    required this.onTap,
+  const _SavingsToggle({
+    required this.isEnabled,
+    required this.totalSavings,
+    required this.onToggle,
   });
-
-  Color get _netColor =>
-      summary.netBalance >= 0 ? AppColors.income : AppColors.expense;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: AppSpacing.card,
+      onTap: onToggle,
+      child: AnimatedContainer(
+        duration: AppDuration.normal,
+        curve: AppCurve.standard,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.base,
+          vertical: AppSpacing.md,
+        ),
         decoration: BoxDecoration(
-          color: AppColors.surfaceCard,
+          color: isEnabled
+              ? AppColors.savings.withValues(alpha: 0.08)
+              : AppColors.surfaceCard,
           borderRadius: AppRadius.card,
           border: Border.all(
-            color: AppColors.borderDefault.withValues(alpha: 0.5),
+            color: isEnabled
+                ? AppColors.savings.withValues(alpha: 0.4)
+                : AppColors.borderDefault,
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            // Header
-            Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: summary.netBalance >= 0
-                          ? [const Color(0xFF059669), const Color(0xFF10B981)]
-                          : [const Color(0xFFDC2626), const Color(0xFFEF4444)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+            Icon(LucideIcons.piggyBank, size: 20, color: AppColors.savings),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Birikimi Dahil Et',
+                    style: AppTypography.labelMedium.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
                     ),
-                    borderRadius: AppRadius.chip,
                   ),
-                  child: Icon(
-                    summary.netBalance >= 0
-                        ? Icons.trending_up_rounded
-                        : Icons.trending_down_rounded,
-                    color: AppColors.textInverse,
-                    size: 22,
+                  Text(
+                    '${CurrencyFormatter.formatNoDecimal(totalSavings)} gelir olarak ekle',
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
                   ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(monthLabel,
-                          style: AppTypography.titleLarge
-                              .copyWith(color: AppColors.textPrimary)),
-                      Row(
-                        children: [
-                          _HealthIcon(score: summary.healthScore, size: 12),
-                          const SizedBox(width: 3),
-                          Text('Sağlık: ${summary.healthScore}',
-                              style: AppTypography.caption
-                                  .copyWith(color: AppColors.textTertiary)),
-                        ],
+                ],
+              ),
+            ),
+            // Custom toggle
+            AnimatedContainer(
+              duration: AppDuration.fast,
+              width: 44,
+              height: 26,
+              decoration: BoxDecoration(
+                color: isEnabled ? AppColors.savings : AppColors.surfaceOverlay,
+                borderRadius: AppRadius.pill,
+              ),
+              child: AnimatedAlign(
+                duration: AppDuration.fast,
+                curve: AppCurve.standard,
+                alignment:
+                    isEnabled ? Alignment.centerRight : Alignment.centerLeft,
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
                       ),
                     ],
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded,
-                    color: AppColors.textTertiary, size: 24),
-              ],
-            ),
-
-            const SizedBox(height: AppSpacing.base),
-
-            // Stats grid
-            Row(
-              children: [
-                Expanded(
-                    child: _MiniStat(
-                        label: 'Gelir',
-                        amount: summary.totalIncome,
-                        color: AppColors.income,
-                        prefix: '+')),
-                Expanded(
-                    child: _MiniStat(
-                        label: 'Gider',
-                        amount: summary.totalExpense,
-                        color: AppColors.expense,
-                        prefix: '-')),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              children: [
-                Expanded(
-                    child: _MiniStat(
-                        label: 'Aylık Net',
-                        amount: summary.netBalance,
-                        color: _netColor,
-                        prefix: summary.netBalance >= 0 ? '+' : '')),
-                Expanded(
-                    child: _MiniStat(
-                        label: 'Birikim',
-                        amount: summary.totalSavings,
-                        color: AppColors.savings,
-                        prefix: '')),
-              ],
-            ),
-
-            // Carry-over
-            if (summary.carryOver != 0) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-                decoration: BoxDecoration(
-                  color: AppColors.brandPrimary.withValues(alpha: 0.06),
-                  borderRadius: AppRadius.chip,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.replay_rounded,
-                        size: 14, color: AppColors.brandPrimary),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Devir: ${CurrencyFormatter.formatNoDecimal(summary.carryOver)}',
-                      style: AppTypography.caption.copyWith(
-                          color: AppColors.brandPrimary,
-                          fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(width: AppSpacing.sm),
-                    Flexible(
-                      child: Text(
-                        '→ Kümülatif: ${CurrencyFormatter.formatNoDecimal(summary.netWithCarryOver)}',
-                        style: AppTypography.caption
-                            .copyWith(color: AppColors.textSecondary),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
               ),
-            ],
+            ),
           ],
         ),
       ),
@@ -569,34 +487,475 @@ class _MonthCard extends StatelessWidget {
   }
 }
 
-class _MiniStat extends StatelessWidget {
-  final String label;
-  final double amount;
-  final Color color;
-  final String prefix;
+// ─── Monthly Flow Table (Excel-like) ─────────────────────────────────────────
 
-  const _MiniStat(
-      {required this.label,
-      required this.amount,
-      required this.color,
-      required this.prefix});
+class _MonthlyFlowTable extends StatefulWidget {
+  final List<MonthSummary> summaries;
+  final List<MonthSummary> projections;
+  final bool includeSavings;
+  final void Function(String yearMonth) onMonthTap;
+
+  const _MonthlyFlowTable({
+    required this.summaries,
+    required this.projections,
+    required this.includeSavings,
+    required this.onMonthTap,
+  });
+
+  @override
+  State<_MonthlyFlowTable> createState() => _MonthlyFlowTableState();
+}
+
+class _MonthlyFlowTableState extends State<_MonthlyFlowTable> {
+  late ScrollController _scrollController;
+  bool _collapsed = false;
+
+  static const _colW = 72.0;
+  static const _labelW = 64.0;
+  static const _labelCollapsedW = 36.0;
+  static const _headerH = 40.0;
+  static const _rowH = 34.0;
+  static const _netH = 36.0;
+  static const _cumH = 40.0;
+  static const _dividerH = 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    final pastLen = widget.summaries.length;
+    final initialOffset = pastLen > 3 ? (pastLen - 3) * _colW : 0.0;
+    _collapsed = initialOffset > 20;
+    _scrollController = ScrollController(initialScrollOffset: initialOffset);
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    final shouldCollapse = _scrollController.offset > 20;
+    if (_collapsed != shouldCollapse) {
+      setState(() => _collapsed = shouldCollapse);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final pastSorted = widget.summaries.reversed.toList();
+    final allMonths = [...pastSorted, ...widget.projections];
+    if (allMonths.isEmpty) return const SizedBox.shrink();
+
+    final rows = <_FlowRowConfig>[
+      const _FlowRowConfig('Gelir', AppIcons.income, AppColors.income),
+      const _FlowRowConfig('Gider', AppIcons.expense, AppColors.expense),
+      if (widget.includeSavings)
+        const _FlowRowConfig('Birikim', AppIcons.savings, AppColors.savings),
+    ];
+
+    final totalH =
+        _headerH + _dividerH + (rows.length * _rowH) + _dividerH + _netH + _cumH;
+    final labelW = _collapsed ? _labelCollapsedW : _labelW;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style:
-                AppTypography.caption.copyWith(color: AppColors.textTertiary)),
-        const SizedBox(height: 2),
-        Text('$prefix${CurrencyFormatter.formatNoDecimal(amount)}',
-            style: AppTypography.numericSmall
-                .copyWith(color: color, fontWeight: FontWeight.w600)),
+        // Section header
+        Row(
+          children: [
+            Text(
+              'Aylık Akış',
+              style: AppTypography.headlineSmall.copyWith(
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceOverlay,
+                borderRadius: AppRadius.pill,
+              ),
+              child: Text(
+                '${pastSorted.length} geçmiş · ${widget.projections.length} tahmini',
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.textTertiary,
+                  fontSize: 10,
+                ),
+              ),
+            ),
+            const Spacer(),
+            Icon(Icons.swipe_rounded, size: 14, color: AppColors.textTertiary),
+            const SizedBox(width: 4),
+            Text(
+              'Kaydır',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.textTertiary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+
+        // Table
+        SizedBox(
+          height: totalH,
+          child: Row(
+            children: [
+              // Left labels (animated width — collapses to icons on scroll)
+              AnimatedContainer(
+                duration: AppDuration.fast,
+                curve: AppCurve.standard,
+                width: labelW,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(height: _headerH),
+                    const Divider(height: _dividerH),
+                    ...rows.map((r) => _FlowLabel(
+                          collapsed: _collapsed,
+                          icon: r.icon,
+                          label: r.label,
+                          color: r.color,
+                          height: _rowH,
+                        )),
+                    const Divider(height: _dividerH),
+                    _FlowLabel(
+                      collapsed: _collapsed,
+                      icon: AppIcons.balance,
+                      label: 'Aylık Net',
+                      color: AppColors.textPrimary,
+                      height: _netH,
+                      bold: true,
+                    ),
+                    _FlowLabel(
+                      collapsed: _collapsed,
+                      icon: AppIcons.networth,
+                      label: 'Kümülatif',
+                      color: AppColors.brandPrimary,
+                      height: _cumH,
+                      bold: true,
+                    ),
+                  ],
+                ),
+              ),
+
+              // Scrollable columns
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  child: Row(
+                    children: allMonths.asMap().entries.map((entry) {
+                      final idx = entry.key;
+                      final s = entry.value;
+                      final isPast = idx < pastSorted.length;
+                      final isCurrent = isPast && idx == pastSorted.length - 1;
+                      final displayNet = s.totalIncome - s.totalExpense;
+
+                      return GestureDetector(
+                        onTap: isPast
+                            ? () => widget.onMonthTap(s.yearMonth)
+                            : null,
+                        child: Container(
+                          width: _colW,
+                          margin: const EdgeInsets.only(right: 2),
+                          decoration: BoxDecoration(
+                            color: isCurrent
+                                ? AppColors.brandPrimary
+                                    .withValues(alpha: 0.05)
+                                : !isPast
+                                    ? AppColors.surfaceOverlay
+                                        .withValues(alpha: 0.4)
+                                    : Colors.transparent,
+                            borderRadius: AppRadius.input,
+                            border: isCurrent
+                                ? Border.all(
+                                    color: AppColors.brandPrimary
+                                        .withValues(alpha: 0.25),
+                                    width: 1.5,
+                                  )
+                                : null,
+                          ),
+                          child: Column(
+                            children: [
+                              // Month header
+                              SizedBox(
+                                height: _headerH,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      DashboardScreen.shortMonthLabel(
+                                          s.yearMonth),
+                                      style:
+                                          AppTypography.labelSmall.copyWith(
+                                        color: isCurrent
+                                            ? AppColors.brandPrimary
+                                            : isPast
+                                                ? AppColors.textPrimary
+                                                : AppColors.textTertiary,
+                                        fontWeight: isCurrent
+                                            ? FontWeight.w800
+                                            : FontWeight.w600,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                    if (!isPast)
+                                      Text(
+                                        'tahmini',
+                                        style:
+                                            AppTypography.caption.copyWith(
+                                          color: AppColors.textTertiary,
+                                          fontSize: 8,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const Divider(height: _dividerH),
+                              // Gelir
+                              DataTableCellValue(
+                                value: s.totalIncome,
+                                color: AppColors.income,
+                                height: _rowH,
+                                prefix: '+',
+                              ),
+                              // Gider
+                              DataTableCellValue(
+                                value: s.totalExpense,
+                                color: AppColors.expense,
+                                height: _rowH,
+                                prefix: '-',
+                              ),
+                              // Birikim (conditional)
+                              if (widget.includeSavings)
+                                DataTableCellValue(
+                                  value: s.totalSavings,
+                                  color: AppColors.savings,
+                                  height: _rowH,
+                                ),
+                              const Divider(height: _dividerH),
+                              // Aylık Net
+                              DataTableCellValue(
+                                value: displayNet,
+                                color: displayNet >= 0
+                                    ? AppColors.income
+                                    : AppColors.expense,
+                                height: _netH,
+                                bold: true,
+                              ),
+                              // Kümülatif
+                              DataTableCumulativeCell(
+                                value: s.netWithCarryOver,
+                                height: _cumH,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 }
+
+// Left label cell — shows text when expanded, icon when collapsed
+class _FlowLabel extends StatelessWidget {
+  final bool collapsed;
+  final IconData icon;
+  final String label;
+  final Color color;
+  final double height;
+  final bool bold;
+
+  const _FlowLabel({
+    required this.collapsed,
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.height,
+    this.bold = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: height,
+      child: AnimatedSwitcher(
+        duration: AppDuration.fast,
+        child: collapsed
+            ? Tooltip(
+                key: const ValueKey('icon'),
+                message: label,
+                child: Center(
+                  child: Icon(icon, size: 14, color: color),
+                ),
+              )
+            : Align(
+                key: const ValueKey('text'),
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  label,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: color,
+                    fontWeight: bold ? FontWeight.w700 : FontWeight.w600,
+                    fontSize: 11,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+      ),
+    );
+  }
+}
+
+class _FlowRowConfig {
+  final String label;
+  final IconData icon;
+  final Color color;
+  const _FlowRowConfig(this.label, this.icon, this.color);
+}
+
+// ─── Trend Chart ─────────────────────────────────────────────────────────────
+
+class _TrendChart extends StatelessWidget {
+  final List<MonthSummary> projections;
+
+  const _TrendChart({required this.projections});
+
+  @override
+  Widget build(BuildContext context) {
+    if (projections.isEmpty) return const SizedBox.shrink();
+
+    final maxVal = projections
+        .map((p) => p.netWithCarryOver.abs())
+        .reduce((a, b) => a > b ? a : b);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'Kümülatif Trend',
+              style: AppTypography.headlineSmall.copyWith(
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '12 ay',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.textTertiary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.md),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.base),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceCard,
+            borderRadius: AppRadius.card,
+            boxShadow: AppShadow.sm,
+          ),
+          child: SizedBox(
+            height: 180,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: projections.map((p) {
+                  final ratio =
+                      maxVal > 0 ? (p.netWithCarryOver.abs() / maxVal) : 0.0;
+                  final isPositive = p.netWithCarryOver >= 0;
+
+                  return SizedBox(
+                    width: 64,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 2),
+                            child: Text(
+                              CurrencyFormatter.compact(
+                                  p.netWithCarryOver),
+                              style: AppTypography.caption.copyWith(
+                                color: isPositive
+                                    ? AppColors.income
+                                    : AppColors.expense,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        AnimatedContainer(
+                          duration: AppDuration.slow,
+                          curve: AppCurve.decelerate,
+                          width: 32,
+                          height: (110 * ratio).clamp(8.0, 110.0),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: isPositive
+                                  ? [
+                                      AppColors.income
+                                          .withValues(alpha: 0.4),
+                                      AppColors.income,
+                                    ]
+                                  : [
+                                      AppColors.expense
+                                          .withValues(alpha: 0.4),
+                                      AppColors.expense,
+                                    ],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                            ),
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(6),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          DashboardScreen.shortMonthLabel(p.yearMonth)
+                              .split(' ')[0],
+                          style: AppTypography.caption.copyWith(
+                            color: AppColors.textTertiary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Health Icon ─────────────────────────────────────────────────────────────
 
 class _HealthIcon extends StatelessWidget {
   final int score;
@@ -620,68 +979,5 @@ class _HealthIcon extends StatelessWidget {
       _ => AppColors.expense,
     };
     return Icon(icon, size: size, color: color);
-  }
-}
-
-class _FutureProjectionCard extends StatelessWidget {
-  final VoidCallback onTap;
-  const _FutureProjectionCard({required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppSpacing.base),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF1E3A5F), Color(0xFF2563EB)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: AppRadius.card,
-          boxShadow: AppShadow.sm,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: AppRadius.chip,
-              ),
-              child:
-                  const Icon(LucideIcons.eye, color: Colors.white, size: 22),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Gelecek Tahminim',
-                    style: AppTypography.titleMedium.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Periyodik gelir/giderlerine göre 6 aylık projeksiyon',
-                    style: AppTypography.caption.copyWith(
-                      color: Colors.white.withValues(alpha: 0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded,
-                color: Colors.white.withValues(alpha: 0.7), size: 24),
-          ],
-        ),
-      ),
-    );
   }
 }

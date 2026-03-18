@@ -171,8 +171,8 @@ class _InfoCard extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
-                    'Periyodik gelir ve giderlerine göre hesaplanır. '
-                    'Tek seferlik gelecek işlemler de dahildir.',
+                    'Periyodik gelir ve giderlerine gore hesaplanir. '
+                    'Tek seferlik gelecek islemler de dahildir.',
                     style: AppTypography.caption.copyWith(
                       color: Colors.white.withValues(alpha: 0.8),
                     ),
@@ -570,7 +570,7 @@ class _ProjectionCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      'Kümülatif Bakiye',
+                      'Kumulatif Bakiye',
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary,
                       ),
