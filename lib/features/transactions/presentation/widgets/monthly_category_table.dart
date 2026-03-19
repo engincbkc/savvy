@@ -40,13 +40,18 @@ class CategoryRowData {
 // ─── Builder Function ────────────────────────────────────────────────────
 
 /// Builds monthly category data from a list of transactions.
+/// If [isRecurring] and [getRecurringEndDate] are provided, recurring items
+/// are projected into future months.
 MonthlyCategoryData buildMonthlyCategoryData<T>(
   List<T> items,
   String Function(T) getCategory,
   IconData Function(T) getIcon,
   DateTime Function(T) getDate,
-  double Function(T) getAmount,
-) {
+  double Function(T) getAmount, {
+  bool Function(T)? isRecurring,
+  DateTime? Function(T)? getRecurringEndDate,
+  int maxProjectionMonths = 240,
+}) {
   if (items.isEmpty) {
     return const MonthlyCategoryData(
       months: [],
@@ -61,16 +66,40 @@ MonthlyCategoryData buildMonthlyCategoryData<T>(
   final catIcons = <String, IconData>{};
   final monthTotals = <String, double>{};
 
+  void addEntry(String ym, String cat, double amount, IconData icon) {
+    months.add(ym);
+    catMap.putIfAbsent(cat, () => {});
+    catMap[cat]![ym] = (catMap[cat]![ym] ?? 0) + amount;
+    catIcons[cat] = icon;
+    monthTotals[ym] = (monthTotals[ym] ?? 0) + amount;
+  }
+
   for (final item in items) {
     final ym = getDate(item).toYearMonth();
     final cat = getCategory(item);
     final amount = getAmount(item);
+    final icon = getIcon(item);
 
-    months.add(ym);
-    catMap.putIfAbsent(cat, () => {});
-    catMap[cat]![ym] = (catMap[cat]![ym] ?? 0) + amount;
-    catIcons[cat] = getIcon(item);
-    monthTotals[ym] = (monthTotals[ym] ?? 0) + amount;
+    // Add the actual transaction
+    addEntry(ym, cat, amount, icon);
+
+    // Project recurring items into future months
+    if (isRecurring != null && isRecurring(item)) {
+      final endDate = getRecurringEndDate?.call(item);
+      final itemDate = getDate(item);
+      // If no end date, project up to 12 months; otherwise project until end date
+      final projLimit = endDate != null
+          ? ((endDate.year - itemDate.year) * 12 + endDate.month - itemDate.month).clamp(1, maxProjectionMonths)
+          : 12;
+      for (int m = 1; m <= projLimit; m++) {
+        final futureDate = DateTime(itemDate.year, itemDate.month + m, 1);
+        final futureYm = futureDate.toYearMonth();
+
+        if (endDate != null && futureDate.isAfter(endDate)) break;
+
+        addEntry(futureYm, cat, amount, icon);
+      }
+    }
   }
 
   final sortedMonths = months.toList()..sort();
@@ -116,7 +145,9 @@ class MonthlyCategoryTable extends StatefulWidget {
 class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
   late ScrollController _scrollController;
   bool _collapsed = false;
+  int _visibleMonths = 12; // kullanıcının seçtiği görüntüleme aralığı
 
+  static const _rangeOptions = [6, 12, 24, 60, 0]; // 0 = tümü
   static const _colW = 72.0;
   static const _labelW = 80.0;
   static const _labelCollapsedW = 36.0;
@@ -148,6 +179,12 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
     super.dispose();
   }
 
+  List<String> _filterMonths(List<String> allMonths) {
+    if (_visibleMonths == 0) return allMonths; // tümü
+    if (allMonths.length <= _visibleMonths) return allMonths;
+    return allMonths.take(_visibleMonths).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final data = widget.data;
@@ -155,9 +192,30 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
       return const SizedBox.shrink();
     }
 
+    final visibleMonths = _filterMonths(data.months);
+
+    // Recalc categories & totals for visible months only
+    final filteredCategories = data.categories.map((cat) {
+      final filtered = Map<String, double>.fromEntries(
+        cat.monthAmounts.entries.where((e) => visibleMonths.contains(e.key)),
+      );
+      return CategoryRowData(
+        label: cat.label,
+        icon: cat.icon,
+        monthAmounts: filtered,
+        grandTotal: filtered.values.fold(0.0, (s, v) => s + v),
+      );
+    }).where((c) => c.grandTotal > 0).toList();
+
+    final filteredTotals = Map<String, double>.fromEntries(
+      data.monthTotals.entries.where((e) => visibleMonths.contains(e.key)),
+    );
+
+    if (filteredCategories.isEmpty) return const SizedBox.shrink();
+
     final tableH = _headerH +
         _dividerH +
-        (data.categories.length * _rowH) +
+        (filteredCategories.length * _rowH) +
         _dividerH +
         _totalH;
     final labelW = _collapsed ? _labelCollapsedW : _labelW;
@@ -174,6 +232,35 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
               ),
             ),
             const Spacer(),
+            // Range selector
+            ...(_rangeOptions.map((opt) {
+              final isActive = _visibleMonths == opt;
+              final label = opt == 0 ? 'Tümü' : opt >= 12 ? '${opt ~/ 12}y' : '${opt}ay';
+              return Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: GestureDetector(
+                  onTap: () => setState(() => _visibleMonths = opt),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? widget.color.withValues(alpha: 0.15)
+                          : Colors.transparent,
+                      borderRadius: AppRadius.chip,
+                    ),
+                    child: Text(
+                      label,
+                      style: AppTypography.caption.copyWith(
+                        color: isActive ? widget.color : AppColors.of(context).textTertiary,
+                        fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                        fontSize: 9,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            })),
+            const SizedBox(width: 4),
             Icon(Icons.swipe_rounded,
                 size: 12, color: AppColors.of(context).textTertiary),
             const SizedBox(width: 4),
@@ -212,7 +299,7 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
                     children: [
                       SizedBox(height: _headerH),
                       const Divider(height: _dividerH),
-                      ...data.categories.map((cat) => SizedBox(
+                      ...filteredCategories.map((cat) => SizedBox(
                             height: _rowH,
                             child: AnimatedSwitcher(
                               duration: const Duration(milliseconds: 200),
@@ -283,8 +370,8 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
                     scrollDirection: Axis.horizontal,
                     physics: const BouncingScrollPhysics(),
                     child: Row(
-                      children: data.months.map((ym) {
-                        final monthTotal = data.monthTotals[ym] ?? 0;
+                      children: visibleMonths.map((ym) {
+                        final monthTotal = filteredTotals[ym] ?? 0;
                         return SizedBox(
                           width: _colW,
                           child: Column(
@@ -294,7 +381,7 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
                                 height: _headerH,
                                 child: Center(
                                   child: Text(
-                                    MonthLabels.shortName(ym),
+                                    MonthLabels.short(ym),
                                     style:
                                         AppTypography.labelSmall.copyWith(
                                       color: AppColors.of(context).textPrimary,
@@ -306,7 +393,7 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
                               ),
                               const Divider(height: _dividerH),
                               // Category values
-                              ...data.categories.map((cat) {
+                              ...filteredCategories.map((cat) {
                                 final val = cat.monthAmounts[ym] ?? 0;
                                 return DataTableCellValue(
                                   value: val,

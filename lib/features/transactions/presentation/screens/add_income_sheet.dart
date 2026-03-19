@@ -15,7 +15,8 @@ import 'package:savvy/features/transactions/presentation/widgets/form_shared_wid
 import 'package:uuid/uuid.dart';
 
 class AddIncomeSheet extends ConsumerStatefulWidget {
-  const AddIncomeSheet({super.key});
+  final ScrollController? scrollController;
+  const AddIncomeSheet({super.key, this.scrollController});
 
   @override
   ConsumerState<AddIncomeSheet> createState() => _AddIncomeSheetState();
@@ -101,14 +102,13 @@ class _AddIncomeSheetState extends ConsumerState<AddIncomeSheet> {
     if (picked != null) setState(() => _date = picked);
   }
 
-  Future<void> _pickEndDate() async {
-    final picked = await showDatePicker(
+  void _pickEndDate() {
+    showMonthDurationPicker(
       context: context,
-      initialDate: _recurringEndDate ?? _date.add(const Duration(days: 365)),
-      firstDate: _date,
-      lastDate: DateTime.now().add(const Duration(days: 1825)),
+      startDate: _date,
+      currentEndDate: _recurringEndDate,
+      onSelected: (date) => setState(() => _recurringEndDate = date),
     );
-    if (picked != null) setState(() => _recurringEndDate = picked);
   }
 
   Future<void> _submit() async {
@@ -148,182 +148,164 @@ class _AddIncomeSheetState extends ConsumerState<AddIncomeSheet> {
     final c = AppColors.of(context);
     final isSalary = _category == IncomeCategory.salary;
 
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.9,
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppSpacing.lg,
+        right: AppSpacing.lg,
+        top: AppSpacing.base,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
       ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: AppSpacing.lg,
-          right: AppSpacing.lg,
-          top: AppSpacing.base,
-          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
-        ),
-        child: Form(
+      child: Form(
         key: _formKey,
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-              const SheetHandle(),
-              const SizedBox(height: AppSpacing.lg),
+        child: ListView(
+          controller: widget.scrollController,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SheetHandle(),
+                const SizedBox(height: AppSpacing.lg),
 
-              // Header
-              const SheetHeader(
-                icon: AppIcons.income,
-                gradient: [Color(0xFF059669), Color(0xFF10B981)],
-                title: 'Gelir Ekle',
-                subtitle: 'Yeni bir gelir kaydı oluştur',
-              ),
-              const SizedBox(height: AppSpacing.xl),
+                // Header
+                const SheetHeader(
+                  icon: AppIcons.income,
+                  gradient: [Color(0xFF059669), Color(0xFF10B981)],
+                  title: 'Gelir Ekle',
+                  subtitle: 'Yeni bir gelir kaydı oluştur',
+                ),
+                const SizedBox(height: AppSpacing.xl),
 
-              // Amount (readonly when using gross calc)
-              AmountInputField(
-                controller: _amountController,
-                color: c.income,
-                strongColor: c.incomeStrong,
-                bgColor: c.incomeSurfaceDim,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Category
-              FormSectionLabel(text: 'Kategori', icon: AppIcons.category),
-              const SizedBox(height: AppSpacing.sm),
-              CategoryChipSelector<IncomeCategory>(
-                values: IncomeCategory.values,
-                selected: _category,
-                labelOf: (cat) => cat.label,
-                iconOf: (cat) => cat.icon,
-                activeColor: c.income,
-                onSelected: (cat) {
-                  setState(() {
-                    _category = cat;
-                    if (cat != IncomeCategory.salary) {
-                      _useGrossCalc = false;
-                      _breakdown = null;
-                    }
-                  });
-                },
-              ),
-
-              // Brütten Hesapla toggle — only when Maaş
-              if (isSalary) ...[
+                // Başlık
+                TextFormField(
+                  controller: _personController,
+                  textInputAction: TextInputAction.next,
+                  decoration: InputDecoration(
+                    hintText: 'Başlık (opsiyonel)',
+                    prefixIcon: const Icon(Icons.label_outline_rounded, size: 18),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md, vertical: AppSpacing.md),
+                    isDense: true,
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.base),
-                _GrossCalcToggle(
-                  value: _useGrossCalc,
+
+                // Amount (readonly when using gross calc)
+                AmountInputField(
+                  controller: _amountController,
+                  color: c.income,
+                  strongColor: c.incomeStrong,
+                  bgColor: c.incomeSurfaceDim,
+                ),
+                const SizedBox(height: AppSpacing.xl),
+
+                // Category
+                FormSectionLabel(text: 'Kategori', icon: AppIcons.category),
+                const SizedBox(height: AppSpacing.sm),
+                CategoryChipSelector<IncomeCategory>(
+                  values: IncomeCategory.values,
+                  selected: _category,
+                  labelOf: (cat) => cat.label,
+                  iconOf: (cat) => cat.icon,
                   activeColor: c.income,
-                  onChanged: (v) {
-                    HapticFeedback.selectionClick();
+                  onSelected: (cat) {
                     setState(() {
-                      _useGrossCalc = v;
-                      if (!v) {
+                      _category = cat;
+                      if (cat != IncomeCategory.salary) {
+                        _useGrossCalc = false;
                         _breakdown = null;
-                        _grossController.clear();
                       }
                     });
                   },
                 ),
-                if (_useGrossCalc) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  _GrossInputSection(
-                    controller: _grossController,
-                    breakdown: _breakdown,
-                    color: c.income,
+
+                // Brütten Hesapla toggle — only when Maaş
+                if (isSalary) ...[
+                  const SizedBox(height: AppSpacing.base),
+                  _GrossCalcToggle(
+                    value: _useGrossCalc,
+                    activeColor: c.income,
+                    onChanged: (v) {
+                      HapticFeedback.selectionClick();
+                      setState(() {
+                        _useGrossCalc = v;
+                        if (!v) {
+                          _breakdown = null;
+                          _grossController.clear();
+                        }
+                      });
+                    },
+                  ),
+                  if (_useGrossCalc) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    _GrossInputSection(
+                      controller: _grossController,
+                      breakdown: _breakdown,
+                      color: c.income,
+                    ),
+                  ],
+                ],
+                const SizedBox(height: AppSpacing.base),
+
+                // Recurring
+                RecurringToggle(
+                  label: 'Periyodik Gelir',
+                  value: _isRecurring,
+                  activeColor: c.income,
+                  onChanged: (v) => setState(() {
+                    _isRecurring = v;
+                    if (!v) _recurringEndDate = null;
+                  }),
+                ),
+                if (_isRecurring) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  GestureDetector(
+                    onTap: _pickEndDate,
+                    child: FieldChip(
+                      icon: Icons.event_busy_rounded,
+                      label: _recurringEndDate != null
+                          ? 'Bitiş: ${formatDateTR(_recurringEndDate!)}'
+                          : 'Bitiş Tarihi (opsiyonel)',
+                    ),
                   ),
                 ],
-              ],
-              const SizedBox(height: AppSpacing.base),
+                const SizedBox(height: AppSpacing.xl),
 
-              // Recurring
-              RecurringToggle(
-                label: 'Periyodik Gelir',
-                value: _isRecurring,
-                activeColor: c.income,
-                onChanged: (v) => setState(() {
-                  _isRecurring = v;
-                  if (!v) _recurringEndDate = null;
-                }),
-              ),
-              if (_isRecurring) ...[
+                // Date
+                FormSectionLabel(text: 'Tarih', icon: AppIcons.calendar),
                 const SizedBox(height: AppSpacing.sm),
                 GestureDetector(
-                  onTap: _pickEndDate,
+                  onTap: _pickDate,
                   child: FieldChip(
-                    icon: Icons.event_busy_rounded,
-                    label: _recurringEndDate != null
-                        ? 'Bitiş: ${formatDateTR(_recurringEndDate!)}'
-                        : 'Bitiş Tarihi (opsiyonel)',
+                    icon: AppIcons.calendar,
+                    label: formatDateTR(_date),
                   ),
                 ),
+                const SizedBox(height: AppSpacing.sm),
+
+                // Note
+                TextFormField(
+                  controller: _noteController,
+                  textInputAction: TextInputAction.done,
+                  maxLength: 200,
+                  decoration: const InputDecoration(
+                    hintText: 'Not (opsiyonel)',
+                    prefixIcon: Icon(AppIcons.note, size: 18),
+                    counterText: '',
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+
+                FormSubmitButton(
+                  isLoading: formState.isLoading,
+                  label: 'Gelir Ekle',
+                  color: c.income,
+                  enabled: _amountOk,
+                  onPressed: _submit,
+                ),
+                const SizedBox(height: AppSpacing.sm),
               ],
-              const SizedBox(height: AppSpacing.xl),
-
-              // Date & Person
-              FormSectionLabel(text: 'Detaylar', icon: AppIcons.info),
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: _pickDate,
-                      child: FieldChip(
-                        icon: AppIcons.calendar,
-                        label: formatDateTR(_date),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _personController,
-                      textInputAction: TextInputAction.next,
-                      decoration: InputDecoration(
-                        hintText: 'Kişi (opsiyonel)',
-                        prefixIcon: const Icon(AppIcons.person, size: 18),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: AppSpacing.md),
-                        isDense: true,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-
-              // Note
-              TextFormField(
-                controller: _noteController,
-                textInputAction: TextInputAction.done,
-                maxLength: 200,
-                decoration: const InputDecoration(
-                  hintText: 'Not (opsiyonel)',
-                  prefixIcon: Icon(AppIcons.note, size: 18),
-                  counterText: '',
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.base),
-              FormSubmitButton(
-                isLoading: formState.isLoading,
-                label: 'Gelir Ekle',
-                color: c.income,
-                enabled: _amountOk,
-                onPressed: _submit,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

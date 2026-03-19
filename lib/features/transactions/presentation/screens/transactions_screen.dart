@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
+import 'package:savvy/core/design/tokens/app_icons.dart';
+import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/utils/year_month_helper.dart';
 import 'package:savvy/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:savvy/features/transactions/presentation/screens/add_income_sheet.dart';
+import 'package:savvy/features/transactions/presentation/screens/add_expense_sheet.dart';
+import 'package:savvy/features/transactions/presentation/screens/add_savings_sheet.dart';
 import 'package:savvy/features/transactions/presentation/widgets/income_tab.dart';
 import 'package:savvy/features/transactions/presentation/widgets/expense_tab.dart';
 import 'package:savvy/features/transactions/presentation/widgets/savings_tab.dart';
@@ -158,8 +164,10 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
     final totalExpense = expenses.fold(0.0, (sum, e) => sum + e.amount);
     final totalSavings = savings.fold(0.0, (sum, s) => sum + s.amount);
 
-    return SafeArea(
-      child: Column(
+    return Stack(
+      children: [
+        SafeArea(
+          child: Column(
         children: [
           // Başlık
           Padding(
@@ -289,6 +297,75 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
             ),
           ),
         ],
+      ),
+        ),
+        // FAB
+        Positioned(
+          right: AppSpacing.lg,
+          bottom: AppSpacing.lg + 80, // navbar yüksekliği üstü
+          child: _AddTransactionFab(
+            tabIndex: _tabController.index,
+            onTap: () => _openAddSheet(context),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _openAddSheet(BuildContext context) {
+    HapticFeedback.mediumImpact();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        maxChildSize: 0.9,
+        minChildSize: 0.4,
+        expand: false,
+        builder: (sheetCtx, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: AppColors.of(sheetCtx).surfaceCard,
+            borderRadius: AppRadius.bottomSheet,
+          ),
+          child: switch (_tabController.index) {
+            0 => AddIncomeSheet(scrollController: scrollController),
+            1 => AddExpenseSheet(scrollController: scrollController),
+            _ => AddSavingsSheet(scrollController: scrollController),
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _AddTransactionFab extends StatelessWidget {
+  final int tabIndex;
+  final VoidCallback onTap;
+
+  const _AddTransactionFab({required this.tabIndex, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final (color, label, icon) = switch (tabIndex) {
+      0 => (AppColors.of(context).income, 'Gelir Ekle', AppIcons.income),
+      1 => (AppColors.of(context).expense, 'Gider Ekle', AppIcons.expense),
+      _ => (AppColors.of(context).savings, 'Birikim Ekle', AppIcons.savings),
+    };
+
+    return FloatingActionButton.extended(
+      heroTag: 'txn_add_fab',
+      onPressed: onTap,
+      backgroundColor: color,
+      foregroundColor: Colors.white,
+      elevation: 4,
+      icon: Icon(icon, size: 20),
+      label: Text(
+        label,
+        style: AppTypography.labelMedium.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

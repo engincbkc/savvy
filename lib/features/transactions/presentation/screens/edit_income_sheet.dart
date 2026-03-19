@@ -118,28 +118,20 @@ class _EditIncomeSheetState extends ConsumerState<EditIncomeSheet> {
     final formState = ref.watch(transactionFormProvider);
     final c = AppColors.of(context);
 
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.9,
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppSpacing.lg,
+        right: AppSpacing.lg,
+        top: AppSpacing.base,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
       ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: AppSpacing.lg,
-          right: AppSpacing.lg,
-          top: AppSpacing.base,
-          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
-        ),
-        child: Form(
+      child: Form(
         key: _formKey,
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
+        child: ListView(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               const SheetHandle(),
               const SizedBox(height: AppSpacing.lg),
 
@@ -240,8 +232,8 @@ class _EditIncomeSheetState extends ConsumerState<EditIncomeSheet> {
                     child: TextFormField(
                       controller: _personController,
                       decoration: InputDecoration(
-                        hintText: 'Kişi',
-                        prefixIcon: const Icon(AppIcons.person, size: 18),
+                        hintText: 'Başlık',
+                        prefixIcon: const Icon(Icons.label_outline_rounded, size: 18),
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: AppSpacing.md, vertical: AppSpacing.md),
                         isDense: true,
@@ -263,10 +255,6 @@ class _EditIncomeSheetState extends ConsumerState<EditIncomeSheet> {
               ),
               const SizedBox(height: AppSpacing.xl),
 
-                    ],
-                  ),
-                ),
-              ),
               if (_hasChanges) ...[
                 const SizedBox(height: AppSpacing.base),
                 FormSubmitButton(
@@ -277,8 +265,9 @@ class _EditIncomeSheetState extends ConsumerState<EditIncomeSheet> {
                 ),
               ],
               const SizedBox(height: AppSpacing.sm),
-            ],
-          ),
+              ],
+            ),
+          ],
         ),
       ),
     );

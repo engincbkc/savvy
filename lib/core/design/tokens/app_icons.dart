@@ -11,7 +11,7 @@ abstract class AppIcons {
   // ─── Financial Fields ────────────────────────────────────────────
   static const income = LucideIcons.trendingUp;
   static const expense = LucideIcons.trendingDown;
-  static const savings = LucideIcons.piggyBank;
+  static const savings = LucideIcons.coins;
   static const balance = LucideIcons.wallet;
   static const networth = LucideIcons.landmark;
 

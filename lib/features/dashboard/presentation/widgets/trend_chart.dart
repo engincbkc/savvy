@@ -48,6 +48,16 @@ class TrendChart extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            const SizedBox(width: AppSpacing.sm),
+            Icon(Icons.swipe_rounded,
+                size: 14, color: AppColors.of(context).textTertiary),
+            const SizedBox(width: 4),
+            Text(
+              'Kaydır',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.of(context).textTertiary,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: AppSpacing.md),

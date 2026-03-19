@@ -7,6 +7,7 @@ import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
+import 'package:savvy/features/transactions/presentation/widgets/delete_dialog.dart';
 import 'package:savvy/features/transactions/domain/models/expense.dart';
 import 'package:savvy/features/transactions/presentation/providers/transaction_form_provider.dart';
 import 'package:savvy/features/transactions/presentation/screens/edit_expense_sheet.dart';
@@ -57,10 +58,14 @@ class ExpenseTab extends ConsumerWidget {
 
     final monthlyData = buildMonthlyCategoryData<Expense>(
       allExpenses,
-      (e) => e.category.label,
+      (e) => e.person != null && e.person!.isNotEmpty
+          ? '${e.person} ${e.category.label}'
+          : e.category.label,
       (e) => expenseIcon(e.category),
       (e) => e.date,
       (e) => e.amount,
+      isRecurring: (e) => e.isRecurring,
+      getRecurringEndDate: (e) => e.recurringEndDate,
     );
 
     return ListView(
@@ -132,32 +137,10 @@ class ExpenseTab extends ConsumerWidget {
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, String id) {
-    showDialog(
+    showDeleteConfirmation(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
-        title: Text('Gider Sil',
-            style: AppTypography.headlineSmall
-                .copyWith(color: AppColors.of(context).textPrimary)),
-        content: Text('Bu gideri silmek istedi\u011fine emin misin?',
-            style: AppTypography.bodyMedium
-                .copyWith(color: AppColors.of(context).textSecondary)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('\u0130ptal',
-                style: TextStyle(color: AppColors.of(context).textSecondary)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              HapticFeedback.mediumImpact();
-              ref.read(transactionFormProvider.notifier).deleteExpense(id);
-            },
-            child: Text('Sil', style: TextStyle(color: AppColors.of(context).expense)),
-          ),
-        ],
-      ),
+      type: 'Gider',
+      onConfirm: () => ref.read(transactionFormProvider.notifier).deleteExpense(id),
     );
   }
 

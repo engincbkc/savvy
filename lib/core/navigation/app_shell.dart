@@ -4,11 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
-import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
-import 'package:savvy/features/transactions/presentation/screens/add_income_sheet.dart';
-import 'package:savvy/features/transactions/presentation/screens/add_expense_sheet.dart';
-import 'package:savvy/features/transactions/presentation/screens/add_savings_sheet.dart';
 
 class AppShell extends StatelessWidget {
   final Widget child;
@@ -22,102 +18,6 @@ class AppShell extends StatelessWidget {
     if (location.startsWith('/simulate')) return 3;
     if (location.startsWith('/settings')) return 4;
     return 0;
-  }
-
-  void _showSheet(BuildContext context, Widget sheet) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetCtx) => Container(
-        decoration: BoxDecoration(
-          color: AppColors.of(sheetCtx).surfaceCard,
-          borderRadius: AppRadius.bottomSheet,
-        ),
-        child: sheet,
-      ),
-    );
-  }
-
-  void _showAddMenu(BuildContext context) {
-    HapticFeedback.mediumImpact();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        margin: EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: AppColors.of(ctx).surfaceCard,
-          borderRadius: AppRadius.card,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'İşlem Ekle',
-              style: AppTypography.headlineSmall.copyWith(
-                color: AppColors.of(ctx).textPrimary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Padding(
-              padding: AppSpacing.screenH,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _AddOption(
-                      icon: AppIcons.income,
-                      label: 'Gelir',
-                      color: AppColors.of(ctx).income,
-                      gradient: const [Color(0xFF059669), Color(0xFF10B981)],
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        Future.delayed(const Duration(milliseconds: 300), () {
-                          if (context.mounted) _showSheet(context, const AddIncomeSheet());
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: _AddOption(
-                      icon: AppIcons.expense,
-                      label: 'Gider',
-                      color: AppColors.of(ctx).expense,
-                      gradient: const [Color(0xFFC81E1E), Color(0xFFEF4444)],
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        Future.delayed(const Duration(milliseconds: 300), () {
-                          if (context.mounted) _showSheet(context, const AddExpenseSheet());
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: _AddOption(
-                      icon: AppIcons.savings,
-                      label: 'Birikim',
-                      color: AppColors.of(ctx).savings,
-                      gradient: const [Color(0xFFB45309), Color(0xFFD97706)],
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        Future.delayed(const Duration(milliseconds: 300), () {
-                          if (context.mounted) _showSheet(context, const AddSavingsSheet());
-                        });
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(
-                height: MediaQuery.of(ctx).padding.bottom + AppSpacing.xl),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
@@ -143,7 +43,6 @@ class AppShell extends StatelessWidget {
             height: 64,
             child: Row(
               children: [
-                // Left nav items
                 _NavItem(
                   icon: AppIcons.home,
                   label: 'Ana Sayfa',
@@ -156,45 +55,6 @@ class AppShell extends StatelessWidget {
                   isActive: currentIndex == 1,
                   onTap: () => context.go('/transactions'),
                 ),
-
-                // Center FAB
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _showAddMenu(context),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF1A56DB), Color(0xFF3F83F8)],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color:
-                                    AppColors.of(context).brandPrimary.withValues(alpha: 0.4),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            AppIcons.add,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Right nav items
                 _NavItem(
                   icon: AppIcons.goal,
                   label: 'Hedefler',
@@ -272,63 +132,6 @@ class _NavItem extends StatelessWidget {
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AddOption extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final List<Color> gradient;
-  final VoidCallback onTap;
-
-  const _AddOption({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.gradient,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: gradient,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: AppRadius.input,
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: Colors.white, size: 28),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              label,
-              style: AppTypography.labelMedium.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
             ),
           ],
         ),

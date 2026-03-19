@@ -42,7 +42,6 @@ class SwipeableTransactionTile extends StatelessWidget {
     final dateStr =
         '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}';
     final parts = <String>[dateStr];
-    if (person != null && person!.isNotEmpty) parts.add(person!);
     if (subtitle != null && subtitle!.isNotEmpty) parts.add(subtitle!);
 
     return Dismissible(
@@ -94,7 +93,10 @@ class SwipeableTransactionTile extends StatelessWidget {
                     Row(
                       children: [
                         Flexible(
-                          child: Text(title,
+                          child: Text(
+                              person != null && person!.isNotEmpty
+                                  ? '$person $title'
+                                  : title,
                               style: AppTypography.titleSmall
                                   .copyWith(color: AppColors.of(context).textPrimary),
                               maxLines: 1,

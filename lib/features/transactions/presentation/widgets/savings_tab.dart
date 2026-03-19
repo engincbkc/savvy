@@ -6,7 +6,7 @@ import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
-import 'package:savvy/core/design/tokens/app_typography.dart';
+import 'package:savvy/features/transactions/presentation/widgets/delete_dialog.dart';
 import 'package:savvy/features/savings/domain/models/savings.dart';
 import 'package:savvy/features/transactions/presentation/providers/transaction_form_provider.dart';
 import 'package:savvy/features/transactions/presentation/screens/edit_savings_sheet.dart';
@@ -124,32 +124,10 @@ class SavingsTab extends ConsumerWidget {
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, String id) {
-    showDialog(
+    showDeleteConfirmation(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
-        title: Text('Birikim Sil',
-            style: AppTypography.headlineSmall
-                .copyWith(color: AppColors.of(context).textPrimary)),
-        content: Text('Bu birikimi silmek istedi\u011fine emin misin?',
-            style: AppTypography.bodyMedium
-                .copyWith(color: AppColors.of(context).textSecondary)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('\u0130ptal',
-                style: TextStyle(color: AppColors.of(context).textSecondary)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              HapticFeedback.mediumImpact();
-              ref.read(transactionFormProvider.notifier).deleteSavings(id);
-            },
-            child: Text('Sil', style: TextStyle(color: AppColors.of(context).expense)),
-          ),
-        ],
-      ),
+      type: 'Birikim',
+      onConfirm: () => ref.read(transactionFormProvider.notifier).deleteSavings(id),
     );
   }
 

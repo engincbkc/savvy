@@ -247,6 +247,14 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                                               ? FontWeight.w800
                                               : FontWeight.w600,
                                           fontSize: 11,
+                                          decoration: isPast && !isCurrent
+                                              ? TextDecoration.underline
+                                              : null,
+                                          decorationColor: AppColors.of(context)
+                                              .textTertiary
+                                              .withValues(alpha: 0.4),
+                                          decorationStyle:
+                                              TextDecorationStyle.dotted,
                                         ),
                                       ),
                                       if (!isPast)
@@ -257,6 +265,17 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                                             color: AppColors.of(context)
                                                 .textTertiary,
                                             fontSize: 8,
+                                          ),
+                                        ),
+                                      if (isCurrent)
+                                        Text(
+                                          'detay ›',
+                                          style: AppTypography.caption
+                                              .copyWith(
+                                            color: AppColors.of(context)
+                                                .brandPrimary,
+                                            fontSize: 8,
+                                            fontWeight: FontWeight.w600,
                                           ),
                                         ),
                                     ],

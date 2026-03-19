@@ -30,6 +30,10 @@ class MonthSummaryAggregator {
     }
     yearMonths.add(DateTime.now().toYearMonth());
 
+    // Only include months up to current month (future months handled by projections)
+    final currentYm = DateTime.now().toYearMonth();
+    yearMonths.removeWhere((ym) => ym.compareTo(currentYm) > 0);
+
     // Sort chronologically
     final sorted = yearMonths.toList()..sort();
 

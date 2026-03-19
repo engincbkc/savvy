@@ -149,8 +149,8 @@ class TransactionDetailSheet extends StatelessWidget {
                 if (person != null && person!.isNotEmpty) ...[
                   _divider(c),
                   _DetailRow(
-                    icon: Icons.person_outline_rounded,
-                    label: 'Kisi',
+                    icon: Icons.label_outline_rounded,
+                    label: 'Başlık',
                     value: person!,
                     color: c,
                   ),

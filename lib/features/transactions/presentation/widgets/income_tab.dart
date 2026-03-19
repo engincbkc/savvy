@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:savvy/core/constants/financial_enums.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
-import 'package:savvy/core/design/tokens/app_typography.dart';
+import 'package:savvy/features/transactions/presentation/widgets/delete_dialog.dart';
 import 'package:savvy/features/transactions/domain/models/income.dart';
 import 'package:savvy/features/transactions/presentation/providers/transaction_form_provider.dart';
 import 'package:savvy/features/transactions/presentation/screens/edit_income_sheet.dart';
@@ -54,10 +53,14 @@ class IncomeTab extends ConsumerWidget {
     // Monthly breakdown data
     final monthlyData = buildMonthlyCategoryData<Income>(
       allIncomes,
-      (i) => i.category.label,
+      (i) => i.person != null && i.person!.isNotEmpty
+          ? '${i.person} ${i.category.label}'
+          : i.category.label,
       (i) => incomeIcon(i.category),
       (i) => i.date,
       (i) => i.amount,
+      isRecurring: (i) => i.isRecurring,
+      getRecurringEndDate: (i) => i.recurringEndDate,
     );
 
     return ListView(
@@ -128,33 +131,10 @@ class IncomeTab extends ConsumerWidget {
 
   void _confirmDelete(
       BuildContext context, WidgetRef ref, String id, String type) {
-    showDialog(
+    showDeleteConfirmation(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
-        title: Text('$type Sil',
-            style: AppTypography.headlineSmall
-                .copyWith(color: AppColors.of(context).textPrimary)),
-        content: Text('Bu ${type}i silmek istedi\u011fine emin misin?',
-            style: AppTypography.bodyMedium
-                .copyWith(color: AppColors.of(context).textSecondary)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('\u0130ptal',
-                style: TextStyle(color: AppColors.of(context).textSecondary)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              HapticFeedback.mediumImpact();
-              ref.read(transactionFormProvider.notifier).deleteIncome(id);
-            },
-            child:
-                Text('Sil', style: TextStyle(color: AppColors.of(context).expense)),
-          ),
-        ],
-      ),
+      type: type,
+      onConfirm: () => ref.read(transactionFormProvider.notifier).deleteIncome(id),
     );
   }
 

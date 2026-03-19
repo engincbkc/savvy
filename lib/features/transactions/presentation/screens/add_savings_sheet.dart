@@ -12,7 +12,8 @@ import 'package:savvy/features/transactions/presentation/widgets/form_shared_wid
 import 'package:uuid/uuid.dart';
 
 class AddSavingsSheet extends ConsumerStatefulWidget {
-  const AddSavingsSheet({super.key});
+  final ScrollController? scrollController;
+  const AddSavingsSheet({super.key, this.scrollController});
 
   @override
   ConsumerState<AddSavingsSheet> createState() => _AddSavingsSheetState();
@@ -87,102 +88,91 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
     final formState = ref.watch(transactionFormProvider);
     final c = AppColors.of(context);
 
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.9,
+    return Padding(
+      padding: EdgeInsets.only(
+        left: AppSpacing.lg,
+        right: AppSpacing.lg,
+        top: AppSpacing.base,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
       ),
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: AppSpacing.lg,
-          right: AppSpacing.lg,
-          top: AppSpacing.base,
-          bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
-        ),
-        child: Form(
+      child: Form(
         key: _formKey,
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-              const SheetHandle(),
-              const SizedBox(height: AppSpacing.lg),
+        child: ListView(
+          controller: widget.scrollController,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SheetHandle(),
+                const SizedBox(height: AppSpacing.lg),
 
-              // Header
-              const SheetHeader(
-                icon: AppIcons.savings,
-                gradient: [Color(0xFFB45309), Color(0xFFD97706)],
-                title: 'Birikim Ekle',
-                subtitle: 'Yeni bir birikim kaydı oluştur',
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Amount
-              AmountInputField(
-                controller: _amountController,
-                color: c.savings,
-                strongColor: c.savingsStrong,
-                bgColor: c.savingsSurfaceDim,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Category
-              FormSectionLabel(text: 'Kategori', icon: AppIcons.category),
-              const SizedBox(height: AppSpacing.sm),
-              CategoryChipSelector<SavingsCategory>(
-                values: SavingsCategory.values,
-                selected: _category,
-                labelOf: (cat) => cat.label,
-                iconOf: (cat) => cat.icon,
-                activeColor: c.savings,
-                onSelected: (cat) => setState(() => _category = cat),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Date
-              FormSectionLabel(text: 'Tarih', icon: AppIcons.calendar),
-              const SizedBox(height: AppSpacing.sm),
-              GestureDetector(
-                onTap: _pickDate,
-                child: FieldChip(
-                  icon: AppIcons.calendar,
-                  label: formatDateTR(_date),
+                // Header
+                const SheetHeader(
+                  icon: AppIcons.savings,
+                  gradient: [Color(0xFFB45309), Color(0xFFD97706)],
+                  title: 'Birikim Ekle',
+                  subtitle: 'Yeni bir birikim kaydı oluştur',
                 ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.xl),
 
-              // Note
-              TextFormField(
-                controller: _noteController,
-                textInputAction: TextInputAction.done,
-                maxLength: 200,
-                decoration: const InputDecoration(
-                  hintText: 'Not (opsiyonel)',
-                  prefixIcon: Icon(AppIcons.note, size: 18),
-                  counterText: '',
+                // Amount
+                AmountInputField(
+                  controller: _amountController,
+                  color: c.savings,
+                  strongColor: c.savingsStrong,
+                  bgColor: c.savingsSurfaceDim,
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
+                const SizedBox(height: AppSpacing.xl),
 
-                    ],
+                // Category
+                FormSectionLabel(text: 'Kategori', icon: AppIcons.category),
+                const SizedBox(height: AppSpacing.sm),
+                CategoryChipSelector<SavingsCategory>(
+                  values: SavingsCategory.values,
+                  selected: _category,
+                  labelOf: (cat) => cat.label,
+                  iconOf: (cat) => cat.icon,
+                  activeColor: c.savings,
+                  onSelected: (cat) => setState(() => _category = cat),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+
+                // Date
+                FormSectionLabel(text: 'Tarih', icon: AppIcons.calendar),
+                const SizedBox(height: AppSpacing.sm),
+                GestureDetector(
+                  onTap: _pickDate,
+                  child: FieldChip(
+                    icon: AppIcons.calendar,
+                    label: formatDateTR(_date),
                   ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.base),
-              FormSubmitButton(
-                isLoading: formState.isLoading,
-                label: 'Birikim Ekle',
-                color: c.savings,
-                enabled: _amountOk,
-                onPressed: _submit,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-            ],
-          ),
+                const SizedBox(height: AppSpacing.sm),
+
+                // Note
+                TextFormField(
+                  controller: _noteController,
+                  textInputAction: TextInputAction.done,
+                  maxLength: 200,
+                  decoration: const InputDecoration(
+                    hintText: 'Not (opsiyonel)',
+                    prefixIcon: Icon(AppIcons.note, size: 18),
+                    counterText: '',
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+
+                FormSubmitButton(
+                  isLoading: formState.isLoading,
+                  label: 'Birikim Ekle',
+                  color: c.savings,
+                  enabled: _amountOk,
+                  onPressed: _submit,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+              ],
+            ),
+          ],
         ),
       ),
     );
