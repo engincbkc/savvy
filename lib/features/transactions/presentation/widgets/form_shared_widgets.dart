@@ -5,6 +5,8 @@ import 'package:savvy/core/design/tokens/savvy_colors.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
+import 'package:savvy/core/utils/currency_formatter.dart';
+import 'package:savvy/core/utils/financial_calculator.dart';
 
 /// Shared date formatter for form sheets.
 String formatDateTR(DateTime d) =>
@@ -70,7 +72,31 @@ class SheetHeader extends StatelessWidget {
                 ),
               ],
             ),
-            child: Icon(icon, color: Colors.white, size: 22),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(icon, color: Colors.white, size: 22),
+                // Subtle shine line at top
+                Positioned(
+                  top: 0,
+                  left: 4,
+                  right: 4,
+                  child: Container(
+                    height: 1,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.white.withValues(alpha: 0.0),
+                          Colors.white.withValues(alpha: 0.3),
+                          Colors.white.withValues(alpha: 0.0),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(1),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(width: AppSpacing.md),
@@ -476,6 +502,19 @@ class FormSubmitButton extends StatelessWidget {
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 200),
       opacity: isDisabled ? 0.5 : 1.0,
+      child: Container(
+      decoration: BoxDecoration(
+        borderRadius: AppRadius.card,
+        boxShadow: isDisabled
+            ? null
+            : [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.3),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+      ),
       child: SizedBox(
       height: 56,
       width: double.infinity,
@@ -484,9 +523,9 @@ class FormSubmitButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.input),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.card),
           elevation: 0,
-          shadowColor: color.withValues(alpha: 0.3),
+          shadowColor: Colors.transparent,
         ),
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
@@ -515,6 +554,7 @@ class FormSubmitButton extends StatelessWidget {
                 ),
         ),
       ),
+    ),
     ),
     );
   }
@@ -864,6 +904,310 @@ class FormSectionLabel extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Brüt Maaş — Shared Premium Components
+// ═══════════════════════════════════════════════════════════════════
+
+/// Premium gross salary amount input with gradient card and animated entrance.
+class GrossAmountInput extends StatelessWidget {
+  final TextEditingController controller;
+  final Color accentColor;
+  final Color strongColor;
+  final Color bgColor;
+
+  const GrossAmountInput({
+    super.key,
+    required this.controller,
+    required this.accentColor,
+    required this.strongColor,
+    required this.bgColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.95, end: 1.0),
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOutCubic,
+      builder: (context, scale, child) => Transform.scale(
+        scale: scale,
+        child: child,
+      ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.xl,
+        ),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              bgColor,
+              isDark
+                  ? accentColor.withValues(alpha: 0.08)
+                  : accentColor.withValues(alpha: 0.04),
+            ],
+          ),
+          borderRadius: AppRadius.cardLg,
+          border: Border.all(
+            color: accentColor.withValues(alpha: 0.15),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: accentColor.withValues(alpha: 0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.account_balance_rounded,
+                  size: 14,
+                  color: accentColor.withValues(alpha: 0.5),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'BRÜT MAAŞ',
+                  style: AppTypography.caption.copyWith(
+                    color: accentColor.withValues(alpha: 0.6),
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            TextFormField(
+              controller: controller,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: false),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
+                ThousandFormatter(),
+              ],
+              textInputAction: TextInputAction.done,
+              style: AppTypography.numericHero.copyWith(
+                color: strongColor,
+                fontSize: 36,
+              ),
+              textAlign: TextAlign.center,
+              decoration: InputDecoration(
+                hintText: '0',
+                hintStyle: AppTypography.numericHero.copyWith(
+                  color: accentColor.withValues(alpha: 0.2),
+                  fontSize: 36,
+                ),
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+                suffixText: '₺',
+                suffixStyle: AppTypography.numericLarge.copyWith(
+                  color: accentColor.withValues(alpha: 0.4),
+                ),
+              ),
+              validator: validateAmount,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Toggle switch for brüt→net calculation mode.
+/// Styled consistently with SavingsToggle (card radius, custom toggle knob).
+class GrossCalcToggle extends StatelessWidget {
+  final bool value;
+  final Color activeColor;
+  final ValueChanged<bool> onChanged;
+
+  const GrossCalcToggle({
+    super.key,
+    required this.value,
+    required this.activeColor,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.base, vertical: AppSpacing.md),
+        decoration: BoxDecoration(
+          color: value
+              ? activeColor.withValues(alpha: 0.08)
+              : c.surfaceCard,
+          borderRadius: AppRadius.card,
+          border: Border.all(
+            color: value
+                ? activeColor.withValues(alpha: 0.4)
+                : c.borderDefault,
+          ),
+        ),
+        child: Row(
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: value
+                    ? activeColor.withValues(alpha: 0.15)
+                    : c.surfaceInput,
+                borderRadius: AppRadius.chip,
+              ),
+              child: Icon(
+                Icons.calculate_rounded,
+                size: 16,
+                color: value ? activeColor : c.textTertiary,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Brütten Hesapla',
+                      style: AppTypography.labelMedium.copyWith(
+                        color: c.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      )),
+                  Text(
+                    value
+                        ? 'SGK, vergi ve istisnalar otomatik hesaplanır'
+                        : 'Brüt maaş girip aylık net tutarı gör',
+                    style: AppTypography.caption.copyWith(
+                      color: value ? activeColor : c.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Custom toggle matching SavingsToggle
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              width: 44,
+              height: 26,
+              decoration: BoxDecoration(
+                color: value ? activeColor : c.surfaceOverlay,
+                borderRadius: AppRadius.pill,
+              ),
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 150),
+                curve: Curves.easeInOut,
+                alignment:
+                    value ? Alignment.centerRight : Alignment.centerLeft,
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 4,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Info card shown when gross calculation is active — single record hint.
+class GrossIncomeInfo extends StatelessWidget {
+  final AnnualSalaryBreakdown breakdown;
+  final int currentMonth; // 1-indexed
+  final Color accentColor;
+
+  const GrossIncomeInfo({
+    super.key,
+    required this.breakdown,
+    required this.currentMonth,
+    required this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final monthDetail = breakdown.months[(currentMonth - 1).clamp(0, 11)];
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: accentColor.withValues(alpha: 0.05),
+        borderRadius: AppRadius.input,
+        border: Border.all(color: accentColor.withValues(alpha: 0.15)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.12),
+              borderRadius: AppRadius.chip,
+            ),
+            child: Icon(
+              Icons.auto_awesome_rounded,
+              size: 14,
+              color: accentColor,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                style: AppTypography.caption.copyWith(
+                  color: c.textSecondary,
+                ),
+                children: [
+                  const TextSpan(text: 'Tek periyodik kayıt oluşturulacak. '),
+                  TextSpan(
+                    text: monthDetail.monthName,
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  const TextSpan(text: ' net: '),
+                  TextSpan(
+                    text: CurrencyFormatter.formatNoDecimal(
+                        monthDetail.netTakeHome),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      color: accentColor,
+                    ),
+                  ),
+                  const TextSpan(text: '\nHer ay net tutar otomatik hesaplanır'),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -4,9 +4,10 @@ import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
+import 'package:savvy/core/design/tokens/app_shadow.dart';
+import 'package:savvy/core/design/tokens/app_animation.dart';
 import 'package:savvy/core/utils/currency_formatter.dart';
 import 'package:savvy/features/dashboard/domain/models/month_summary.dart';
-import 'package:savvy/shared/widgets/info_tooltip.dart';
 
 class QuickStatsRow extends StatelessWidget {
   final MonthSummary summary;
@@ -14,38 +15,35 @@ class QuickStatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
     return Row(
       children: [
         Expanded(
-          child: QuickStatCard(
+          child: _StatCard(
             label: 'Gelir',
             amount: summary.totalIncome,
-            color: AppColors.of(context).income,
+            accentColor: c.income,
             icon: AppIcons.income,
-            tooltipTitle: 'Aylık Gelir',
-            tooltipDesc: 'Bu ayki toplam gelir tutarıdır. Maaş, ek iş, freelance ve diğer tüm gelir kaynaklarını içerir.',
+            prefix: '+',
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
-          child: QuickStatCard(
+          child: _StatCard(
             label: 'Gider',
             amount: summary.totalExpense,
-            color: AppColors.of(context).expense,
+            accentColor: c.expense,
             icon: AppIcons.expense,
-            tooltipTitle: 'Aylık Gider',
-            tooltipDesc: 'Bu ayki toplam gider tutarıdır. Sabit, değişken ve isteğe bağlı tüm harcamaları içerir.',
+            prefix: '-',
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
-          child: QuickStatCard(
+          child: _StatCard(
             label: 'Birikim',
             amount: summary.totalSavings,
-            color: AppColors.of(context).savings,
+            accentColor: c.savings,
             icon: AppIcons.savings,
-            tooltipTitle: 'Aylık Birikim',
-            tooltipDesc: 'Bu ayki toplam birikim tutarıdır. Acil durum fonu, altın, döviz ve diğer yatırımları içerir.',
           ),
         ),
       ],
@@ -53,75 +51,73 @@ class QuickStatsRow extends StatelessWidget {
   }
 }
 
-class QuickStatCard extends StatelessWidget {
+class _StatCard extends StatelessWidget {
   final String label;
   final double amount;
-  final Color color;
+  final Color accentColor;
   final IconData icon;
-  final String? tooltipTitle;
-  final String? tooltipDesc;
+  final String? prefix;
 
-  const QuickStatCard({
-    super.key,
+  const _StatCard({
     required this.label,
     required this.amount,
-    required this.color,
+    required this.accentColor,
     required this.icon,
-    this.tooltipTitle,
-    this.tooltipDesc,
+    this.prefix,
   });
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.of(context).surfaceCard,
-        borderRadius: AppRadius.input,
-        border: Border.all(color: color.withValues(alpha: 0.15)),
+        color: c.surfaceCard,
+        borderRadius: AppRadius.card,
+        boxShadow: AppShadow.sm,
+        border: Border.all(color: c.borderDefault.withValues(alpha: 0.5)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Icon + label
           Row(
             children: [
               Container(
-                width: 24,
-                height: 24,
+                width: 26,
+                height: 26,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: accentColor.withValues(alpha: 0.1),
                   borderRadius: AppRadius.chip,
                 ),
-                child: Icon(icon, size: 13, color: color),
+                child: Icon(icon, size: 13, color: accentColor),
               ),
               const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  label,
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.of(context).textTertiary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+              Text(
+                label,
+                style: AppTypography.caption.copyWith(
+                  color: c.textTertiary,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              if (tooltipTitle != null && tooltipDesc != null)
-                InfoTooltip(
-                  title: tooltipTitle!,
-                  description: tooltipDesc!,
-                  size: 12,
-                ),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              CurrencyFormatter.formatNoDecimal(amount),
-              style: AppTypography.numericSmall.copyWith(
-                color: color,
-                fontWeight: FontWeight.w700,
+          // Amount with count-up
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: amount),
+            duration: AppDuration.countUp,
+            curve: AppCurve.decelerate,
+            builder: (context, value, _) => FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '${prefix ?? ''}${CurrencyFormatter.formatNoDecimal(value)}',
+                style: AppTypography.numericSmall.copyWith(
+                  color: accentColor,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),

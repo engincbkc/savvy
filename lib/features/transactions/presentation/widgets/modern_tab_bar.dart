@@ -20,17 +20,20 @@ class ModernTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
     return Container(
-      height: 44,
+      height: 46,
       decoration: BoxDecoration(
-        color: AppColors.of(context).surfaceOverlay,
+        color: c.surfaceOverlay,
         borderRadius: AppRadius.card,
+        border: Border.all(color: c.borderDefault.withValues(alpha: 0.2)),
       ),
       padding: const EdgeInsets.all(3),
       child: TabBar(
         controller: controller,
         indicator: BoxDecoration(
-          color: AppColors.of(context).surfaceCard,
+          color: c.surfaceCard,
           borderRadius: AppRadius.input,
           boxShadow: AppShadow.sm,
         ),
@@ -42,13 +45,18 @@ class ModernTabBar extends StatelessWidget {
           final tab = tabs[i];
           final isSelected = controller.index == i;
           return Tab(
-            child: AnimatedDefaultTextStyle(
+            child: AnimatedContainer(
               duration: AppDuration.fast,
-              style: AppTypography.labelMedium.copyWith(
-                color: isSelected ? tab.color : AppColors.of(context).textTertiary,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              curve: AppCurve.standard,
+              child: AnimatedDefaultTextStyle(
+                duration: AppDuration.fast,
+                curve: AppCurve.standard,
+                style: AppTypography.labelMedium.copyWith(
+                  color: isSelected ? tab.color : c.textTertiary,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                ),
+                child: Text(tab.label),
               ),
-              child: Text(tab.label),
             ),
           );
         }),

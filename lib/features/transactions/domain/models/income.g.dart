@@ -18,6 +18,7 @@ _Income _$IncomeFromJson(Map<String, dynamic> json) => _Income(
   recurringEndDate: json['recurringEndDate'] == null
       ? null
       : DateTime.parse(json['recurringEndDate'] as String),
+  isGross: json['isGross'] as bool? ?? false,
   isDeleted: json['isDeleted'] as bool? ?? false,
   createdAt: DateTime.parse(json['createdAt'] as String),
 );
@@ -32,6 +33,7 @@ Map<String, dynamic> _$IncomeToJson(_Income instance) => <String, dynamic>{
   'note': instance.note,
   'isRecurring': instance.isRecurring,
   'recurringEndDate': instance.recurringEndDate?.toIso8601String(),
+  'isGross': instance.isGross,
   'isDeleted': instance.isDeleted,
   'createdAt': instance.createdAt.toIso8601String(),
 };

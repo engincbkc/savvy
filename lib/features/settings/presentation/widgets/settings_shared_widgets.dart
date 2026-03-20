@@ -3,6 +3,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
+import 'package:savvy/core/design/tokens/app_shadow.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 
@@ -16,13 +17,26 @@ class SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(left: 4),
-      child: Text(
-        title.toUpperCase(),
-        style: AppTypography.labelMedium.copyWith(
-          color: AppColors.of(context).textTertiary,
-          letterSpacing: 1.2,
-          fontWeight: FontWeight.w600,
-        ),
+      child: Row(
+        children: [
+          Container(
+            width: 2,
+            height: 16,
+            decoration: BoxDecoration(
+              color: AppColors.of(context).brandPrimary,
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            title.toUpperCase(),
+            style: AppTypography.labelMedium.copyWith(
+              color: AppColors.of(context).textTertiary,
+              letterSpacing: 1.2,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -43,6 +57,7 @@ class SettingsCard extends StatelessWidget {
         border: Border.all(
           color: AppColors.of(context).borderDefault.withValues(alpha: 0.3),
         ),
+        boxShadow: AppShadow.sm,
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(children: children),
@@ -84,18 +99,21 @@ class ModernTile extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
                 color: iconBgColor.withValues(alpha: 0.1),
                 borderRadius: AppRadius.chip,
               ),
-              child: Icon(icon, size: 20, color: iconColor),
+              child: Center(
+                child: Icon(icon, size: 18, color: iconColor),
+              ),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     title,

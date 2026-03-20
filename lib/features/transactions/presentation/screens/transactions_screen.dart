@@ -4,8 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
+import 'package:savvy/core/design/tokens/app_shadow.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
+import 'package:savvy/core/design/tokens/app_animation.dart';
+import 'package:savvy/core/utils/financial_calculator.dart';
 import 'package:savvy/core/utils/year_month_helper.dart';
 import 'package:savvy/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:savvy/features/transactions/presentation/screens/add_income_sheet.dart';
@@ -35,6 +38,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
   late TabController _tabController;
   String? _selectedMonth; // null = Tümü
   TransactionFilters _filters = const TransactionFilters();
+  bool _headerShadow = false;
 
   @override
   void initState() {
@@ -160,7 +164,18 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
     expenses.sort((a, b) => b.date.compareTo(a.date));
     savings.sort((a, b) => b.date.compareTo(a.date));
 
-    final totalIncome = incomes.fold(0.0, (sum, i) => sum + i.amount);
+    // Seçili ayı belirle (brüt→net çözümlemesi için)
+    final resolveMonth = _selectedMonth != null
+        ? int.parse(_selectedMonth!.split('-')[1])
+        : DateTime.now().month;
+    final totalIncome = incomes.fold(0.0, (sum, i) {
+      return sum +
+          FinancialCalculator.resolveNetForMonth(
+            amount: i.amount,
+            isGross: i.isGross,
+            month: resolveMonth,
+          );
+    });
     final totalExpense = expenses.fold(0.0, (sum, e) => sum + e.amount);
     final totalSavings = savings.fold(0.0, (sum, s) => sum + s.amount);
 
@@ -169,131 +184,172 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
         SafeArea(
           child: Column(
         children: [
-          // Başlık
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg, AppSpacing.base, AppSpacing.lg, 0),
-            child: Row(
+          // Header area with animated bottom shadow
+          AnimatedContainer(
+            duration: AppDuration.fast,
+            curve: AppCurve.standard,
+            decoration: BoxDecoration(
+              boxShadow: _headerShadow ? AppShadow.sm : AppShadow.none,
+            ),
+            child: Column(
               children: [
-                Text(
-                  'İşlemler',
-                  style: AppTypography.headlineMedium.copyWith(
-                    color: AppColors.of(context).textPrimary,
+                // Başlık
+                _StaggeredEntry(
+                  delay: 0,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg, AppSpacing.base, AppSpacing.lg, 0),
+                    child: Row(
+                      children: [
+                        Text(
+                          'İşlemler',
+                          style: AppTypography.headlineMedium.copyWith(
+                            color: AppColors.of(context).textPrimary,
+                          ),
+                        ),
+                        const Spacer(),
+                        QuickSummaryChip(net: totalIncome - totalExpense),
+                      ],
+                    ),
                   ),
                 ),
-                const Spacer(),
-                QuickSummaryChip(net: totalIncome - totalExpense),
-              ],
-            ),
-          ),
 
-          const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.sm),
 
-          // Ay seçici
-          SizedBox(
-            height: 44,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              itemCount: sortedMonths.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  final isSelected = _selectedMonth == null;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: AppSpacing.sm),
-                    child: MonthChip(
-                      label: 'Tümü',
-                      isSelected: isSelected,
-                      onTap: () => setState(() => _selectedMonth = null),
+                // Ay seçici
+                _StaggeredEntry(
+                  delay: 80,
+                  child: SizedBox(
+                    height: 44,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      itemCount: sortedMonths.length + 1,
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          final isSelected = _selectedMonth == null;
+                          return Padding(
+                            padding:
+                                const EdgeInsets.only(right: AppSpacing.sm),
+                            child: MonthChip(
+                              label: 'Tümü',
+                              isSelected: isSelected,
+                              onTap: () =>
+                                  setState(() => _selectedMonth = null),
+                            ),
+                          );
+                        }
+                        final ym = sortedMonths[index - 1];
+                        final isSelected = _selectedMonth == ym;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: AppSpacing.sm),
+                          child: MonthChip(
+                            label: MonthLabels.shortName(ym),
+                            year: ym.split('-')[0],
+                            isSelected: isSelected,
+                            onTap: () =>
+                                setState(() => _selectedMonth = ym),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                }
-                final ym = sortedMonths[index - 1];
-                final isSelected = _selectedMonth == ym;
-                return Padding(
-                  padding: const EdgeInsets.only(right: AppSpacing.sm),
-                  child: MonthChip(
-                    label: MonthLabels.shortName(ym),
-                    year: ym.split('-')[0],
-                    isSelected: isSelected,
-                    onTap: () => setState(() => _selectedMonth = ym),
                   ),
-                );
-              },
-            ),
-          ),
+                ),
 
-          const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.sm),
 
-          // Filter bar
-          Padding(
-            padding: AppSpacing.screenH,
-            child: FilterBar(
-              filters: _filters,
-              activeTabIndex: _tabController.index,
-              onChanged: (f) => setState(() => _filters = f),
-            ),
-          ),
+                // Filter bar
+                _StaggeredEntry(
+                  delay: 160,
+                  child: Padding(
+                    padding: AppSpacing.screenH,
+                    child: FilterBar(
+                      filters: _filters,
+                      activeTabIndex: _tabController.index,
+                      onChanged: (f) => setState(() => _filters = f),
+                    ),
+                  ),
+                ),
 
-          const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.sm),
 
-          // Tab Bar
-          Padding(
-            padding: AppSpacing.screenH,
-            child: ModernTabBar(
-              controller: _tabController,
-              tabs: [
-                TabData('Gelir', totalIncome, AppColors.of(context).income),
-                TabData('Gider', totalExpense, AppColors.of(context).expense),
-                TabData('Birikim', totalSavings, AppColors.of(context).savings),
+                // Tab Bar
+                _StaggeredEntry(
+                  delay: 240,
+                  child: Padding(
+                    padding: AppSpacing.screenH,
+                    child: ModernTabBar(
+                      controller: _tabController,
+                      tabs: [
+                        TabData('Gelir', totalIncome,
+                            AppColors.of(context).income),
+                        TabData('Gider', totalExpense,
+                            AppColors.of(context).expense),
+                        TabData('Birikim', totalSavings,
+                            AppColors.of(context).savings),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.xs),
               ],
             ),
           ),
-
-          const SizedBox(height: AppSpacing.xs),
 
           // Tab içerikleri
           Expanded(
-            child: Stack(
-              children: [
-                if (isLoading)
-                  const Padding(
-                    padding: AppSpacing.screenH,
-                    child: SavvyShimmer(
-                      child: Column(
-                        children: [
-                          SizedBox(height: AppSpacing.base),
-                          ShimmerBox(height: 100),
-                          SizedBox(height: AppSpacing.base),
-                          ShimmerBox(height: 60),
-                          SizedBox(height: AppSpacing.sm),
-                          ShimmerBox(height: 60),
-                        ],
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                final shouldShow = notification.metrics.pixels > 0;
+                if (shouldShow != _headerShadow) {
+                  setState(() => _headerShadow = shouldShow);
+                }
+                return false;
+              },
+              child: Stack(
+                children: [
+                  if (isLoading)
+                    const Padding(
+                      padding: AppSpacing.screenH,
+                      child: SavvyShimmer(
+                        child: Column(
+                          children: [
+                            SizedBox(height: AppSpacing.base),
+                            ShimmerBox(height: 100),
+                            SizedBox(height: AppSpacing.base),
+                            ShimmerBox(height: 60),
+                            SizedBox(height: AppSpacing.sm),
+                            ShimmerBox(height: 60),
+                          ],
+                        ),
                       ),
+                    )
+                  else
+                    TabBarView(
+                      controller: _tabController,
+                      children: [
+                        IncomeTab(
+                          incomes: incomes,
+                          allIncomes: allIncomes,
+                          total: totalIncome,
+                          displayMonth: resolveMonth,
+                        ),
+                        ExpenseTab(
+                          expenses: expenses,
+                          allExpenses: allExpenses,
+                          total: totalExpense,
+                        ),
+                        SavingsTab(
+                          savings: savings,
+                          allSavings: allSavings,
+                          total: totalSavings,
+                        ),
+                      ],
                     ),
-                  )
-                else
-                  TabBarView(
-                    controller: _tabController,
-                    children: [
-                      IncomeTab(
-                        incomes: incomes,
-                        allIncomes: allIncomes,
-                        total: totalIncome,
-                      ),
-                      ExpenseTab(
-                        expenses: expenses,
-                        allExpenses: allExpenses,
-                        total: totalExpense,
-                      ),
-                      SavingsTab(
-                        savings: savings,
-                        allSavings: allSavings,
-                        total: totalSavings,
-                      ),
-                    ],
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -335,6 +391,38 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
           },
         ),
       ),
+    );
+  }
+}
+
+/// Staggered entrance animation for transaction screen sections.
+class _StaggeredEntry extends StatelessWidget {
+  final int delay;
+  final Widget child;
+
+  const _StaggeredEntry({
+    required this.delay,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 600 + delay),
+      curve: AppCurve.enter,
+      builder: (context, value, child) {
+        final adjusted =
+            ((value * (600 + delay) - delay) / 600).clamp(0.0, 1.0);
+        return Opacity(
+          opacity: adjusted,
+          child: Transform.translate(
+            offset: Offset(0, 16 * (1 - adjusted)),
+            child: child,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }

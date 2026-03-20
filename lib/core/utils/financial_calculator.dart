@@ -182,63 +182,185 @@ class FinancialCalculator {
   }
 
   // ─── Brüt → Net Maaş Hesaplama (2026 Türkiye) ─────────────────
-
-  /// 2026 Türkiye gelir vergisi dilimleri
-  static const _taxBrackets2026 = [
-    (limit: 158000.0, rate: 0.15),
-    (limit: 350000.0, rate: 0.20),
-    (limit: 900000.0, rate: 0.27),
-    (limit: 1900000.0, rate: 0.35),
-    (limit: double.infinity, rate: 0.40),
-  ];
+  // Kaynak: GİB Gelir Vergisi Tarifesi 2026 (Tebliğ Seri No: 332)
+  // Doğrulama: verginet.net brüt-net tablosuyla ay ay eşleştirilmiştir.
 
   static const sgkWorkerRate = 0.14;
   static const unemploymentInsuranceRate = 0.01;
+  static const double brutAsgariUcret = 33030.0;
+  static const double _sgkTavan = 297270.0; // 33030 × 9
+  static const double _damgaVergisiOrani = 0.00759;
+  // Asgari ücret GV matrahı: 33030 - (33030 × 0.14) - (33030 × 0.01)
+  static const double _asgariUcretGvMatrahi = 28075.50;
 
-  /// Brüt yıllık maaştan gelir vergisi hesapla (kümülatif dilim)
-  static double _annualIncomeTax(double annualTaxBase) {
+  /// 2026 Türkiye gelir vergisi dilimleri (ücret gelirleri — yıllık kümülatif)
+  static const _taxBrackets2026 = [
+    (limit: 190000.0, rate: 0.15),
+    (limit: 400000.0, rate: 0.20),
+    (limit: 1500000.0, rate: 0.27),
+    (limit: 5300000.0, rate: 0.35),
+    (limit: double.infinity, rate: 0.40),
+  ];
+
+  static const monthNamesTR = [
+    'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+  ];
+
+  static const monthShortNamesTR = [
+    'Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz',
+    'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara',
+  ];
+
+  /// Kümülatif gelir vergisi hesapla (yıllık matrah üzerinden)
+  static double _cumulativeTax(double cumulativeBase) {
     double tax = 0;
-    double remaining = annualTaxBase;
     double prevLimit = 0;
-
     for (final bracket in _taxBrackets2026) {
-      final taxable = (remaining).clamp(0.0, bracket.limit - prevLimit);
-      tax += taxable * bracket.rate;
-      remaining -= taxable;
+      if (cumulativeBase <= prevLimit) break;
+      final taxableInBracket = min(cumulativeBase, bracket.limit) - prevLimit;
+      tax += taxableInBracket * bracket.rate;
       prevLimit = bracket.limit;
-      if (remaining <= 0) break;
     }
     return tax;
   }
 
-  /// Brüt aylık maaştan net maaş ve kesinti detaylarını hesapla
+  /// Returns the tax bracket rate for a given cumulative base
+  static double _getCurrentBracketRate(double cumulativeBase) {
+    for (final bracket in _taxBrackets2026) {
+      if (cumulativeBase <= bracket.limit) return bracket.rate;
+    }
+    return 0.40;
+  }
+
+  /// Full 12-month gross-to-net with proper cumulative tax, SGK tavan,
+  /// asgari ücret GV istisnası, and damga vergisi istisnası.
+  static AnnualSalaryBreakdown calculateAnnualNetSalary({
+    required double grossMonthly,
+  }) {
+    final months = <MonthlySalaryDetail>[];
+    double cumBase = 0;
+    double cumTax = 0;
+    double cumAsgariBase = 0;
+    double cumAsgariTax = 0;
+
+    for (int i = 0; i < 12; i++) {
+      // Adım 1: SGK ve İşsizlik (tavan sınırlı)
+      final sgkMatrahi = min(grossMonthly, _sgkTavan);
+      final sgkIsci = sgkMatrahi * sgkWorkerRate;
+      final issizlikIsci = sgkMatrahi * unemploymentInsuranceRate;
+
+      // Adım 2: Aylık GV matrahı
+      final aylikGvMatrahi = grossMonthly - sgkIsci - issizlikIsci;
+
+      // Adım 3: Kümülatif GV
+      final yeniCumBase = cumBase + aylikGvMatrahi;
+      final yeniCumTax = _cumulativeTax(yeniCumBase);
+      final aylikGelirVergisi = max(yeniCumTax - cumTax, 0.0);
+
+      // Adım 4: Damga vergisi (asgari ücret istisna matrahı)
+      final damgaMatrahi = max(grossMonthly - brutAsgariUcret, 0.0);
+      final damgaVergisi = damgaMatrahi * _damgaVergisiOrani;
+
+      // Adım 5: Net (istisna öncesi)
+      final netMaas =
+          grossMonthly - sgkIsci - issizlikIsci - aylikGelirVergisi - damgaVergisi;
+
+      // Adım 6: Asgari ücret GV istisnası (kümülatif)
+      final yeniCumAsgariBase = cumAsgariBase + _asgariUcretGvMatrahi;
+      final yeniCumAsgariTax = _cumulativeTax(yeniCumAsgariBase);
+      var aylikGvIstisnasi = yeniCumAsgariTax - cumAsgariTax;
+      aylikGvIstisnasi = min(aylikGvIstisnasi, aylikGelirVergisi);
+
+      // Adım 7: Damga istisnası (sabit, her ay aynı)
+      final damgaIstisnasi = min(
+        brutAsgariUcret * _damgaVergisiOrani,
+        damgaVergisi + (brutAsgariUcret * _damgaVergisiOrani),
+      );
+
+      // Adım 8: Toplam net ele geçen
+      final netEleGecen = netMaas + aylikGvIstisnasi + damgaIstisnasi;
+
+      months.add(MonthlySalaryDetail(
+        monthIndex: i,
+        monthName: monthNamesTR[i],
+        monthShortName: monthShortNamesTR[i],
+        grossMonthly: grossMonthly,
+        sgk: sgkIsci,
+        unemploymentInsurance: issizlikIsci,
+        gvMatrah: aylikGvMatrahi,
+        cumulativeBase: yeniCumBase,
+        monthlyIncomeTax: aylikGelirVergisi,
+        stampTax: damgaVergisi,
+        netBeforeExemption: netMaas,
+        gvExemption: aylikGvIstisnasi,
+        stampExemption: damgaIstisnasi,
+        netTakeHome: netEleGecen,
+        taxBracketRate: _getCurrentBracketRate(yeniCumBase),
+      ));
+
+      // Adım 9: Sonraki aya taşı
+      cumBase = yeniCumBase;
+      cumTax = yeniCumTax;
+      cumAsgariBase = yeniCumAsgariBase;
+      cumAsgariTax = yeniCumAsgariTax;
+    }
+
+    final totalNet = months.fold(0.0, (s, m) => s + m.netTakeHome);
+    final totalGross = grossMonthly * 12;
+
+    return AnnualSalaryBreakdown(
+      grossMonthly: grossMonthly,
+      months: months,
+      totalNet: totalNet,
+      totalGross: totalGross,
+      totalTax: months.fold(
+          0.0, (s, m) => s + m.monthlyIncomeTax - m.gvExemption),
+      totalSgk: months.fold(0.0, (s, m) => s + m.sgk + m.unemploymentInsurance),
+      totalStampTax:
+          months.fold(0.0, (s, m) => s + m.stampTax - m.stampExemption),
+      effectiveTaxRate: totalGross > 0 ? (totalGross - totalNet) / totalGross : 0,
+    );
+  }
+
+  /// Simple single-month gross-to-net (backward compat, returns January values)
   static SalaryBreakdown grossToNet({required double grossMonthly}) {
-    final grossAnnual = grossMonthly * 12;
-
-    // SGK işçi payı (brüt üzerinden, tavan kontrolü basitlik için yok)
-    final sgkMonthly = grossMonthly * sgkWorkerRate;
-    final unemploymentMonthly = grossMonthly * unemploymentInsuranceRate;
-
-    // Gelir vergisi matrahı (yıllık)
-    final annualTaxBase = grossAnnual - (sgkMonthly * 12) - (unemploymentMonthly * 12);
-    final annualTax = _annualIncomeTax(annualTaxBase);
-    final monthlyTax = annualTax / 12;
-
-    // Damga vergisi (%0.759)
-    final stampTax = grossMonthly * 0.00759;
-
-    final totalDeductions = sgkMonthly + unemploymentMonthly + monthlyTax + stampTax;
-    final netMonthly = grossMonthly - totalDeductions;
-
+    final annual = calculateAnnualNetSalary(grossMonthly: grossMonthly);
+    final jan = annual.months[0];
     return SalaryBreakdown(
       grossMonthly: grossMonthly,
-      sgk: sgkMonthly,
-      unemploymentInsurance: unemploymentMonthly,
-      incomeTax: monthlyTax,
-      stampTax: stampTax,
-      totalDeductions: totalDeductions,
-      netMonthly: netMonthly,
+      sgk: jan.sgk,
+      unemploymentInsurance: jan.unemploymentInsurance,
+      incomeTax: jan.monthlyIncomeTax - jan.gvExemption,
+      stampTax: jan.stampTax - jan.stampExemption,
+      totalDeductions: grossMonthly - jan.netTakeHome,
+      netMonthly: jan.netTakeHome,
     );
+  }
+
+  // ─── Gross → Net Resolution ─────────────────────────────────────
+
+  /// Brüt gelir kaydı için belirli bir aydaki net ele geçeni döndür.
+  /// [month] 1-indexed (1=Ocak, 12=Aralık).
+  /// Brüt değilse doğrudan amount döner.
+  static double resolveNetForMonth({
+    required double amount,
+    required bool isGross,
+    required int month,
+  }) {
+    if (!isGross) return amount;
+    final breakdown = calculateAnnualNetSalary(grossMonthly: amount);
+    return breakdown.months[(month - 1).clamp(0, 11)].netTakeHome;
+  }
+
+  /// 12 aylık net breakdown döndür (brüt değilse her ay aynı amount).
+  static List<double> resolveAllMonths({
+    required double amount,
+    required bool isGross,
+  }) {
+    if (!isGross) return List.filled(12, amount);
+    final breakdown = calculateAnnualNetSalary(grossMonthly: amount);
+    return breakdown.months.map((m) => m.netTakeHome).toList();
   }
 
   // ─── Projections ─────────────────────────────────────────────────
@@ -251,7 +373,7 @@ class FinancialCalculator {
       currentSavings + (monthlySavings * months);
 }
 
-/// Brüt → Net maaş hesaplama sonucu
+/// Brüt → Net maaş hesaplama sonucu (basit, tek ay)
 class SalaryBreakdown {
   final double grossMonthly;
   final double sgk;
@@ -270,4 +392,80 @@ class SalaryBreakdown {
     required this.totalDeductions,
     required this.netMonthly,
   });
+}
+
+/// Tek bir ayın detaylı brüt→net hesaplama sonucu
+class MonthlySalaryDetail {
+  final int monthIndex;
+  final String monthName;
+  final String monthShortName;
+  final double grossMonthly;
+  final double sgk;
+  final double unemploymentInsurance;
+  final double gvMatrah;
+  final double cumulativeBase;
+  final double monthlyIncomeTax;
+  final double stampTax;
+  final double netBeforeExemption;
+  final double gvExemption;
+  final double stampExemption;
+  final double netTakeHome;
+  final double taxBracketRate;
+
+  const MonthlySalaryDetail({
+    required this.monthIndex,
+    required this.monthName,
+    required this.monthShortName,
+    required this.grossMonthly,
+    required this.sgk,
+    required this.unemploymentInsurance,
+    required this.gvMatrah,
+    required this.cumulativeBase,
+    required this.monthlyIncomeTax,
+    required this.stampTax,
+    required this.netBeforeExemption,
+    required this.gvExemption,
+    required this.stampExemption,
+    required this.netTakeHome,
+    required this.taxBracketRate,
+  });
+
+  /// Net vergi yükü (istisna sonrası)
+  double get netIncomeTax => monthlyIncomeTax - gvExemption;
+
+  /// Net damga vergisi (istisna sonrası)
+  double get netStampTax => stampTax - stampExemption;
+
+  /// Toplam kesinti
+  double get totalDeductions => grossMonthly - netTakeHome;
+}
+
+/// 12 aylık brüt→net hesaplama sonucu
+class AnnualSalaryBreakdown {
+  final double grossMonthly;
+  final List<MonthlySalaryDetail> months;
+  final double totalNet;
+  final double totalGross;
+  final double totalTax;
+  final double totalSgk;
+  final double totalStampTax;
+  final double effectiveTaxRate;
+
+  const AnnualSalaryBreakdown({
+    required this.grossMonthly,
+    required this.months,
+    required this.totalNet,
+    required this.totalGross,
+    required this.totalTax,
+    required this.totalSgk,
+    required this.totalStampTax,
+    required this.effectiveTaxRate,
+  });
+
+  /// En yüksek net (genellikle Ocak)
+  double get maxNet => months.fold(0.0, (m, d) => max(m, d.netTakeHome));
+
+  /// En düşük net
+  double get minNet =>
+      months.fold(double.infinity, (m, d) => min(m, d.netTakeHome));
 }

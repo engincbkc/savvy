@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
+import 'package:savvy/core/design/tokens/app_shadow.dart';
+import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
+import 'package:savvy/core/design/tokens/app_animation.dart';
 
 class MonthChip extends StatelessWidget {
   final String label;
@@ -20,34 +23,36 @@ class MonthChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
         onTap();
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        duration: AppDuration.fast,
+        curve: AppCurve.standard,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md + 2,
+          vertical: AppSpacing.sm,
+        ),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.of(context).brandPrimary : AppColors.of(context).surfaceOverlay,
+          color: isSelected ? c.brandPrimary : c.surfaceCard,
           borderRadius: AppRadius.pill,
           border: Border.all(
             color: isSelected
-                ? AppColors.of(context).brandPrimary
-                : AppColors.of(context).borderDefault.withValues(alpha: 0.5),
+                ? c.brandPrimary
+                : c.borderDefault.withValues(alpha: 0.3),
           ),
+          boxShadow: isSelected ? AppShadow.sm : AppShadow.none,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              year != null ? '$label \'${year!.substring(2)}' : label,
-              style: AppTypography.labelSmall.copyWith(
-                color: isSelected ? Colors.white : AppColors.of(context).textSecondary,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              ),
-            ),
-          ],
+        child: Text(
+          year != null ? '$label \'${year!.substring(2)}' : label,
+          style: AppTypography.labelSmall.copyWith(
+            color: isSelected ? Colors.white : c.textSecondary,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          ),
         ),
       ),
     );

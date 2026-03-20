@@ -65,6 +65,16 @@ class TransactionFormNotifier extends _$TransactionFormNotifier {
 
   // ─── Delete (soft) ───────────────────────────────────────────────────
 
+  Future<bool> deleteMultipleIncomes(List<String> ids) async {
+    state = const AsyncLoading();
+    final result = await AsyncValue.guard(() async {
+      await ref.read(incomeRepositoryProvider).softDeleteMany(ids);
+    });
+    if (!ref.mounted) return true;
+    state = result;
+    return !state.hasError;
+  }
+
   Future<bool> deleteIncome(String id) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {

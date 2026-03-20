@@ -16,6 +16,8 @@ abstract class Income with _$Income {
     String? note,
     @Default(false) bool isRecurring,
     DateTime? recurringEndDate,
+    /// true ise [amount] brüt tutardır; net, ay bazında hesaplanır.
+    @Default(false) bool isGross,
     @Default(false) bool isDeleted,
     required DateTime createdAt,
   }) = _Income;

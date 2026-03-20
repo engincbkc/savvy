@@ -90,4 +90,13 @@ class IncomeRepository implements BaseRepository<Income> {
   Future<void> hardDelete(String id) async {
     await _collection.doc(id).delete();
   }
+
+  /// Batch soft-delete multiple records at once.
+  Future<void> softDeleteMany(List<String> ids) async {
+    final batch = _firestore.batch();
+    for (final id in ids) {
+      batch.update(_collection.doc(id), {'isDeleted': true});
+    }
+    await batch.commit();
+  }
 }

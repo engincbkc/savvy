@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:savvy/core/constants/financial_enums.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
-import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/features/transactions/presentation/widgets/delete_dialog.dart';
 import 'package:savvy/features/transactions/domain/models/expense.dart';
 import 'package:savvy/features/transactions/presentation/providers/transaction_form_provider.dart';
@@ -81,7 +79,7 @@ class ExpenseTab extends ConsumerWidget {
           itemCount: expenses.length,
           categoryCount: grouped.length,
         ),
-        const SizedBox(height: AppSpacing.base),
+        const SizedBox(height: AppSpacing.lg),
 
         ExpenseTypeRow(byType: byType, total: total),
         const SizedBox(height: AppSpacing.lg),

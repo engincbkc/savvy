@@ -710,4 +710,4 @@ final class FutureProjectionsProvider
   }
 }
 
-String _$futureProjectionsHash() => r'72a27902e6e68a624243ac130a574b931413094b';
+String _$futureProjectionsHash() => r'e76ef44d4615511bf154712cf09d657dc746d19e';

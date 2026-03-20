@@ -60,8 +60,15 @@ class MonthSummaryAggregator {
             s.date.toUtc().isBefore(range.end),
       );
 
-      final totalIncome =
-          monthIncomeList.fold(0.0, (sum, i) => sum + i.amount);
+      final month = range.start.month; // 1-indexed
+      final totalIncome = monthIncomeList.fold(0.0, (sum, i) {
+        return sum +
+            FinancialCalculator.resolveNetForMonth(
+              amount: i.amount,
+              isGross: i.isGross,
+              month: month,
+            );
+      });
       final totalExpense =
           monthExpenseList.fold(0.0, (sum, e) => sum + e.amount);
       final totalSavings =

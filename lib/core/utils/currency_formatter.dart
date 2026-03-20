@@ -26,9 +26,16 @@ class CurrencyFormatter {
   /// No decimal: ₺1.250
   static String formatNoDecimal(double amount) => _noDecimal.format(amount);
 
-  /// Compact: ₺1,2B for 1M+, standard otherwise
-  static String compact(double amount) =>
-      amount.abs() >= 1000000 ? _compact.format(amount) : format(amount);
+  /// Compact: ₺1,2M for 1M+, ₺102K for 10K+, ₺1.250 for smaller
+  static String compact(double amount) {
+    final abs = amount.abs();
+    if (abs >= 1000000) return _compact.format(amount);
+    if (abs >= 10000) {
+      final k = (amount / 1000).round();
+      return '₺${k}K';
+    }
+    return formatNoDecimal(amount);
+  }
 
   /// Signed: +₺1.250,00 or -₺500,00
   static String withSign(double amount) {

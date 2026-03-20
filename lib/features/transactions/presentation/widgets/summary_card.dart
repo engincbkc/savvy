@@ -29,7 +29,6 @@ class SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: gradient,
@@ -45,53 +44,93 @@ class SummaryCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: AppRadius.chip,
-                ),
-                child: Icon(icon, color: Colors.white, size: 20),
+      child: ClipRRect(
+        borderRadius: AppRadius.card,
+        child: Stack(
+          children: [
+            // Icon watermark in bottom-right
+            Positioned(
+              right: -AppSpacing.sm,
+              bottom: -AppSpacing.sm,
+              child: Icon(
+                icon,
+                size: 80,
+                color: Colors.white.withValues(alpha: 0.06),
               ),
-              const SizedBox(width: AppSpacing.md),
-              Text(title,
-                  style: AppTypography.titleMedium
-                      .copyWith(color: Colors.white.withValues(alpha: 0.85))),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.base),
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: total),
-            duration: AppDuration.countUp,
-            curve: AppCurve.decelerate,
-            builder: (context, value, _) => Text(
-              CurrencyFormatter.formatNoDecimal(value),
-              style: AppTypography.numericLarge.copyWith(color: Colors.white),
             ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            children: [
-              MiniChip(
-                label: '$itemCount işlem',
-                bgColor: Colors.white.withValues(alpha: 0.15),
-                textColor: Colors.white.withValues(alpha: 0.9),
+            // Shine line at top
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      Colors.white.withValues(alpha: 0.15),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
               ),
-              const SizedBox(width: AppSpacing.sm),
-              MiniChip(
-                label: '$categoryCount kategori',
-                bgColor: Colors.white.withValues(alpha: 0.15),
-                textColor: Colors.white.withValues(alpha: 0.9),
+            ),
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: AppRadius.chip,
+                        ),
+                        child: Icon(icon, color: Colors.white, size: 20),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Text(title,
+                          style: AppTypography.titleMedium.copyWith(
+                              color: Colors.white.withValues(alpha: 0.85))),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.base),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: total),
+                    duration: AppDuration.countUp,
+                    curve: AppCurve.decelerate,
+                    builder: (context, value, _) => Text(
+                      CurrencyFormatter.formatNoDecimal(value),
+                      style: AppTypography.numericLarge
+                          .copyWith(color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    children: [
+                      MiniChip(
+                        label: '$itemCount işlem',
+                        bgColor: Colors.white.withValues(alpha: 0.15),
+                        textColor: Colors.white.withValues(alpha: 0.9),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      MiniChip(
+                        label: '$categoryCount kategori',
+                        bgColor: Colors.white.withValues(alpha: 0.15),
+                        textColor: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

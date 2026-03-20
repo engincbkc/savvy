@@ -129,19 +129,27 @@ List<MonthSummary> futureProjections(Ref ref) {
     final ym = futureDate.toYearMonth();
     final range = YearMonthRange.from(ym);
 
-    // Recurring incomes (check end date)
+    // Recurring incomes (check end date, resolve gross→net)
     double projIncome = 0;
     for (final i in recurringIncomes) {
       if (i.recurringEndDate != null &&
           i.recurringEndDate!.isBefore(futureDate)) {
         continue;
       }
-      projIncome += i.amount;
+      projIncome += FinancialCalculator.resolveNetForMonth(
+        amount: i.amount,
+        isGross: i.isGross,
+        month: futureDate.month,
+      );
     }
     // One-time future incomes in this month
     for (final i in futureOneTimeIncomes) {
       if (!i.date.isBefore(range.start) && i.date.isBefore(range.end)) {
-        projIncome += i.amount;
+        projIncome += FinancialCalculator.resolveNetForMonth(
+          amount: i.amount,
+          isGross: i.isGross,
+          month: futureDate.month,
+        );
       }
     }
 

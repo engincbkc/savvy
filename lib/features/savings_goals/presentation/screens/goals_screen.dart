@@ -6,6 +6,7 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:savvy/core/constants/financial_enums.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
+import 'package:savvy/core/design/tokens/app_shadow.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/utils/currency_formatter.dart';
@@ -103,14 +104,26 @@ class GoalsScreen extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(
                       AppSpacing.lg, 0, AppSpacing.lg, 100),
                   itemCount: goals.length,
-                  itemBuilder: (context, i) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.base),
-                    child: _GoalCard(
-                      goal: goals[i],
-                      monthlyNet: monthlyNet,
-                      onTap: () => _showDetail(context, ref, goals[i], monthlyNet),
-                      onEdit: () => _showEditGoal(context, goals[i]),
-                      onDelete: () => _confirmDelete(context, ref, goals[i]),
+                  itemBuilder: (context, i) => TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0.0, end: 1.0),
+                    duration: Duration(milliseconds: 400 + (i * 80)),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, child) => Opacity(
+                      opacity: value,
+                      child: Transform.translate(
+                        offset: Offset(0, 24 * (1 - value)),
+                        child: child,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.base),
+                      child: _GoalCard(
+                        goal: goals[i],
+                        monthlyNet: monthlyNet,
+                        onTap: () => _showDetail(context, ref, goals[i], monthlyNet),
+                        onEdit: () => _showEditGoal(context, goals[i]),
+                        onDelete: () => _confirmDelete(context, ref, goals[i]),
+                      ),
                     ),
                   ),
                 );
@@ -373,14 +386,8 @@ class _GoalCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: c.surfaceCard,
           borderRadius: AppRadius.cardLg,
-          border: Border.all(color: accentColor.withValues(alpha: 0.12)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          border: Border.all(color: c.borderDefault.withValues(alpha: 0.3)),
+          boxShadow: AppShadow.sm,
         ),
         child: Column(
           children: [
@@ -832,28 +839,27 @@ class _MilestoneBar extends StatelessWidget {
               Positioned(
                 left: 0,
                 right: 0,
-                top: 14,
+                top: 13,
                 child: Container(
-                  height: 8,
+                  height: 10,
                   decoration: BoxDecoration(
                     color: c.surfaceOverlay,
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(5),
                   ),
                 ),
               ),
               // Fill
               Positioned(
                 left: 0,
-                top: 14,
+                top: 13,
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    // Use parent width from outside
                     return FractionallySizedBox(
                       child: Container(
-                        height: 8,
+                        height: 10,
                         decoration: BoxDecoration(
                           color: color,
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(5),
                         ),
                       ),
                     );

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
+import 'package:savvy/core/design/tokens/app_shadow.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/utils/currency_formatter.dart';
@@ -53,11 +54,11 @@ class SwipeableTransactionTile extends StatelessWidget {
       },
       background: Container(
         alignment: Alignment.centerRight,
-        margin: const EdgeInsets.only(bottom: 4),
+        margin: const EdgeInsets.only(bottom: AppSpacing.xs),
         padding: const EdgeInsets.only(right: AppSpacing.lg),
         decoration: BoxDecoration(
           color: AppColors.of(context).expense,
-          borderRadius: AppRadius.chip,
+          borderRadius: AppRadius.card,
         ),
         child: const Icon(AppIcons.delete, color: Colors.white, size: 20),
       ),
@@ -67,15 +68,29 @@ class SwipeableTransactionTile extends StatelessWidget {
           onTap();
         },
         child: Container(
-          margin: const EdgeInsets.only(bottom: 4),
+          margin: const EdgeInsets.only(bottom: AppSpacing.xs),
           padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
           decoration: BoxDecoration(
             color: AppColors.of(context).surfaceCard,
-            borderRadius: AppRadius.chip,
+            borderRadius: AppRadius.card,
+            border: Border.all(
+              color: AppColors.of(context).borderDefault.withValues(alpha: 0.3),
+            ),
+            boxShadow: AppShadow.xs,
           ),
           child: Row(
             children: [
+              // Left accent bar
+              Container(
+                width: 4,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: AppRadius.pill,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
               Container(
                 width: 34,
                 height: 34,

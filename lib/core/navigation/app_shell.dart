@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -23,57 +25,70 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentIndex = _currentIndex(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: child,
       extendBody: true,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppColors.of(context).surfaceCard,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 20,
-              offset: const Offset(0, -4),
+      bottomNavigationBar: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark
+                  ? AppColors.of(context)
+                      .surfaceCard
+                      .withValues(alpha: 0.85)
+                  : AppColors.of(context)
+                      .surfaceCard
+                      .withValues(alpha: 0.92),
+              border: Border(
+                top: BorderSide(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.06)
+                      : Colors.black.withValues(alpha: 0.04),
+                ),
+              ),
             ),
-          ],
-        ),
-        child: SafeArea(
-          top: false,
-          child: SizedBox(
-            height: 64,
-            child: Row(
-              children: [
-                _NavItem(
-                  icon: AppIcons.home,
-                  label: 'Ana Sayfa',
-                  isActive: currentIndex == 0,
-                  onTap: () => context.go('/dashboard'),
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                height: 64,
+                child: Row(
+                  children: [
+                    _NavItem(
+                      icon: AppIcons.home,
+                      label: 'Ana Sayfa',
+                      isActive: currentIndex == 0,
+                      onTap: () => context.go('/dashboard'),
+                    ),
+                    _NavItem(
+                      icon: AppIcons.analytics,
+                      label: 'İşlemler',
+                      isActive: currentIndex == 1,
+                      onTap: () => context.go('/transactions'),
+                    ),
+                    _NavItem(
+                      icon: AppIcons.goal,
+                      label: 'Hedefler',
+                      isActive: currentIndex == 2,
+                      onTap: () => context.go('/goals'),
+                    ),
+                    _NavItem(
+                      icon: AppIcons.simulate,
+                      label: 'Simülasyon',
+                      isActive: currentIndex == 3,
+                      onTap: () => context.go('/simulate'),
+                    ),
+                    _NavItem(
+                      icon: AppIcons.settings,
+                      label: 'Ayarlar',
+                      isActive: currentIndex == 4,
+                      onTap: () => context.go('/settings'),
+                    ),
+                  ],
                 ),
-                _NavItem(
-                  icon: AppIcons.analytics,
-                  label: 'İşlemler',
-                  isActive: currentIndex == 1,
-                  onTap: () => context.go('/transactions'),
-                ),
-                _NavItem(
-                  icon: AppIcons.goal,
-                  label: 'Hedefler',
-                  isActive: currentIndex == 2,
-                  onTap: () => context.go('/goals'),
-                ),
-                _NavItem(
-                  icon: AppIcons.simulate,
-                  label: 'Simülasyon',
-                  isActive: currentIndex == 3,
-                  onTap: () => context.go('/simulate'),
-                ),
-                _NavItem(
-                  icon: AppIcons.settings,
-                  label: 'Ayarlar',
-                  isActive: currentIndex == 4,
-                  onTap: () => context.go('/settings'),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -97,6 +112,9 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brandColor = AppColors.of(context).brandPrimary;
+    final inactiveColor = AppColors.of(context).textTertiary;
+
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
@@ -108,30 +126,38 @@ class _NavItem extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutCubic,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
                 color: isActive
-                    ? AppColors.of(context).brandPrimary.withValues(alpha: 0.1)
+                    ? brandColor.withValues(alpha: 0.1)
                     : Colors.transparent,
                 borderRadius: AppRadius.pill,
               ),
-              child: Icon(
-                icon,
-                size: 22,
-                color: isActive ? AppColors.of(context).brandPrimary : AppColors.of(context).textTertiary,
+              child: AnimatedScale(
+                scale: isActive ? 1.1 : 1.0,
+                duration: const Duration(milliseconds: 200),
+                child: Icon(
+                  icon,
+                  size: 22,
+                  color: isActive ? brandColor : inactiveColor,
+                ),
               ),
             ),
             const SizedBox(height: 2),
-            Text(
-              label,
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 200),
               style: AppTypography.caption.copyWith(
-                color: isActive ? AppColors.of(context).brandPrimary : AppColors.of(context).textTertiary,
+                color: isActive ? brandColor : inactiveColor,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                 fontSize: 10,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),

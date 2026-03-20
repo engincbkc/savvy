@@ -20,7 +20,6 @@ import 'package:savvy/features/savings_goals/presentation/providers/goals_provid
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final allIncomesAsync = ref.watch(allIncomesProvider);
@@ -46,6 +45,7 @@ class DashboardScreen extends ConsumerWidget {
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
+          // App bar
           SliverAppBar(
             floating: true,
             backgroundColor: AppColors.of(context).surfaceBackground,
@@ -53,13 +53,20 @@ class DashboardScreen extends ConsumerWidget {
             title: Row(
               children: [
                 Container(
-                  width: 32,
-                  height: 32,
+                  width: 34,
+                  height: 34,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [Color(0xFF1A56DB), Color(0xFF3F83F8)],
                     ),
                     borderRadius: AppRadius.chip,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF1A56DB).withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: const Icon(LucideIcons.wallet,
                       color: Colors.white, size: 18),
@@ -69,12 +76,15 @@ class DashboardScreen extends ConsumerWidget {
                   'Savvy',
                   style: AppTypography.headlineMedium.copyWith(
                     color: AppColors.of(context).brandPrimary,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ],
             ),
             centerTitle: false,
           ),
+
+          // Content
           SliverPadding(
             padding: AppSpacing.screenH,
             sliver: isLoading
@@ -84,7 +94,7 @@ class DashboardScreen extends ConsumerWidget {
                       const SavvyShimmer(
                         child: Column(
                           children: [
-                            ShimmerBox(height: 170),
+                            ShimmerBox(height: 180),
                             SizedBox(height: AppSpacing.base),
                             ShimmerBox(height: 80),
                             SizedBox(height: AppSpacing.base),
@@ -101,71 +111,90 @@ class DashboardScreen extends ConsumerWidget {
                       const SizedBox(height: AppSpacing.sm),
 
                       // 1) Hero Card
-                      HeroCard(
-                        cumulativeNet: cumulativeNet,
+                      _StaggeredEntry(
+                        delay: 0,
+                        child: HeroCard(
+                          cumulativeNet: cumulativeNet,
+                          currentMonth: currentMonth,
+                        ),
                       ),
 
                       const SizedBox(height: AppSpacing.base),
 
                       // 2) Quick Stats
                       if (currentMonth != null) ...[
-                        QuickStatsRow(summary: currentMonth),
+                        _StaggeredEntry(
+                          delay: 100,
+                          child: QuickStatsRow(summary: currentMonth),
+                        ),
                         const SizedBox(height: AppSpacing.base),
                       ],
 
                       // 3) Birikim toggle
                       if (totalSavings > 0) ...[
-                        SavingsToggle(
-                          isEnabled: includeSavings,
-                          totalSavings: totalSavings,
-                          onToggle: () {
-                            HapticFeedback.selectionClick();
-                            ref
-                                .read(
-                                    includeSavingsInProjectionProvider.notifier)
-                                .toggle();
-                          },
+                        _StaggeredEntry(
+                          delay: 200,
+                          child: SavingsToggle(
+                            isEnabled: includeSavings,
+                            totalSavings: totalSavings,
+                            onToggle: () {
+                              HapticFeedback.selectionClick();
+                              ref
+                                  .read(includeSavingsInProjectionProvider
+                                      .notifier)
+                                  .toggle();
+                            },
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.xl),
                       ],
 
                       // 4) Aylık Akış tablosu
-                      MonthlyFlowTable(
-                        summaries: summaries,
-                        projections: projections,
-                        includeSavings: includeSavings,
-                        nearestGoalTarget: goals.isNotEmpty
-                            ? goals
-                                .where((g) => g.status.name == 'active')
-                                .fold<double?>(null, (nearest, g) {
-                                  if (nearest == null) return g.targetAmount;
-                                  return g.targetAmount < nearest
-                                      ? g.targetAmount
-                                      : nearest;
-                                })
-                            : null,
-                        onMonthTap: (ym) {
-                          HapticFeedback.lightImpact();
-                          context.go('/dashboard/month/$ym');
-                        },
+                      _StaggeredEntry(
+                        delay: 300,
+                        child: MonthlyFlowTable(
+                          summaries: summaries,
+                          projections: projections,
+                          includeSavings: includeSavings,
+                          nearestGoalTarget: goals.isNotEmpty
+                              ? goals
+                                  .where((g) => g.status.name == 'active')
+                                  .fold<double?>(null, (nearest, g) {
+                                    if (nearest == null) return g.targetAmount;
+                                    return g.targetAmount < nearest
+                                        ? g.targetAmount
+                                        : nearest;
+                                  })
+                              : null,
+                          onMonthTap: (ym) {
+                            HapticFeedback.lightImpact();
+                            context.go('/dashboard/month/$ym');
+                          },
+                        ),
                       ),
 
                       const SizedBox(height: AppSpacing.xl),
 
                       // 5) Hedefler özeti
                       if (goals.isNotEmpty) ...[
-                        GoalsSummary(goals: goals),
+                        _StaggeredEntry(
+                          delay: 400,
+                          child: GoalsSummary(goals: goals),
+                        ),
                         const SizedBox(height: AppSpacing.xl),
                       ],
 
                       // 6) Trend grafiği
                       if (projections.isNotEmpty)
-                        TrendChart(
-                          projections: projections,
-                          goalTargets: goals
-                              .where((g) => g.status.name == 'active')
-                              .map((g) => g.targetAmount)
-                              .toList(),
+                        _StaggeredEntry(
+                          delay: 500,
+                          child: TrendChart(
+                            projections: projections,
+                            goalTargets: goals
+                                .where((g) => g.status.name == 'active')
+                                .map((g) => g.targetAmount)
+                                .toList(),
+                          ),
                         ),
 
                       const SizedBox(height: 100),
@@ -174,6 +203,39 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Staggered entrance animation for dashboard sections.
+class _StaggeredEntry extends StatelessWidget {
+  final int delay;
+  final Widget child;
+
+  const _StaggeredEntry({
+    required this.delay,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: Duration(milliseconds: 600 + delay),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        // Delay effect: the actual animation starts after the delay portion
+        final adjusted =
+            ((value * (600 + delay) - delay) / 600).clamp(0.0, 1.0);
+        return Opacity(
+          opacity: adjusted,
+          child: Transform.translate(
+            offset: Offset(0, 20 * (1 - adjusted)),
+            child: child,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }
