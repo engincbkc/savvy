@@ -78,6 +78,10 @@ class IncomeTab extends ConsumerWidget {
       (i) => _resolveAmount(i),
       isRecurring: (i) => i.isRecurring,
       getRecurringEndDate: (i) => i.recurringEndDate,
+      getAmountForMonth: (i, month) => FinancialCalculator.resolveNetForMonth(
+        amount: i.amount, isGross: i.isGross, month: month,
+      ),
+      isYearBounded: (i) => i.isGross,
     );
 
     final displayCount = grossIncomes.length + regularIncomes.length + legacyGrossIncomes.length;
@@ -279,27 +283,43 @@ class _GrossSalaryCardState extends State<_GrossSalaryCard> {
     final currentNet = breakdown.months[widget.displayMonth - 1].netTakeHome;
     final monthName = FinancialCalculator.monthNamesTR[widget.displayMonth - 1];
 
-    return GestureDetector(
-      onTap: widget.onTap,
-      child: Container(
+    return Dismissible(
+      key: ValueKey(widget.income.id),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (_) async {
+        widget.onDelete();
+        return false;
+      },
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: AppSpacing.lg),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    widget.color.withValues(alpha: 0.12),
-                    widget.color.withValues(alpha: 0.04),
-                  ]
-                : [
-                    widget.color.withValues(alpha: 0.06),
-                    widget.color.withValues(alpha: 0.02),
-                  ],
-          ),
+          color: c.expense,
           borderRadius: AppRadius.cardLg,
-          border: Border.all(
-            color: widget.color.withValues(alpha: isDark ? 0.2 : 0.12),
-          ),
+        ),
+        child: const Icon(AppIcons.delete, color: Colors.white, size: 20),
+      ),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [
+                      widget.color.withValues(alpha: 0.12),
+                      widget.color.withValues(alpha: 0.04),
+                    ]
+                  : [
+                      widget.color.withValues(alpha: 0.06),
+                      widget.color.withValues(alpha: 0.02),
+                    ],
+            ),
+            borderRadius: AppRadius.cardLg,
+            border: Border.all(
+              color: widget.color.withValues(alpha: isDark ? 0.2 : 0.12),
+            ),
           boxShadow: [
             BoxShadow(
               color: widget.color.withValues(alpha: 0.08),
@@ -523,6 +543,7 @@ class _GrossSalaryCardState extends State<_GrossSalaryCard> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

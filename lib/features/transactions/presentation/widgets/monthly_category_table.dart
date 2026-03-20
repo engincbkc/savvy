@@ -50,6 +50,8 @@ MonthlyCategoryData buildMonthlyCategoryData<T>(
   double Function(T) getAmount, {
   bool Function(T)? isRecurring,
   DateTime? Function(T)? getRecurringEndDate,
+  double Function(T, int month)? getAmountForMonth,
+  bool Function(T)? isYearBounded, // true = yıl sonuna kadar (brüt maaş gibi)
   int maxProjectionMonths = 240,
 }) {
   if (items.isEmpty) {
@@ -75,29 +77,39 @@ MonthlyCategoryData buildMonthlyCategoryData<T>(
   }
 
   for (final item in items) {
-    final ym = getDate(item).toYearMonth();
+    final itemDate = getDate(item);
+    final ym = itemDate.toYearMonth();
     final cat = getCategory(item);
-    final amount = getAmount(item);
     final icon = getIcon(item);
 
-    // Add the actual transaction
-    addEntry(ym, cat, amount, icon);
+    // Add the actual transaction (use month-specific amount if available)
+    final actualAmount = getAmountForMonth != null
+        ? getAmountForMonth(item, itemDate.month)
+        : getAmount(item);
+    addEntry(ym, cat, actualAmount, icon);
 
     // Project recurring items into future months
     if (isRecurring != null && isRecurring(item)) {
       final endDate = getRecurringEndDate?.call(item);
-      final itemDate = getDate(item);
-      // If no end date, project up to 12 months; otherwise project until end date
+      final bounded = isYearBounded != null && isYearBounded(item);
+      // Brüt maaş: yıl sonuna kadar. Diğerleri: bitiş tarihine veya 12 aya kadar.
+      final defaultLimit = bounded
+          ? (12 - itemDate.month)
+          : 12;
       final projLimit = endDate != null
           ? ((endDate.year - itemDate.year) * 12 + endDate.month - itemDate.month).clamp(1, maxProjectionMonths)
-          : 12;
+          : defaultLimit;
       for (int m = 1; m <= projLimit; m++) {
         final futureDate = DateTime(itemDate.year, itemDate.month + m, 1);
         final futureYm = futureDate.toYearMonth();
 
         if (endDate != null && futureDate.isAfter(endDate)) break;
+        if (bounded && futureDate.year > itemDate.year) break;
 
-        addEntry(futureYm, cat, amount, icon);
+        final projAmount = getAmountForMonth != null
+            ? getAmountForMonth(item, futureDate.month)
+            : getAmount(item);
+        addEntry(futureYm, cat, projAmount, icon);
       }
     }
   }

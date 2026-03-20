@@ -83,11 +83,6 @@ class _AddIncomeSheetState extends ConsumerState<AddIncomeSheet> {
 
   void _onMonthSelected(int index) {
     setState(() => _selectedMonthIndex = index);
-    // Sync date to selected month (keep day)
-    final newMonth = index + 1;
-    final maxDay = DateUtils.getDaysInMonth(_date.year, newMonth);
-    final day = _date.day > maxDay ? maxDay : _date.day;
-    _date = DateTime(_date.year, newMonth, day);
     _syncNetAmount();
   }
 
