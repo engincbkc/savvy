@@ -456,7 +456,7 @@ final class AllMonthSummariesProvider
   }
 }
 
-String _$allMonthSummariesHash() => r'1a45728cdd117c95ffe58f4108f74a7909911f36';
+String _$allMonthSummariesHash() => r'47dd6efba1bb94db5f3fcefb3bc8e3a7ada492d9';
 
 /// Single month summary (used in detail screen)
 
@@ -653,16 +653,16 @@ String _$totalSavingsAmountHash() =>
 
 /// Future month projections based on recurring incomes/expenses.
 /// Projects 12 months ahead from current month.
-/// When includeSavings is true, total savings is added as one-time income
-/// in month 1.
+/// Future-dated savings are included in their respective months when
+/// includeSavings toggle is on.
 
 @ProviderFor(futureProjections)
 final futureProjectionsProvider = FutureProjectionsProvider._();
 
 /// Future month projections based on recurring incomes/expenses.
 /// Projects 12 months ahead from current month.
-/// When includeSavings is true, total savings is added as one-time income
-/// in month 1.
+/// Future-dated savings are included in their respective months when
+/// includeSavings toggle is on.
 
 final class FutureProjectionsProvider
     extends
@@ -674,8 +674,8 @@ final class FutureProjectionsProvider
     with $Provider<List<MonthSummary>> {
   /// Future month projections based on recurring incomes/expenses.
   /// Projects 12 months ahead from current month.
-  /// When includeSavings is true, total savings is added as one-time income
-  /// in month 1.
+  /// Future-dated savings are included in their respective months when
+  /// includeSavings toggle is on.
   FutureProjectionsProvider._()
     : super(
         from: null,
@@ -710,4 +710,4 @@ final class FutureProjectionsProvider
   }
 }
 
-String _$futureProjectionsHash() => r'e76ef44d4615511bf154712cf09d657dc746d19e';
+String _$futureProjectionsHash() => r'44ec5210fb25127be1344a4e030a19c828bc2cba';

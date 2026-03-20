@@ -102,7 +102,6 @@ class IncomeTab extends ConsumerWidget {
           MonthlyCategoryTable(
             data: monthlyData,
             color: AppColors.of(context).income,
-            prefix: '+',
           ),
         if (monthlyData.months.length > 1)
           const SizedBox(height: AppSpacing.xl),
@@ -146,7 +145,6 @@ class IncomeTab extends ConsumerWidget {
               date: i.date,
               color: AppColors.of(context).income,
               icon: incomeIcon(i.category),
-              prefix: '+',
               isRecurring: i.isRecurring,
               person: i.person,
               onDelete: () => _confirmDelete(context, ref, i.id, 'gelir'),
@@ -400,7 +398,7 @@ class _GrossSalaryCardState extends State<_GrossSalaryCard> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '+${CurrencyFormatter.formatNoDecimal(currentNet)}',
+                        CurrencyFormatter.formatNoDecimal(currentNet),
                         style: AppTypography.numericMedium.copyWith(
                           color: widget.color,
                           fontWeight: FontWeight.w800,

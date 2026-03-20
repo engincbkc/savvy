@@ -424,14 +424,12 @@ class _BreakdownDetailCard extends StatelessWidget {
                     label: 'GV İstisnası',
                     value: month.gvExemption,
                     color: accentColor,
-                    prefix: '+',
                   ),
                 if (month.stampExemption > 0)
                   _DetailRow(
                     label: 'DV İstisnası',
                     value: month.stampExemption,
                     color: accentColor,
-                    prefix: '+',
                   ),
 
                 const SizedBox(height: 6),
@@ -484,21 +482,18 @@ class _DetailRow extends StatelessWidget {
   final double value;
   final Color color;
   final bool isBold;
-  final String? prefix;
 
   const _DetailRow({
     required this.label,
     required this.value,
     required this.color,
     this.isBold = false,
-    this.prefix,
   });
 
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
     final displayValue = value.abs();
-    final sign = prefix ?? (value < 0 ? '−' : '');
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -513,7 +508,7 @@ class _DetailRow extends StatelessWidget {
             ),
           ),
           Text(
-            '$sign${CurrencyFormatter.formatNoDecimal(displayValue)}',
+            CurrencyFormatter.formatNoDecimal(displayValue),
             style: AppTypography.numericSmall.copyWith(
               color: color,
               fontWeight: isBold ? FontWeight.w700 : FontWeight.w500,

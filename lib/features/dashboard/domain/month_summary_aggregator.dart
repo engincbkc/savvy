@@ -14,6 +14,7 @@ class MonthSummaryAggregator {
     required List<Income> incomes,
     required List<Expense> expenses,
     required List<Savings> savings,
+    bool includeSavings = false,
   }) {
     if (incomes.isEmpty && expenses.isEmpty && savings.isEmpty) return [];
 
@@ -45,19 +46,13 @@ class MonthSummaryAggregator {
       final range = YearMonthRange.from(ym);
 
       final monthIncomeList = incomes.where(
-        (i) =>
-            !i.date.toUtc().isBefore(range.start) &&
-            i.date.toUtc().isBefore(range.end),
+        (i) => i.date.toYearMonth() == ym,
       );
       final monthExpenseList = expenses.where(
-        (e) =>
-            !e.date.toUtc().isBefore(range.start) &&
-            e.date.toUtc().isBefore(range.end),
+        (e) => e.date.toYearMonth() == ym,
       );
       final monthSavingsList = savings.where(
-        (s) =>
-            !s.date.toUtc().isBefore(range.start) &&
-            s.date.toUtc().isBefore(range.end),
+        (s) => s.date.toYearMonth() == ym,
       );
 
       final month = range.start.month; // 1-indexed
@@ -74,8 +69,13 @@ class MonthSummaryAggregator {
       final totalSavings =
           monthSavingsList.fold(0.0, (sum, s) => sum + s.amount);
 
+      // includeSavings açıkken birikim gelire eklenir
+      final effectiveIncome = includeSavings
+          ? totalIncome + totalSavings
+          : totalIncome;
+
       final netBalance = FinancialCalculator.netBalance(
-        totalIncome: totalIncome,
+        totalIncome: effectiveIncome,
         totalExpense: totalExpense,
         totalSavings: totalSavings,
       );

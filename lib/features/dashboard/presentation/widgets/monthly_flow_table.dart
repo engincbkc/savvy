@@ -32,8 +32,8 @@ class MonthlyFlowTable extends StatefulWidget {
 class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
   late ScrollController _scrollController;
 
-  static const _colW = 72.0;
-  static const _labelW = 64.0;
+  static const _colW = 80.0;
+  static const _labelW = 56.0;
   static const _headerH = 40.0;
   static const _rowH = 48.0;
   static const _netH = 48.0;
@@ -81,6 +81,16 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
         // Section header
         Row(
           children: [
+            // Left accent line
+            Container(
+              width: 2,
+              height: 16,
+              margin: const EdgeInsets.only(right: AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.of(context).brandPrimary,
+                borderRadius: AppRadius.pill,
+              ),
+            ),
             Text(
               'Aylık Akış',
               style: AppTypography.headlineSmall.copyWith(
@@ -129,15 +139,31 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                   children: [
                     SizedBox(height: _headerH),
                     const Divider(height: _dividerH),
-                    ...rows.map((r) => FlowLabel(
-                          icon: r.icon,
-                          label: r.label,
-                          color: r.color,
-                          height: _rowH,
-                        )),
+                    ...rows.asMap().entries.map((e) {
+                      final r = e.value;
+                      final isOdd = e.key.isOdd;
+                      final child = FlowLabel(
+                        icon: r.icon,
+                        label: r.label,
+                        color: r.color,
+                        height: _rowH,
+                      );
+                      if (isOdd) {
+                        return Container(
+                          color: AppColors.of(context)
+                              .surfaceOverlay
+                              .withValues(alpha: 0.3),
+                          child: child,
+                        );
+                      }
+                      return child;
+                    }),
                     const Divider(height: _dividerH),
                     // Aylık Net — with info tooltip
-                    SizedBox(
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.of(context).brandPrimary.withValues(alpha: 0.03),
+                      ),
                       height: _netH,
                       child: Row(
                         children: [
@@ -205,9 +231,7 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                         onTap: isPast
                             ? () => widget.onMonthTap(s.yearMonth)
                             : null,
-                        child: Opacity(
-                          opacity: isPast ? 1.0 : 0.55,
-                          child: Container(
+                        child: Container(
                             width: _colW,
                             margin: const EdgeInsets.only(right: 2),
                             decoration: BoxDecoration(
@@ -231,31 +255,46 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                                     mainAxisAlignment:
                                         MainAxisAlignment.center,
                                     children: [
-                                      Text(
-                                        MonthLabels.short(s.yearMonth),
-                                        style: AppTypography.labelSmall
-                                            .copyWith(
-                                          color: isCurrent
-                                              ? AppColors.of(context)
-                                                  .brandPrimary
-                                              : isPast
+                                      Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            MonthLabels.short(s.yearMonth),
+                                            style: AppTypography.labelSmall
+                                                .copyWith(
+                                              color: isCurrent
                                                   ? AppColors.of(context)
-                                                      .textPrimary
-                                                  : AppColors.of(context)
-                                                      .textTertiary,
-                                          fontWeight: isCurrent
-                                              ? FontWeight.w800
-                                              : FontWeight.w600,
-                                          fontSize: 11,
-                                          decoration: isPast && !isCurrent
-                                              ? TextDecoration.underline
-                                              : null,
-                                          decorationColor: AppColors.of(context)
-                                              .textTertiary
-                                              .withValues(alpha: 0.4),
-                                          decorationStyle:
-                                              TextDecorationStyle.dotted,
-                                        ),
+                                                      .brandPrimary
+                                                  : isPast
+                                                      ? AppColors.of(context)
+                                                          .textPrimary
+                                                      : AppColors.of(context)
+                                                          .textTertiary,
+                                              fontWeight: isCurrent
+                                                  ? FontWeight.w800
+                                                  : FontWeight.w600,
+                                              fontSize: 11,
+                                              decoration: isPast && !isCurrent
+                                                  ? TextDecoration.underline
+                                                  : null,
+                                              decorationColor: AppColors.of(context)
+                                                  .textTertiary
+                                                  .withValues(alpha: 0.4),
+                                              decorationStyle:
+                                                  TextDecorationStyle.dotted,
+                                            ),
+                                          ),
+                                          if (isCurrent)
+                                            Container(
+                                              width: 18,
+                                              height: 2,
+                                              margin: const EdgeInsets.only(top: 2),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.of(context).brandPrimary,
+                                                borderRadius: AppRadius.pill,
+                                              ),
+                                            ),
+                                        ],
                                       ),
                                       if (!isPast)
                                         Text(
@@ -282,21 +321,24 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                                   ),
                                 ),
                                 const Divider(height: _dividerH),
-                                // Gelir
+                                // Gelir (row 0 — no shading)
                                 DataTableCellValue(
                                   value: s.totalIncome,
                                   color: AppColors.of(context).income,
                                   height: _rowH,
-                                  prefix: '+',
                                 ),
-                                // Gider
-                                DataTableCellValue(
-                                  value: s.totalExpense,
-                                  color: AppColors.of(context).expense,
-                                  height: _rowH,
-                                  prefix: '-',
+                                // Gider (row 1 — alternating shading)
+                                Container(
+                                  color: AppColors.of(context)
+                                      .surfaceOverlay
+                                      .withValues(alpha: 0.3),
+                                  child: DataTableCellValue(
+                                    value: s.totalExpense,
+                                    color: AppColors.of(context).expense,
+                                    height: _rowH,
+                                  ),
                                 ),
-                                // Birikim (conditional)
+                                // Birikim (row 2 — no shading)
                                 if (widget.includeSavings)
                                   DataTableCellValue(
                                     value: s.totalSavings,
@@ -304,14 +346,22 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                                     height: _rowH,
                                   ),
                                 const Divider(height: _dividerH),
-                                // Aylık Net
-                                DataTableCellValue(
-                                  value: displayNet,
-                                  color: displayNet >= 0
-                                      ? AppColors.of(context).income
-                                      : AppColors.of(context).expense,
-                                  height: _netH,
-                                  bold: true,
+                                // Aylık Net — vurgulu
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: (displayNet >= 0
+                                            ? AppColors.of(context).income
+                                            : AppColors.of(context).expense)
+                                        .withValues(alpha: 0.04),
+                                  ),
+                                  child: DataTableCellValue(
+                                    value: displayNet,
+                                    color: displayNet >= 0
+                                        ? AppColors.of(context).income
+                                        : AppColors.of(context).expense,
+                                    height: _netH,
+                                    bold: true,
+                                  ),
                                 ),
                                 // Kümülatif — bold + green + goal marker
                                 DataTableCumulativeCell(
@@ -322,8 +372,7 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                               ],
                             ),
                           ),
-                        ),
-                      );
+                        );
                     }).toList(),
                   ),
                 ),

@@ -4,6 +4,7 @@ import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
+import 'package:savvy/core/design/tokens/app_shadow.dart';
 import 'package:savvy/core/design/tokens/app_animation.dart';
 import 'package:savvy/core/utils/currency_formatter.dart';
 import 'package:savvy/shared/widgets/info_tooltip.dart';
@@ -36,6 +37,7 @@ class SavingsToggle extends StatelessWidget {
               ? AppColors.of(context).savings.withValues(alpha: 0.08)
               : AppColors.of(context).surfaceCard,
           borderRadius: AppRadius.card,
+          boxShadow: AppShadow.sm,
           border: Border.all(
             color: isEnabled
                 ? AppColors.of(context).savings.withValues(alpha: 0.4)
@@ -79,8 +81,8 @@ class SavingsToggle extends StatelessWidget {
             // Custom toggle
             AnimatedContainer(
               duration: AppDuration.fast,
-              width: 44,
-              height: 26,
+              width: 48,
+              height: 28,
               decoration: BoxDecoration(
                 color: isEnabled ? AppColors.of(context).savings : AppColors.of(context).surfaceOverlay,
                 borderRadius: AppRadius.pill,
@@ -91,8 +93,8 @@ class SavingsToggle extends StatelessWidget {
                 alignment:
                     isEnabled ? Alignment.centerRight : Alignment.centerLeft,
                 child: Container(
-                  width: 20,
-                  height: 20,
+                  width: 22,
+                  height: 22,
                   margin: const EdgeInsets.symmetric(horizontal: 3),
                   decoration: BoxDecoration(
                     color: Colors.white,

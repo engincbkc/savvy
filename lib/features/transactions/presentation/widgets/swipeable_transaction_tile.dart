@@ -16,7 +16,6 @@ class SwipeableTransactionTile extends StatelessWidget {
   final DateTime date;
   final Color color;
   final IconData icon;
-  final String prefix;
   final bool isRecurring;
   final String? person;
   final VoidCallback onDelete;
@@ -31,7 +30,6 @@ class SwipeableTransactionTile extends StatelessWidget {
     required this.date,
     required this.color,
     required this.icon,
-    required this.prefix,
     required this.isRecurring,
     this.person,
     required this.onDelete,
@@ -132,7 +130,7 @@ class SwipeableTransactionTile extends StatelessWidget {
                 ),
               ),
               Text(
-                '$prefix${CurrencyFormatter.formatNoDecimal(amount)}',
+                CurrencyFormatter.formatNoDecimal(amount),
                 style: AppTypography.numericSmall
                     .copyWith(color: color, fontWeight: FontWeight.w600),
               ),

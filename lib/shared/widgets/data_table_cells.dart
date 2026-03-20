@@ -41,7 +41,6 @@ class DataTableCellValue extends StatelessWidget {
   final double value;
   final Color color;
   final double height;
-  final String? prefix;
   final bool bold;
 
   const DataTableCellValue({
@@ -49,7 +48,6 @@ class DataTableCellValue extends StatelessWidget {
     required this.value,
     required this.color,
     required this.height,
-    this.prefix,
     this.bold = false,
   });
 
@@ -57,7 +55,7 @@ class DataTableCellValue extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = value == 0
         ? '-'
-        : '${prefix ?? ''}${CurrencyFormatter.formatNoDecimal(value)}';
+        : CurrencyFormatter.formatNoDecimal(value);
     return SizedBox(
       height: height,
       child: Center(

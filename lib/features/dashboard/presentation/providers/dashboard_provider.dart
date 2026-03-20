@@ -56,11 +56,13 @@ List<MonthSummary> allMonthSummaries(Ref ref) {
   final allInc = ref.watch(allIncomesProvider).value ?? [];
   final allExp = ref.watch(allExpensesProvider).value ?? [];
   final allSav = ref.watch(allSavingsProvider).value ?? [];
+  final includeSavings = ref.watch(includeSavingsInProjectionProvider);
 
   return MonthSummaryAggregator.buildSummaries(
     incomes: allInc,
     expenses: allExp,
     savings: allSav,
+    includeSavings: includeSavings,
   );
 }
 
@@ -90,15 +92,15 @@ double totalSavingsAmount(Ref ref) {
 
 /// Future month projections based on recurring incomes/expenses.
 /// Projects 12 months ahead from current month.
-/// When includeSavings is true, total savings is added as one-time income
-/// in month 1.
+/// Future-dated savings are included in their respective months when
+/// includeSavings toggle is on.
 @riverpod
 List<MonthSummary> futureProjections(Ref ref) {
   final allInc = ref.watch(allIncomesProvider).value ?? [];
   final allExp = ref.watch(allExpensesProvider).value ?? [];
+  final allSav = ref.watch(allSavingsProvider).value ?? [];
   final summaries = ref.watch(allMonthSummariesProvider);
   final includeSavings = ref.watch(includeSavingsInProjectionProvider);
-  final totalSavings = ref.watch(totalSavingsAmountProvider);
 
   if (summaries.isEmpty) return [];
 
@@ -119,6 +121,11 @@ List<MonthSummary> futureProjections(Ref ref) {
       allInc.where((i) => !i.isRecurring && i.date.isAfter(now));
   final futureOneTimeExpenses =
       allExp.where((e) => !e.isRecurring && e.date.isAfter(now));
+
+  // Future savings (dated after current month)
+  final currentYm = now.toYearMonth();
+  final futureSavings =
+      allSav.where((s) => s.date.toYearMonth().compareTo(currentYm) > 0);
 
   // Project 12 months ahead
   double cumCarry = latestCarryOver;
@@ -153,9 +160,15 @@ List<MonthSummary> futureProjections(Ref ref) {
       }
     }
 
-    // Add savings as one-time income in month 1 only
-    if (includeSavings && m == 1 && totalSavings > 0) {
-      projIncome += totalSavings;
+    // Future savings in this month — add as income when toggle on
+    double monthSavings = 0;
+    for (final s in futureSavings) {
+      if (s.date.toYearMonth() == ym) {
+        monthSavings += s.amount;
+      }
+    }
+    if (includeSavings && monthSavings > 0) {
+      projIncome += monthSavings;
     }
 
     // Recurring expenses (check end date)
@@ -186,7 +199,7 @@ List<MonthSummary> futureProjections(Ref ref) {
       yearMonth: ym,
       totalIncome: projIncome,
       totalExpense: projExpense,
-      totalSavings: 0,
+      totalSavings: monthSavings,
       netBalance: netBalance,
       carryOver: cumCarry,
       netWithCarryOver: netWithCarry,

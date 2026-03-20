@@ -5,13 +5,14 @@ void main() {
   group('FinancialCalculator', () {
     group('netBalance', () {
       test('positive net balance', () {
+        // Birikim düşülmez — sadece gelir - gider
         expect(
           FinancialCalculator.netBalance(
             totalIncome: 45000,
             totalExpense: 20000,
             totalSavings: 8000,
           ),
-          equals(17000),
+          equals(25000),
         );
       });
 
@@ -26,13 +27,14 @@ void main() {
         );
       });
 
-      test('savings is not added to expense', () {
+      test('savings is not subtracted from net', () {
+        // Birikim gelir-gider dengesini etkilemez
         final net = FinancialCalculator.netBalance(
           totalIncome: 50000,
           totalExpense: 20000,
           totalSavings: 10000,
         );
-        expect(net, equals(20000));
+        expect(net, equals(30000));
       });
     });
 

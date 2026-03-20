@@ -6,7 +6,8 @@ import 'package:savvy/core/constants/financial_enums.dart';
 class FinancialCalculator {
   // ─── Core Summary ────────────────────────────────────────────────
 
-  /// Net balance without carry-over
+  /// Net balance without carry-over.
+  /// Birikim düşülmez — birikim para kaybı değil, yatırım/tasarruftur.
   static double netBalance({
     required double totalIncome,
     required double totalExpense,
@@ -15,7 +16,7 @@ class FinancialCalculator {
     assert(totalIncome >= 0, 'Income cannot be negative');
     assert(totalExpense >= 0, 'Expense cannot be negative');
     assert(totalSavings >= 0, 'Savings cannot be negative');
-    return totalIncome - totalExpense - totalSavings;
+    return totalIncome - totalExpense;
   }
 
   /// Net balance with carry-over from previous month

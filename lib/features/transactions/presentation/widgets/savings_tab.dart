@@ -77,7 +77,6 @@ class SavingsTab extends ConsumerWidget {
           MonthlyCategoryTable(
             data: monthlyData,
             color: AppColors.of(context).savings,
-            prefix: '',
           ),
         if (monthlyData.months.length > 1)
           const SizedBox(height: AppSpacing.xl),
@@ -93,8 +92,7 @@ class SavingsTab extends ConsumerWidget {
               date: s.date,
               color: AppColors.of(context).savings,
               icon: savingsIcon(s.category),
-              prefix: '',
-              isRecurring: false,
+                isRecurring: false,
               person: null,
               onDelete: () => _confirmDelete(context, ref, s.id),
               onTap: () => _showDetail(context, s),

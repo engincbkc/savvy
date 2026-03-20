@@ -129,13 +129,11 @@ MonthlyCategoryData buildMonthlyCategoryData<T>(
 class MonthlyCategoryTable extends StatefulWidget {
   final MonthlyCategoryData data;
   final Color color;
-  final String prefix;
 
   const MonthlyCategoryTable({
     super.key,
     required this.data,
     required this.color,
-    this.prefix = '',
   });
 
   @override
@@ -399,7 +397,6 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
                                   value: val,
                                   color: widget.color,
                                   height: _rowH,
-                                  prefix: val > 0 ? widget.prefix : null,
                                 );
                               }),
                               const Divider(height: _dividerH),
@@ -408,7 +405,6 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
                                 value: monthTotal,
                                 color: widget.color,
                                 height: _totalH,
-                                prefix: widget.prefix,
                                 bold: true,
                               ),
                             ],

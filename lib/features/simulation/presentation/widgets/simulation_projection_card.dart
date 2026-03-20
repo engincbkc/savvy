@@ -79,7 +79,7 @@ class SimulationProjectionCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${isPositive ? '+' : ''}${CurrencyFormatter.formatNoDecimal(projection.netBalance)}',
+                    CurrencyFormatter.formatNoDecimal(projection.netBalance),
                     style: AppTypography.numericSmall.copyWith(
                       color:
                           isPositive ? AppColors.of(context).income : AppColors.of(context).expense,
@@ -97,13 +97,11 @@ class SimulationProjectionCard extends StatelessWidget {
                 label: 'Gelir',
                 amount: projection.totalIncome,
                 color: AppColors.of(context).income,
-                prefix: '+',
               ),
               _MiniStat(
                 label: 'Gider',
                 amount: projection.totalExpense,
                 color: AppColors.of(context).expense,
-                prefix: '-',
               ),
               _MiniStat(
                 label: 'Kümülatif',
@@ -111,7 +109,6 @@ class SimulationProjectionCard extends StatelessWidget {
                 color: projection.netWithCarryOver >= 0
                     ? AppColors.of(context).brandPrimary
                     : AppColors.of(context).expense,
-                prefix: '',
               ),
             ],
           ),
@@ -142,13 +139,11 @@ class _MiniStat extends StatelessWidget {
   final String label;
   final double amount;
   final Color color;
-  final String prefix;
 
   const _MiniStat({
     required this.label,
     required this.amount,
     required this.color,
-    required this.prefix,
   });
 
   @override
@@ -165,7 +160,7 @@ class _MiniStat extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            '$prefix${CurrencyFormatter.formatNoDecimal(amount)}',
+            CurrencyFormatter.formatNoDecimal(amount),
             style: AppTypography.numericSmall.copyWith(
               color: color,
               fontWeight: FontWeight.w600,

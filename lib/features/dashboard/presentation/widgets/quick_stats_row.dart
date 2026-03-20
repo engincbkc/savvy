@@ -24,7 +24,6 @@ class QuickStatsRow extends StatelessWidget {
             amount: summary.totalIncome,
             accentColor: c.income,
             icon: AppIcons.income,
-            prefix: '+',
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -34,7 +33,6 @@ class QuickStatsRow extends StatelessWidget {
             amount: summary.totalExpense,
             accentColor: c.expense,
             icon: AppIcons.expense,
-            prefix: '-',
           ),
         ),
         const SizedBox(width: AppSpacing.sm),
@@ -56,14 +54,11 @@ class _StatCard extends StatelessWidget {
   final double amount;
   final Color accentColor;
   final IconData icon;
-  final String? prefix;
-
   const _StatCard({
     required this.label,
     required this.amount,
     required this.accentColor,
     required this.icon,
-    this.prefix,
   });
 
   @override
@@ -71,53 +66,71 @@ class _StatCard extends StatelessWidget {
     final c = AppColors.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: c.surfaceCard,
         borderRadius: AppRadius.card,
-        boxShadow: AppShadow.sm,
-        border: Border.all(color: c.borderDefault.withValues(alpha: 0.5)),
+        boxShadow: AppShadow.md,
+        border: Border.all(color: c.borderDefault.withValues(alpha: 0.3)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          // Icon + label
-          Row(
-            children: [
-              Container(
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.1),
-                  borderRadius: AppRadius.chip,
-                ),
-                child: Icon(icon, size: 13, color: accentColor),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: AppTypography.caption.copyWith(
-                  color: c.textTertiary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+          // Bold colored left accent stripe
+          Container(
+            width: 3,
+            height: 82,
+            color: accentColor,
           ),
-          const SizedBox(height: AppSpacing.sm),
-          // Amount with count-up
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0, end: amount),
-            duration: AppDuration.countUp,
-            curve: AppCurve.decelerate,
-            builder: (context, value, _) => FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                '${prefix ?? ''}${CurrencyFormatter.formatNoDecimal(value)}',
-                style: AppTypography.numericSmall.copyWith(
-                  color: accentColor,
-                  fontWeight: FontWeight.w700,
-                ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.base,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Icon + label
+                  Row(
+                    children: [
+                      Container(
+                        width: 26,
+                        height: 26,
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.1),
+                          borderRadius: AppRadius.chip,
+                        ),
+                        child: Icon(icon, size: 13, color: accentColor),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        label,
+                        style: AppTypography.caption.copyWith(
+                          color: c.textTertiary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  // Amount with count-up
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: amount),
+                    duration: AppDuration.countUp,
+                    curve: AppCurve.decelerate,
+                    builder: (context, value, _) => FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        CurrencyFormatter.formatNoDecimal(value),
+                        style: AppTypography.numericMedium.copyWith(
+                          color: accentColor,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

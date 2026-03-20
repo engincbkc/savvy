@@ -45,187 +45,234 @@ class TransactionDetailSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: AppSpacing.lg,
-        right: AppSpacing.lg,
-        top: AppSpacing.base,
-        bottom: MediaQuery.of(context).padding.bottom + AppSpacing.xl,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SheetHandle(),
-          const SizedBox(height: AppSpacing.xl),
+    // Entrance animation: fade in from bottom
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.0, end: 1.0),
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 24 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: AppSpacing.lg,
+          right: AppSpacing.lg,
+          top: AppSpacing.base,
+          bottom: MediaQuery.of(context).padding.bottom + AppSpacing.xl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SheetHandle(),
+            const SizedBox(height: AppSpacing.xl),
 
-          // Amount hero
-          TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.9, end: 1.0),
-            duration: const Duration(milliseconds: 400),
-            curve: Curves.easeOutBack,
-            builder: (context, scale, child) =>
-                Transform.scale(scale: scale, child: child),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                vertical: AppSpacing.xl2,
-                horizontal: AppSpacing.lg,
-              ),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: gradient,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: AppRadius.cardLg,
-                boxShadow: [
-                  BoxShadow(
-                    color: gradient.first.withValues(alpha: 0.3),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+            // Amount hero
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 0.9, end: 1.0),
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeOutBack,
+              builder: (context, scale, child) =>
+                  Transform.scale(scale: scale, child: child),
+              child: Container(
+                width: double.infinity,
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: gradient,
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                ],
+                  borderRadius: AppRadius.cardLg,
+                  boxShadow: [
+                    BoxShadow(
+                      color: gradient.first.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  children: [
+                    // Subtle top shine line
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 1,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.white.withValues(alpha: 0.0),
+                              Colors.white.withValues(alpha: 0.35),
+                              Colors.white.withValues(alpha: 0.0),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Content
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpacing.xl2,
+                        horizontal: AppSpacing.lg,
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(categoryIcon, color: Colors.white, size: 32),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            title,
+                            style: AppTypography.labelMedium.copyWith(
+                              color: Colors.white.withValues(alpha: 0.7),
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            CurrencyFormatter.formatNoDecimal(amount),
+                            style: AppTypography.numericHero.copyWith(
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: AppRadius.pill,
+                            ),
+                            child: Text(
+                              categoryLabel,
+                              style: AppTypography.labelSmall.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: AppSpacing.xl),
+
+            // Details
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.base),
+              decoration: BoxDecoration(
+                color: c.surfaceOverlay,
+                borderRadius: AppRadius.card,
               ),
               child: Column(
                 children: [
-                  Icon(categoryIcon, color: Colors.white, size: 32),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    title,
-                    style: AppTypography.labelMedium.copyWith(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      letterSpacing: 1,
-                    ),
+                  _DetailRow(
+                    icon: Icons.calendar_today_rounded,
+                    label: 'Tarih',
+                    value: formatDateTR(date),
+                    color: c,
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    CurrencyFormatter.formatNoDecimal(amount),
-                    style: AppTypography.numericHero.copyWith(
-                      color: Colors.white,
-                      fontSize: 36,
+                  if (person != null && person!.isNotEmpty) ...[
+                    _roundedSeparator(c),
+                    _DetailRow(
+                      icon: Icons.label_outline_rounded,
+                      label: 'Baslik',
+                      value: person!,
+                      color: c,
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
+                  ],
+                  if (isRecurring) ...[
+                    _roundedSeparator(c),
+                    _DetailRow(
+                      icon: Icons.repeat_rounded,
+                      label: 'Periyodik',
+                      value: recurringEndDate != null
+                          ? 'Bitis: ${formatDateTR(recurringEndDate!)}'
+                          : 'Suresiz',
+                      color: c,
+                      valueColor: color,
                     ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      borderRadius: AppRadius.pill,
+                  ],
+                  if (extraLabel != null && extraValue != null) ...[
+                    _roundedSeparator(c),
+                    _DetailRow(
+                      icon: Icons.tune_rounded,
+                      label: extraLabel!,
+                      value: extraValue!,
+                      color: c,
                     ),
-                    child: Text(
-                      categoryLabel,
-                      style: AppTypography.labelSmall.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
+                  ],
+                  if (note != null && note!.isNotEmpty) ...[
+                    _roundedSeparator(c),
+                    _DetailRow(
+                      icon: Icons.sticky_note_2_outlined,
+                      label: 'Not',
+                      value: note!,
+                      color: c,
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
-          ),
 
-          const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
 
-          // Details
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.base),
-            decoration: BoxDecoration(
-              color: c.surfaceOverlay,
-              borderRadius: AppRadius.card,
-            ),
-            child: Column(
-              children: [
-                _DetailRow(
-                  icon: Icons.calendar_today_rounded,
-                  label: 'Tarih',
-                  value: formatDateTR(date),
-                  color: c,
+            // Edit button
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  final editCallback = onEdit;
+                  Navigator.pop(context);
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    editCallback();
+                  });
+                },
+                icon: Icon(Icons.edit_rounded, size: 18, color: color),
+                label: Text(
+                  'Duzenle',
+                  style: AppTypography.labelLarge.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-                if (person != null && person!.isNotEmpty) ...[
-                  _divider(c),
-                  _DetailRow(
-                    icon: Icons.label_outline_rounded,
-                    label: 'Başlık',
-                    value: person!,
-                    color: c,
-                  ),
-                ],
-                if (isRecurring) ...[
-                  _divider(c),
-                  _DetailRow(
-                    icon: Icons.repeat_rounded,
-                    label: 'Periyodik',
-                    value: recurringEndDate != null
-                        ? 'Bitis: ${formatDateTR(recurringEndDate!)}'
-                        : 'Suresiz',
-                    color: c,
-                    valueColor: color,
-                  ),
-                ],
-                if (extraLabel != null && extraValue != null) ...[
-                  _divider(c),
-                  _DetailRow(
-                    icon: Icons.tune_rounded,
-                    label: extraLabel!,
-                    value: extraValue!,
-                    color: c,
-                  ),
-                ],
-                if (note != null && note!.isNotEmpty) ...[
-                  _divider(c),
-                  _DetailRow(
-                    icon: Icons.sticky_note_2_outlined,
-                    label: 'Not',
-                    value: note!,
-                    color: c,
-                  ),
-                ],
-              ],
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.xl),
-
-          // Edit button
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                final editCallback = onEdit;
-                Navigator.pop(context);
-                Future.delayed(const Duration(milliseconds: 300), () {
-                  editCallback();
-                });
-              },
-              icon: Icon(Icons.edit_rounded, size: 18, color: color),
-              label: Text(
-                'Duzenle',
-                style: AppTypography.labelLarge.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w700,
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: color.withValues(alpha: 0.3)),
+                  shape: RoundedRectangleBorder(borderRadius: AppRadius.input),
                 ),
               ),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: color.withValues(alpha: 0.3)),
-                shape: RoundedRectangleBorder(borderRadius: AppRadius.input),
-              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _divider(dynamic c) => Padding(
+  /// Rounded separator line between detail sections
+  Widget _roundedSeparator(dynamic c) => Padding(
         padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-        child: Divider(height: 1, color: c.borderDefault.withValues(alpha: 0.3)),
+        child: Container(
+          height: 1,
+          decoration: BoxDecoration(
+            color: c.borderDefault.withValues(alpha: 0.25),
+            borderRadius: AppRadius.pill,
+          ),
+        ),
       );
 }
 

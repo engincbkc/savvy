@@ -2,12 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:savvy/core/design/tokens/app_colors.dart';
-import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
-import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:savvy/shared/widgets/loading_shimmer.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/hero_card.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/quick_stats_row.dart';
@@ -45,46 +41,7 @@ class DashboardScreen extends ConsumerWidget {
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // App bar
-          SliverAppBar(
-            floating: true,
-            backgroundColor: AppColors.of(context).surfaceBackground,
-            surfaceTintColor: Colors.transparent,
-            title: Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF1A56DB), Color(0xFF3F83F8)],
-                    ),
-                    borderRadius: AppRadius.chip,
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF1A56DB).withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Icon(LucideIcons.wallet,
-                      color: Colors.white, size: 18),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  'Savvy',
-                  style: AppTypography.headlineMedium.copyWith(
-                    color: AppColors.of(context).brandPrimary,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-            centerTitle: false,
-          ),
-
-          // Content
+          // Content — no app bar, hero card is the top element
           SliverPadding(
             padding: AppSpacing.screenH,
             sliver: isLoading
@@ -108,7 +65,7 @@ class DashboardScreen extends ConsumerWidget {
                   )
                 : SliverList(
                     delegate: SliverChildListDelegate([
-                      const SizedBox(height: AppSpacing.sm),
+                      const SizedBox(height: AppSpacing.lg),
 
                       // 1) Hero Card
                       _StaggeredEntry(
