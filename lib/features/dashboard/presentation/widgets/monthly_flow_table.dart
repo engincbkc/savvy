@@ -1,9 +1,12 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
+import 'package:savvy/core/utils/currency_formatter.dart';
 import 'package:savvy/features/dashboard/domain/models/month_summary.dart';
 import 'package:savvy/core/utils/year_month_helper.dart';
 import 'package:savvy/shared/widgets/data_table_cells.dart';
@@ -54,6 +57,35 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
     super.dispose();
   }
 
+  void _showColumnFocus(int index, MonthSummary month, bool isPast) {
+    HapticFeedback.lightImpact();
+    final pastSorted = widget.summaries.reversed.toList();
+    final isCurrent = isPast && index == pastSorted.length - 1;
+
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        opaque: false,
+        barrierDismissible: true,
+        pageBuilder: (context, anim, _) {
+          return _FullScreenColumnZoom(
+            month: month,
+            isPast: isPast,
+            isCurrent: isCurrent,
+            includeSavings: widget.includeSavings,
+            animation: anim,
+            onDetailTap: isPast
+                ? () {
+                    Navigator.pop(context);
+                    widget.onMonthTap(month.yearMonth);
+                  }
+                : null,
+          );
+        },
+        transitionsBuilder: (context, anim, _, child) => child,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final pastSorted = widget.summaries.reversed.toList();
@@ -81,7 +113,6 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
         // Section header
         Row(
           children: [
-            // Left accent line
             Container(
               width: 2,
               height: 16,
@@ -126,263 +157,266 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
         ),
         const SizedBox(height: AppSpacing.md),
 
-        // Table
-        SizedBox(
-          height: totalH,
-          child: Row(
-            children: [
-              // Left labels — sticky
-              SizedBox(
-                width: _labelW,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: _headerH),
-                    const Divider(height: _dividerH),
-                    ...rows.asMap().entries.map((e) {
-                      final r = e.value;
-                      final isOdd = e.key.isOdd;
-                      final child = FlowLabel(
-                        icon: r.icon,
-                        label: r.label,
-                        color: r.color,
-                        height: _rowH,
-                      );
-                      if (isOdd) {
-                        return Container(
-                          color: AppColors.of(context)
-                              .surfaceOverlay
-                              .withValues(alpha: 0.3),
-                          child: child,
-                        );
-                      }
-                      return child;
-                    }),
-                    const Divider(height: _dividerH),
-                    // Aylık Net — with info tooltip
-                    Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.of(context).brandPrimary.withValues(alpha: 0.03),
-                      ),
-                      height: _netH,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: FlowLabel(
-                              icon: AppIcons.balance,
-                              label: 'Net',
-                              color: AppColors.of(context).textPrimary,
-                              height: _netH,
-                              bold: true,
-                            ),
+        // Table with focus overlay
+        Stack(
+          children: [
+            // Actual table
+            SizedBox(
+              height: totalH,
+              child: Row(
+                children: [
+                  // Left labels — sticky
+                  SizedBox(
+                    width: _labelW,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: _headerH),
+                        const Divider(height: _dividerH),
+                        ...rows.asMap().entries.map((e) {
+                          final r = e.value;
+                          final isOdd = e.key.isOdd;
+                          final child = FlowLabel(
+                            icon: r.icon,
+                            label: r.label,
+                            color: r.color,
+                            height: _rowH,
+                          );
+                          if (isOdd) {
+                            return Container(
+                              color: AppColors.of(context)
+                                  .surfaceOverlay
+                                  .withValues(alpha: 0.3),
+                              child: child,
+                            );
+                          }
+                          return child;
+                        }),
+                        const Divider(height: _dividerH),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.of(context)
+                                .brandPrimary
+                                .withValues(alpha: 0.03),
                           ),
-                          InfoTooltip(
-                            title: 'Aylık Net',
-                            description:
-                                'O aydaki toplam gelir ile toplam gider arasındaki farktır. Pozitif değer o ay kâra geçtiğinizi, negatif değer zararda olduğunuzu gösterir.',
-                            size: 12,
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Kümülatif — with info tooltip
-                    SizedBox(
-                      height: _cumH,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: FlowLabel(
-                              icon: AppIcons.networth,
-                              label: 'Küm.',
-                              color: AppColors.of(context).income,
-                              height: _cumH,
-                              bold: true,
-                            ),
-                          ),
-                          InfoTooltip(
-                            title: 'Kümülatif Bakiye',
-                            description:
-                                'Başlangıçtan itibaren biriken toplam net bakiyedir. Her ayın net tutarı bir önceki aya eklenerek hesaplanır.',
-                            size: 12,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Scrollable columns
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  child: Row(
-                    children: allMonths.asMap().entries.map((entry) {
-                      final idx = entry.key;
-                      final s = entry.value;
-                      final isPast = idx < pastSorted.length;
-                      final isCurrent =
-                          isPast && idx == pastSorted.length - 1;
-                      final displayNet = s.totalIncome - s.totalExpense;
-
-                      return GestureDetector(
-                        onTap: isPast
-                            ? () => widget.onMonthTap(s.yearMonth)
-                            : null,
-                        child: Container(
-                            width: _colW,
-                            margin: const EdgeInsets.only(right: 2),
-                            decoration: BoxDecoration(
-                              color: isCurrent
-                                  ? AppColors.of(context)
-                                      .brandPrimary
-                                      .withValues(alpha: 0.05)
-                                  : !isPast
-                                      ? AppColors.of(context)
-                                          .surfaceOverlay
-                                          .withValues(alpha: 0.4)
-                                      : Colors.transparent,
-                              borderRadius: AppRadius.input,
-                            ),
-                            child: Column(
-                              children: [
-                                // Month header
-                                SizedBox(
-                                  height: _headerH,
-                                  child: Column(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
-                                    children: [
-                                      Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(
-                                            MonthLabels.short(s.yearMonth),
-                                            style: AppTypography.labelSmall
-                                                .copyWith(
-                                              color: isCurrent
-                                                  ? AppColors.of(context)
-                                                      .brandPrimary
-                                                  : isPast
-                                                      ? AppColors.of(context)
-                                                          .textPrimary
-                                                      : AppColors.of(context)
-                                                          .textTertiary,
-                                              fontWeight: isCurrent
-                                                  ? FontWeight.w800
-                                                  : FontWeight.w600,
-                                              fontSize: 11,
-                                              decoration: isPast && !isCurrent
-                                                  ? TextDecoration.underline
-                                                  : null,
-                                              decorationColor: AppColors.of(context)
-                                                  .textTertiary
-                                                  .withValues(alpha: 0.4),
-                                              decorationStyle:
-                                                  TextDecorationStyle.dotted,
-                                            ),
-                                          ),
-                                          if (isCurrent)
-                                            Container(
-                                              width: 18,
-                                              height: 2,
-                                              margin: const EdgeInsets.only(top: 2),
-                                              decoration: BoxDecoration(
-                                                color: AppColors.of(context).brandPrimary,
-                                                borderRadius: AppRadius.pill,
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                      if (!isPast)
-                                        Text(
-                                          'tahmini',
-                                          style: AppTypography.caption
-                                              .copyWith(
-                                            color: AppColors.of(context)
-                                                .textTertiary,
-                                            fontSize: 8,
-                                          ),
-                                        ),
-                                      if (isCurrent)
-                                        Text(
-                                          'detay ›',
-                                          style: AppTypography.caption
-                                              .copyWith(
-                                            color: AppColors.of(context)
-                                                .brandPrimary,
-                                            fontSize: 8,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                    ],
-                                  ),
+                          height: _netH,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: FlowLabel(
+                                  icon: AppIcons.balance,
+                                  label: 'Net',
+                                  color: AppColors.of(context).textPrimary,
+                                  height: _netH,
+                                  bold: true,
                                 ),
-                                const Divider(height: _dividerH),
-                                // Gelir (row 0 — no shading)
-                                DataTableCellValue(
-                                  value: s.totalIncome,
+                              ),
+                              InfoTooltip(
+                                title: 'Aylık Net',
+                                description:
+                                    'O aydaki toplam gelir ile toplam gider arasındaki farktır. Pozitif değer o ay kâra geçtiğinizi, negatif değer zararda olduğunuzu gösterir.',
+                                size: 12,
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(
+                          height: _cumH,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: FlowLabel(
+                                  icon: AppIcons.networth,
+                                  label: 'Küm.',
                                   color: AppColors.of(context).income,
-                                  height: _rowH,
-                                ),
-                                // Gider (row 1 — alternating shading)
-                                Container(
-                                  color: AppColors.of(context)
-                                      .surfaceOverlay
-                                      .withValues(alpha: 0.3),
-                                  child: DataTableCellValue(
-                                    value: s.totalExpense,
-                                    color: AppColors.of(context).expense,
-                                    height: _rowH,
-                                  ),
-                                ),
-                                // Birikim (row 2 — no shading)
-                                if (widget.includeSavings)
-                                  DataTableCellValue(
-                                    value: s.totalSavings,
-                                    color: AppColors.of(context).savings,
-                                    height: _rowH,
-                                  ),
-                                const Divider(height: _dividerH),
-                                // Aylık Net — vurgulu
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: (displayNet >= 0
-                                            ? AppColors.of(context).income
-                                            : AppColors.of(context).expense)
-                                        .withValues(alpha: 0.04),
-                                  ),
-                                  child: DataTableCellValue(
-                                    value: displayNet,
-                                    color: displayNet >= 0
-                                        ? AppColors.of(context).income
-                                        : AppColors.of(context).expense,
-                                    height: _netH,
-                                    bold: true,
-                                  ),
-                                ),
-                                // Kümülatif — bold + green + goal marker
-                                DataTableCumulativeCell(
-                                  value: s.netWithCarryOver,
                                   height: _cumH,
-                                  goalTarget: widget.nearestGoalTarget,
+                                  bold: true,
                                 ),
-                              ],
-                            ),
+                              ),
+                              InfoTooltip(
+                                title: 'Kümülatif Bakiye',
+                                description:
+                                    'Başlangıçtan itibaren biriken toplam net bakiyedir. Her ayın net tutarı bir önceki aya eklenerek hesaplanır.',
+                                size: 12,
+                              ),
+                            ],
                           ),
-                        );
-                    }).toList(),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+
+                  // Scrollable columns
+                  Expanded(
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Row(
+                        children: allMonths.asMap().entries.map((entry) {
+                          final idx = entry.key;
+                          final s = entry.value;
+                          final isPast = idx < pastSorted.length;
+                          final isCurrent =
+                              isPast && idx == pastSorted.length - 1;
+                          final displayNet =
+                              s.totalIncome - s.totalExpense;
+
+                          return GestureDetector(
+                            onTap: () =>
+                                _showColumnFocus(idx, s, isPast),
+                            child: Container(
+                              width: _colW,
+                              margin: const EdgeInsets.only(right: 2),
+                              decoration: BoxDecoration(
+                                color: isCurrent
+                                    ? AppColors.of(context)
+                                        .brandPrimary
+                                        .withValues(alpha: 0.05)
+                                    : !isPast
+                                        ? AppColors.of(context)
+                                            .surfaceOverlay
+                                            .withValues(alpha: 0.4)
+                                        : Colors.transparent,
+                                borderRadius: AppRadius.input,
+                              ),
+                              child: Column(
+                                children: [
+                                  _buildColHeader(
+                                      s, isPast, isCurrent),
+                                  const Divider(height: _dividerH),
+                                  DataTableCellValue(
+                                    value: s.totalIncome,
+                                    color:
+                                        AppColors.of(context).income,
+                                    height: _rowH,
+                                  ),
+                                  Container(
+                                    color: AppColors.of(context)
+                                        .surfaceOverlay
+                                        .withValues(alpha: 0.3),
+                                    child: DataTableCellValue(
+                                      value: s.totalExpense,
+                                      color: AppColors.of(context)
+                                          .expense,
+                                      height: _rowH,
+                                    ),
+                                  ),
+                                  if (widget.includeSavings)
+                                    DataTableCellValue(
+                                      value: s.totalSavings,
+                                      color: AppColors.of(context)
+                                          .savings,
+                                      height: _rowH,
+                                    ),
+                                  const Divider(height: _dividerH),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: (displayNet >= 0
+                                              ? AppColors.of(context)
+                                                  .income
+                                              : AppColors.of(context)
+                                                  .expense)
+                                          .withValues(alpha: 0.04),
+                                    ),
+                                    child: DataTableCellValue(
+                                      value: displayNet,
+                                      color: displayNet >= 0
+                                          ? AppColors.of(context)
+                                              .income
+                                          : AppColors.of(context)
+                                              .expense,
+                                      height: _netH,
+                                      bold: true,
+                                    ),
+                                  ),
+                                  DataTableCumulativeCell(
+                                    value: s.netWithCarryOver,
+                                    height: _cumH,
+                                    goalTarget:
+                                        widget.nearestGoalTarget,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+
+          ],
         ),
       ],
     );
   }
+
+  Widget _buildColHeader(MonthSummary s, bool isPast, bool isCurrent) {
+    return SizedBox(
+      height: _headerH,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                MonthLabels.short(s.yearMonth),
+                style: AppTypography.labelSmall.copyWith(
+                  color: isCurrent
+                      ? AppColors.of(context).brandPrimary
+                      : isPast
+                          ? AppColors.of(context).textPrimary
+                          : AppColors.of(context).textTertiary,
+                  fontWeight:
+                      isCurrent ? FontWeight.w800 : FontWeight.w600,
+                  fontSize: 11,
+                  decoration: isPast && !isCurrent
+                      ? TextDecoration.underline
+                      : null,
+                  decorationColor: AppColors.of(context)
+                      .textTertiary
+                      .withValues(alpha: 0.4),
+                  decorationStyle: TextDecorationStyle.dotted,
+                ),
+              ),
+              if (isCurrent)
+                Container(
+                  width: 18,
+                  height: 2,
+                  margin: const EdgeInsets.only(top: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.of(context).brandPrimary,
+                    borderRadius: AppRadius.pill,
+                  ),
+                ),
+            ],
+          ),
+          if (!isPast)
+            Text(
+              'tahmini',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.of(context).textTertiary,
+                fontSize: 8,
+              ),
+            ),
+          if (isCurrent)
+            Text(
+              'detay ›',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.of(context).brandPrimary,
+                fontSize: 8,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
 }
 
 // Left label cell
@@ -427,4 +461,274 @@ class FlowRowConfig {
   final IconData icon;
   final Color color;
   const FlowRowConfig(this.label, this.icon, this.color);
+}
+
+/// Fullscreen blurred overlay showing a zoomed column strip.
+class _FullScreenColumnZoom extends StatelessWidget {
+  final MonthSummary month;
+  final bool isPast;
+  final bool isCurrent;
+  final bool includeSavings;
+  final Animation<double> animation;
+  final VoidCallback? onDetailTap;
+
+  const _FullScreenColumnZoom({
+    required this.month,
+    required this.isPast,
+    required this.isCurrent,
+    required this.includeSavings,
+    required this.animation,
+    this.onDetailTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final displayNet = month.totalIncome - month.totalExpense;
+
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        final t = Curves.easeOutCubic.transform(animation.value);
+
+        return GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: Stack(
+            children: [
+              // Blurred background
+              BackdropFilter(
+                filter: ImageFilter.blur(
+                  sigmaX: 8 * t,
+                  sigmaY: 8 * t,
+                ),
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.35 * t),
+                ),
+              ),
+
+              // Zoomed column card — centered, full height
+              Center(
+                child: Opacity(
+                  opacity: t,
+                  child: Transform.scale(
+                    scale: 0.85 + 0.15 * t,
+                    child: GestureDetector(
+                      onTap: () {}, // Prevent dismiss
+                      child: Container(
+                        width: 140,
+                        margin: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.xl2,
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.lg,
+                          horizontal: AppSpacing.base,
+                        ),
+                        decoration: BoxDecoration(
+                          color: c.surfaceCard,
+                          borderRadius: AppRadius.cardLg,
+                          border: isCurrent
+                              ? Border.all(
+                                  color: c.brandPrimary
+                                      .withValues(alpha: 0.2),
+                                  width: 1,
+                                )
+                              : null,
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                                  Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 32,
+                              offset: const Offset(0, 12),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Month header
+                            Text(
+                              MonthLabels.short(month.yearMonth),
+                              style:
+                                  AppTypography.headlineMedium.copyWith(
+                                color: isCurrent
+                                    ? c.brandPrimary
+                                    : c.textPrimary,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            if (isCurrent)
+                              Container(
+                                width: 24,
+                                height: 3,
+                                margin:
+                                    const EdgeInsets.only(top: 4),
+                                decoration: BoxDecoration(
+                                  color: c.brandPrimary,
+                                  borderRadius: AppRadius.pill,
+                                ),
+                              ),
+                            if (!isPast)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  'tahmini',
+                                  style:
+                                      AppTypography.caption.copyWith(
+                                    color: c.textTertiary,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ),
+                            if (isCurrent)
+                              Padding(
+                                padding:
+                                    const EdgeInsets.only(top: 2),
+                                child: GestureDetector(
+                                  onTap: onDetailTap,
+                                  child: Text(
+                                    'detay ›',
+                                    style: AppTypography.caption
+                                        .copyWith(
+                                      color: c.brandPrimary,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                            const SizedBox(height: AppSpacing.xl),
+
+                            // Gelir
+                            _ZoomCell(
+                              label: 'Gelir',
+                              value: month.totalIncome,
+                              color: c.income,
+                            ),
+
+                            const SizedBox(height: AppSpacing.lg),
+
+                            // Gider
+                            _ZoomCell(
+                              label: 'Gider',
+                              value: month.totalExpense,
+                              color: c.expense,
+                            ),
+
+                            if (includeSavings) ...[
+                              const SizedBox(height: AppSpacing.lg),
+                              _ZoomCell(
+                                label: 'Birikim',
+                                value: month.totalSavings,
+                                color: c.savings,
+                              ),
+                            ],
+
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: AppSpacing.md),
+                              child: Divider(
+                                color: c.borderDefault
+                                    .withValues(alpha: 0.3),
+                                height: 1,
+                              ),
+                            ),
+
+                            // Net
+                            _ZoomCell(
+                              label: 'Net',
+                              value: displayNet,
+                              color: displayNet >= 0
+                                  ? c.income
+                                  : c.expense,
+                              bold: true,
+                            ),
+
+                            const SizedBox(height: AppSpacing.lg),
+
+                            // Kümülatif
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppSpacing.sm,
+                                horizontal: AppSpacing.sm,
+                              ),
+                              decoration: BoxDecoration(
+                                color: (month.netWithCarryOver >= 0
+                                        ? c.income
+                                        : c.expense)
+                                    .withValues(alpha: 0.06),
+                                borderRadius: AppRadius.chip,
+                              ),
+                              child: _ZoomCell(
+                                label: 'Kümülatif',
+                                value: month.netWithCarryOver,
+                                color: month.netWithCarryOver >= 0
+                                    ? c.income
+                                    : c.expense,
+                                bold: true,
+                                large: true,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ZoomCell extends StatelessWidget {
+  final String label;
+  final double value;
+  final Color color;
+  final bool bold;
+  final bool large;
+
+  const _ZoomCell({
+    required this.label,
+    required this.value,
+    required this.color,
+    this.bold = false,
+    this.large = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: AppTypography.caption.copyWith(
+            color: color.withValues(alpha: 0.6),
+            fontSize: 9,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 2),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            CurrencyFormatter.formatNoDecimal(value),
+            style: (large
+                    ? AppTypography.numericLarge
+                    : AppTypography.numericMedium)
+                .copyWith(
+              color: color,
+              fontWeight: bold ? FontWeight.w700 : FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

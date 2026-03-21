@@ -205,7 +205,7 @@ class IncomeTab extends ConsumerWidget {
         amount: income.amount, isGross: income.isGross, month: displayMonth);
 
   void _showDetail(BuildContext context, Income income) {
-    showModalBottomSheet(
+    showModalBottomSheet(useRootNavigator: true, 
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -233,7 +233,7 @@ class IncomeTab extends ConsumerWidget {
   }
 
   void _showEdit(BuildContext context, Income income) {
-    showModalBottomSheet(
+    showModalBottomSheet(useRootNavigator: true, 
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

@@ -5,19 +5,24 @@ import 'package:go_router/go_router.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:savvy/shared/widgets/loading_shimmer.dart';
-import 'package:savvy/features/dashboard/presentation/widgets/hero_card.dart';
-import 'package:savvy/features/dashboard/presentation/widgets/quick_stats_row.dart';
+import 'package:savvy/features/dashboard/presentation/widgets/greeting_header.dart';
+import 'package:savvy/features/dashboard/presentation/widgets/wallet_widget.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/savings_toggle.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/monthly_flow_table.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/trend_chart.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/goals_summary.dart';
 import 'package:savvy/features/savings_goals/presentation/providers/goals_provider.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  @override
+  Widget build(BuildContext context) {
     final allIncomesAsync = ref.watch(allIncomesProvider);
     final allExpensesAsync = ref.watch(allExpensesProvider);
     final allSavingsAsync = ref.watch(allSavingsProvider);
@@ -41,7 +46,6 @@ class DashboardScreen extends ConsumerWidget {
       child: CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: [
-          // Content — no app bar, hero card is the top element
           SliverPadding(
             padding: AppSpacing.screenH,
             sliver: isLoading
@@ -67,25 +71,24 @@ class DashboardScreen extends ConsumerWidget {
                     delegate: SliverChildListDelegate([
                       const SizedBox(height: AppSpacing.lg),
 
-                      // 1) Hero Card
+                      // 1) Greeting Header
                       _StaggeredEntry(
                         delay: 0,
-                        child: HeroCard(
+                        child: const GreetingHeader(),
+                      ),
+
+                      const SizedBox(height: AppSpacing.base),
+
+                      // 2) Wallet
+                      _StaggeredEntry(
+                        delay: 100,
+                        child: WalletWidget(
                           cumulativeNet: cumulativeNet,
                           currentMonth: currentMonth,
                         ),
                       ),
 
                       const SizedBox(height: AppSpacing.base),
-
-                      // 2) Quick Stats
-                      if (currentMonth != null) ...[
-                        _StaggeredEntry(
-                          delay: 100,
-                          child: QuickStatsRow(summary: currentMonth),
-                        ),
-                        const SizedBox(height: AppSpacing.base),
-                      ],
 
                       // 3) Birikim toggle
                       if (totalSavings > 0) ...[
@@ -181,7 +184,6 @@ class _StaggeredEntry extends StatelessWidget {
       duration: Duration(milliseconds: 600 + delay),
       curve: Curves.easeOutCubic,
       builder: (context, value, child) {
-        // Delay effect: the actual animation starts after the delay portion
         final adjusted =
             ((value * (600 + delay) - delay) / 600).clamp(0.0, 1.0);
         return Opacity(

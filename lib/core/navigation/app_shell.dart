@@ -120,6 +120,8 @@ class _NavItem extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: () {
           HapticFeedback.selectionClick();
+          // Dismiss any open modals/bottom sheets before navigating
+          Navigator.of(context, rootNavigator: true).popUntil((route) => route is! PopupRoute);
           onTap();
         },
         child: Column(

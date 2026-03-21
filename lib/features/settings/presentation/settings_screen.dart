@@ -8,6 +8,7 @@ import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/providers/theme_provider.dart';
+import 'package:savvy/core/providers/wallet_color_provider.dart';
 import 'package:savvy/features/settings/presentation/screens/export_data_sheet.dart';
 import 'package:savvy/features/settings/presentation/screens/settings_dialogs.dart';
 import 'package:savvy/features/settings/presentation/widgets/profile_card.dart';
@@ -108,6 +109,8 @@ class SettingsScreen extends ConsumerWidget {
                           },
                         ),
                       ),
+                      tileDivider(color: AppColors.of(context).borderDefault.withValues(alpha: 0.3)),
+                      _WalletColorTile(ref: ref),
                     ],
                   ),
                 ),
@@ -256,6 +259,348 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Wallet color picker tile for settings.
+class _WalletColorTile extends StatelessWidget {
+  final WidgetRef ref;
+  const _WalletColorTile({required this.ref});
+
+  @override
+  Widget build(BuildContext context) {
+    final current = ref.watch(walletColorProvider);
+    final c = AppColors.of(context);
+
+    return InkWell(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        showModalBottomSheet(
+          useRootNavigator: true,
+          context: context,
+          backgroundColor: c.surfaceCard,
+          isScrollControlled: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: AppRadius.bottomSheet,
+          ),
+          builder: (_) => FractionallySizedBox(
+            heightFactor: 0.42,
+            child: _WalletColorPicker(
+              current: current,
+              onSelect: (color) {
+                ref.read(walletColorProvider.notifier).set(color);
+              },
+            ),
+          ),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.base,
+          vertical: AppSpacing.md,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: current.base,
+                borderRadius: AppRadius.chip,
+                border: Border.all(
+                  color: current.highlight.withValues(alpha: 0.5),
+                  width: 1,
+                ),
+              ),
+              child: const Icon(
+                LucideIcons.wallet,
+                size: 18,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Cüzdan Rengi',
+                    style: AppTypography.titleMedium.copyWith(
+                      color: c.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 1),
+                  Text(
+                    current.label,
+                    style: AppTypography.caption.copyWith(
+                      color: c.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              AppIcons.forward,
+              size: 16,
+              color: c.textTertiary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Bottom sheet for picking wallet color with preview and circular palette.
+class _WalletColorPicker extends StatefulWidget {
+  final WalletColor current;
+  final ValueChanged<WalletColor> onSelect;
+
+  const _WalletColorPicker({required this.current, required this.onSelect});
+
+  @override
+  State<_WalletColorPicker> createState() => _WalletColorPickerState();
+}
+
+class _WalletColorPickerState extends State<_WalletColorPicker> {
+  late WalletColor _preview;
+
+  @override
+  void initState() {
+    super.initState();
+    _preview = widget.current;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.xl, AppSpacing.md, AppSpacing.xl, AppSpacing.xl,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: c.textTertiary.withValues(alpha: 0.3),
+                borderRadius: AppRadius.pill,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // ─── Mini wallet preview ──────────────────────────────
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+            width: 140,
+            height: 90,
+            decoration: BoxDecoration(
+              color: _preview.base,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: _preview.shadow.withValues(alpha: 0.5),
+                  blurRadius: 16,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                // Leather grain overlay
+                Positioned.fill(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            _preview.highlight.withValues(alpha: 0.15),
+                            Colors.transparent,
+                            _preview.base.withValues(alpha: 0.3),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // Flap (V-shape)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: ClipPath(
+                    clipper: _MiniFlapClipper(),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      height: 48,
+                      color: Color.lerp(
+                        _preview.base,
+                        _preview.highlight,
+                        0.08,
+                      ),
+                    ),
+                  ),
+                ),
+                // Clasp
+                Positioned(
+                  bottom: 28,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      width: 8,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(2),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            _preview.highlight.withValues(alpha: 0.5),
+                            _preview.highlight.withValues(alpha: 0.25),
+                          ],
+                        ),
+                        border: Border.all(
+                          color: _preview.highlight.withValues(alpha: 0.3),
+                          width: 0.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // SAVVY text
+                Positioned(
+                  bottom: 10,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Text(
+                      'SAVVY',
+                      style: TextStyle(
+                        color: _preview.highlight.withValues(alpha: 0.3),
+                        fontSize: 8,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 3,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+
+          // Selected color label
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: Text(
+              _preview.label,
+              key: ValueKey(_preview),
+              style: AppTypography.titleSmall.copyWith(
+                color: c.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          // ─── Horizontal color strip palette ─────────────────────
+          SizedBox(
+            height: 70,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: WalletColor.values.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 4),
+              itemBuilder: (context, index) {
+                final color = WalletColor.values[index];
+                final isSelected = color == _preview;
+
+                return GestureDetector(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _preview = color);
+                    widget.onSelect(color);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 28,
+                    decoration: BoxDecoration(
+                      color: color.base,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: isSelected
+                            ? c.brandPrimary
+                            : color.highlight.withValues(alpha: 0.15),
+                        width: isSelected ? 2.5 : 0.5,
+                      ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: c.brandPrimary.withValues(alpha: 0.35),
+                                blurRadius: 8,
+                                spreadRadius: 1,
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: isSelected
+                        ? const Center(
+                            child: Icon(
+                              Icons.check_rounded,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                          )
+                        : null,
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Mini flap clipper for the wallet preview in settings.
+class _MiniFlapClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    const r = 14.0;
+    path.moveTo(r, 0);
+    path.lineTo(size.width - r, 0);
+    path.quadraticBezierTo(size.width, 0, size.width, r);
+    path.lineTo(size.width, size.height * 0.5);
+    path.quadraticBezierTo(
+      size.width * 0.7, size.height * 0.72,
+      size.width / 2, size.height,
+    );
+    path.quadraticBezierTo(
+      size.width * 0.3, size.height * 0.72,
+      0, size.height * 0.5,
+    );
+    path.lineTo(0, r);
+    path.quadraticBezierTo(0, 0, r, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
 
 /// Staggered entrance animation for settings sections.

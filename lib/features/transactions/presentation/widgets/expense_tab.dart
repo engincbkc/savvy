@@ -141,7 +141,7 @@ class ExpenseTab extends ConsumerWidget {
   }
 
   void _showDetail(BuildContext context, Expense expense) {
-    showModalBottomSheet(
+    showModalBottomSheet(useRootNavigator: true, 
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -171,7 +171,7 @@ class ExpenseTab extends ConsumerWidget {
   }
 
   void _showEdit(BuildContext context, Expense expense) {
-    showModalBottomSheet(
+    showModalBottomSheet(useRootNavigator: true, 
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

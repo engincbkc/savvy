@@ -136,7 +136,7 @@ class GoalsScreen extends ConsumerWidget {
   }
 
   void _showAddGoal(BuildContext context) {
-    showModalBottomSheet(
+    showModalBottomSheet(useRootNavigator: true, 
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -151,7 +151,7 @@ class GoalsScreen extends ConsumerWidget {
   }
 
   void _showEditGoal(BuildContext context, SavingsGoal goal) {
-    showModalBottomSheet(
+    showModalBottomSheet(useRootNavigator: true, 
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -167,7 +167,7 @@ class GoalsScreen extends ConsumerWidget {
 
   void _showDetail(
       BuildContext context, WidgetRef ref, SavingsGoal goal, double monthlyNet) {
-    showModalBottomSheet(
+    showModalBottomSheet(useRootNavigator: true, 
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

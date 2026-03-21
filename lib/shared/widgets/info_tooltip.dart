@@ -22,7 +22,7 @@ class InfoTooltip extends StatelessWidget {
 
   void _show(BuildContext context) {
     HapticFeedback.lightImpact();
-    showModalBottomSheet(
+    showModalBottomSheet(useRootNavigator: true, 
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _InfoSheet(title: title, description: description),

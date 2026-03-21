@@ -46,7 +46,7 @@ class SavingsToggle extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(LucideIcons.piggyBank, size: 20, color: AppColors.of(context).savings),
+            Icon(LucideIcons.landmark, size: 20, color: AppColors.of(context).savings),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(

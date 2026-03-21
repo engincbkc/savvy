@@ -129,7 +129,7 @@ class SavingsTab extends ConsumerWidget {
   }
 
   void _showDetail(BuildContext context, Savings s) {
-    showModalBottomSheet(
+    showModalBottomSheet(useRootNavigator: true, 
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -154,7 +154,7 @@ class SavingsTab extends ConsumerWidget {
   }
 
   void _showEdit(BuildContext context, Savings s) {
-    showModalBottomSheet(
+    showModalBottomSheet(useRootNavigator: true, 
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

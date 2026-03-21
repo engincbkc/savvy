@@ -11,7 +11,7 @@ void showDeleteConfirmation({
   required String type,
   required VoidCallback onConfirm,
 }) {
-  showModalBottomSheet(
+  showModalBottomSheet(useRootNavigator: true, 
     context: context,
     backgroundColor: Colors.transparent,
     builder: (ctx) {

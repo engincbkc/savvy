@@ -604,7 +604,7 @@ void showMonthDurationPicker({
   required DateTime? currentEndDate,
   required ValueChanged<DateTime> onSelected,
 }) {
-  showModalBottomSheet(
+  showModalBottomSheet(useRootNavigator: true, 
     context: context,
     backgroundColor: Colors.transparent,
     isScrollControlled: true,

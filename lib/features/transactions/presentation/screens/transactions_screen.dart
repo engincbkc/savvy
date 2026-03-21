@@ -370,7 +370,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
 
   void _openAddSheet(BuildContext context) {
     HapticFeedback.mediumImpact();
-    showModalBottomSheet(
+    showModalBottomSheet(useRootNavigator: true, 
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
