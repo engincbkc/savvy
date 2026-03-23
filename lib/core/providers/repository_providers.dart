@@ -4,6 +4,7 @@ import 'package:savvy/features/transactions/data/expense_repository.dart';
 import 'package:savvy/features/transactions/data/income_repository.dart';
 import 'package:savvy/features/savings/data/savings_repository.dart';
 import 'package:savvy/features/savings_goals/data/savings_goal_repository.dart';
+import 'package:savvy/features/simulation/data/simulation_repository.dart';
 
 part 'repository_providers.g.dart';
 
@@ -42,6 +43,16 @@ SavingsGoalRepository savingsGoalRepository(Ref ref) {
   final uid = ref.watch(currentUserProvider)?.uid;
   if (uid == null) throw StateError('User not authenticated');
   return SavingsGoalRepository(
+    firestore: ref.watch(firestoreProvider),
+    uid: uid,
+  );
+}
+
+@riverpod
+SimulationRepository simulationRepository(Ref ref) {
+  final uid = ref.watch(currentUserProvider)?.uid;
+  if (uid == null) throw StateError('User not authenticated');
+  return SimulationRepository(
     firestore: ref.watch(firestoreProvider),
     uid: uid,
   );

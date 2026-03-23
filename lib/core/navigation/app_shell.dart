@@ -16,9 +16,8 @@ class AppShell extends StatelessWidget {
   int _currentIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
     if (location.startsWith('/transactions')) return 1;
-    if (location.startsWith('/goals')) return 2;
-    if (location.startsWith('/simulate')) return 3;
-    if (location.startsWith('/settings')) return 4;
+    if (location.startsWith('/simulate')) return 2;
+    if (location.startsWith('/settings')) return 3;
     return 0;
   }
 
@@ -69,21 +68,15 @@ class AppShell extends StatelessWidget {
                       onTap: () => context.go('/transactions'),
                     ),
                     _NavItem(
-                      icon: AppIcons.goal,
-                      label: 'Hedefler',
-                      isActive: currentIndex == 2,
-                      onTap: () => context.go('/goals'),
-                    ),
-                    _NavItem(
                       icon: AppIcons.simulate,
                       label: 'Simülasyon',
-                      isActive: currentIndex == 3,
+                      isActive: currentIndex == 2,
                       onTap: () => context.go('/simulate'),
                     ),
                     _NavItem(
                       icon: AppIcons.settings,
                       label: 'Ayarlar',
-                      isActive: currentIndex == 4,
+                      isActive: currentIndex == 3,
                       onTap: () => context.go('/settings'),
                     ),
                   ],
