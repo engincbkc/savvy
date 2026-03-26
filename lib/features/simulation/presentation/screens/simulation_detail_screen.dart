@@ -137,8 +137,9 @@ class _SimulationDetailScreenState
 
     switch (entry.type) {
       case SimulationType.credit:
-      case SimulationType.investment:
       case SimulationType.custom:
+      case SimulationType.vacation:
+      case SimulationType.tech:
         final principal = double.tryParse(_principalCtrl.text) ?? 0;
         final rate = double.tryParse(_rateCtrl.text) ?? 0;
         final term = int.tryParse(_termCtrl.text) ?? 0;
@@ -208,20 +209,6 @@ class _SimulationDetailScreenState
           });
         }
 
-      case SimulationType.rent:
-        final rent = double.tryParse(_currentRentCtrl.text) ?? 0;
-        final inc = double.tryParse(_increaseCtrl.text) ?? 0;
-        if (rent <= 0) return;
-        setState(() {
-          _rentResult = SimulationCalculator.rentChange(
-            currentRent: rent,
-            increasePercent: inc,
-            currentBudget: budget,
-          );
-        });
-        if (save) {
-          _saveParameters({'currentRent': rent, 'increasePercent': inc});
-        }
     }
   }
 
@@ -396,7 +383,7 @@ class _SimulationDetailScreenState
                         HeroResultCard(
                           monthlyImpact: _monthlyImpact,
                           color: typeColor,
-                          isRent: entry.type == SimulationType.rent,
+                          isRent: entry.type == SimulationType.custom,
                         ),
                         const SizedBox(height: AppSpacing.base),
 
@@ -519,7 +506,7 @@ class _SimulationDetailScreenState
 
   Widget _buildForm(BuildContext context, SimulationType type, Color color) {
     return switch (type) {
-      SimulationType.rent => _buildRentForm(context, color),
+      SimulationType.custom => _buildRentForm(context, color),
       SimulationType.car => _buildCarForm(context, color),
       SimulationType.housing => _buildHousingForm(context, color),
       _ => _buildCreditForm(context, color),

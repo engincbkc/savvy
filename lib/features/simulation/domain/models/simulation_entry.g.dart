@@ -37,10 +37,10 @@ Map<String, dynamic> _$SimulationEntryToJson(_SimulationEntry instance) =>
     };
 
 const _$SimulationTypeEnumMap = {
-  SimulationType.credit: 'credit',
-  SimulationType.housing: 'housing',
   SimulationType.car: 'car',
-  SimulationType.rent: 'rent',
-  SimulationType.investment: 'investment',
+  SimulationType.housing: 'housing',
+  SimulationType.credit: 'credit',
+  SimulationType.vacation: 'vacation',
+  SimulationType.tech: 'tech',
   SimulationType.custom: 'custom',
 };

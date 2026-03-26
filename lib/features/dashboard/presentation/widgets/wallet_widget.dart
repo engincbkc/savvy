@@ -34,13 +34,19 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
   late final AnimationController _flapController;
   late final AnimationController _cardsController;
   late final AnimationController _pulseController;
+  late final AnimationController _hintController;
+  late final AnimationController _peekController;
 
   late final Animation<double> _flapAnim;
   late final Animation<double> _cardsSlide;
   late final Animation<double> _balanceOpacity;
+  late final Animation<double> _hintAnim;
+  late final Animation<double> _peekAnim;
 
   bool _isOpen = false;
   bool _isExpanded = false;
+  bool _hasOpened = false; // Track if user ever opened the wallet
+  bool _showHint = true;
   double _flapDragOffset = 0;
   double _cardsDragOffset = 0;
 
@@ -77,8 +83,46 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
 
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2200),
+      duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
+
+    // Hint arrow bounce animation (repeating)
+    _hintController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+    _hintAnim = Tween<double>(begin: 0, end: -8).animate(
+      CurvedAnimation(parent: _hintController, curve: Curves.easeInOut),
+    );
+
+    // Peek demo animation — runs once after 1.5s delay
+    _peekController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    );
+    _peekAnim = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween(begin: 0.0, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeOutCubic)),
+        weight: 40,
+      ),
+      TweenSequenceItem(
+        tween: ConstantTween(1.0),
+        weight: 20,
+      ),
+      TweenSequenceItem(
+        tween: Tween(begin: 1.0, end: 0.0)
+            .chain(CurveTween(curve: Curves.easeInCubic)),
+        weight: 40,
+      ),
+    ]).animate(_peekController);
+
+    // Start peek demo after delay
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted && !_hasOpened) {
+        _peekController.forward();
+      }
+    });
   }
 
   @override
@@ -86,12 +130,18 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
     _flapController.dispose();
     _cardsController.dispose();
     _pulseController.dispose();
+    _hintController.dispose();
+    _peekController.dispose();
     super.dispose();
   }
 
   void _openWallet() {
     if (_isOpen) return;
     HapticFeedback.mediumImpact();
+    _hasOpened = true;
+    _showHint = false;
+    _hintController.stop();
+    _peekController.stop();
     setState(() => _isOpen = true);
     _flapController.forward();
     _pulseController.stop();
@@ -143,6 +193,8 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
         _flapController,
         _cardsController,
         _pulseController,
+        _hintController,
+        _peekController,
       ]),
       builder: (context, _) => _buildContent(walletColor),
     );
@@ -291,6 +343,7 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
       left: 0,
       right: 0,
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: _closeWallet,
         onVerticalDragUpdate: (d) =>
             setState(() => _flapDragOffset += d.delta.dy),
@@ -314,7 +367,10 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: _buildClasp(walletColor, 0.0),
+                  child: GestureDetector(
+                    onTap: _closeWallet,
+                    child: _buildClasp(walletColor, 0.0),
+                  ),
                 ),
               ),
             ),
@@ -328,7 +384,8 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
   // ─────────────────────────────────────────────────────────────────
   Widget _buildFlap(WalletColor walletColor, double t) {
     // When open, flap moves up and folds behind (translate upward)
-    final flapY = -t * (_flapHeight + 10);
+    final peekOffset = !_hasOpened ? _peekAnim.value * -18 : 0.0;
+    final flapY = -t * (_flapHeight + 10) + peekOffset;
 
     return Positioned(
       top: flapY,
@@ -382,6 +439,35 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
                       child: _buildClasp(walletColor, t),
                     ),
                   ),
+                  // Hint arrow + text (only before first open)
+                  if (_showHint && !_isOpen)
+                    Positioned(
+                      top: 6,
+                      left: 0,
+                      right: 0,
+                      child: Transform.translate(
+                        offset: Offset(0, _hintAnim.value),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.keyboard_arrow_up_rounded,
+                              size: 18,
+                              color: walletColor.highlight
+                                  .withValues(alpha: 0.5),
+                            ),
+                            Text(
+                              'aç',
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: walletColor.highlight
+                                    .withValues(alpha: 0.4),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   // Stitching line near bottom
                   Positioned(
                     bottom: 28,
@@ -496,17 +582,34 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.base, AppSpacing.sm, AppSpacing.base, AppSpacing.md,
           ),
-          child: Column(
-            children: [
-              Container(
-                width: 32,
-                height: 3,
-                margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: AppRadius.pill,
+          child: Transform.translate(
+            // Gentle bounce when open and not yet expanded
+            offset: Offset(0, !_isExpanded ? _hintAnim.value * -0.5 : 0),
+            child: Column(
+              children: [
+                // Pull handle + hint
+                Column(
+                  children: [
+                    if (!_isExpanded)
+                      Transform.translate(
+                        offset: Offset(0, _hintAnim.value * 0.6),
+                        child: Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 16,
+                          color: Colors.white.withValues(alpha: 0.35),
+                        ),
+                      ),
+                    Container(
+                      width: 32,
+                      height: 3,
+                      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: AppRadius.pill,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
               Row(
                 children: [
                   _buildGhostCard('Gelir', c.income, AppIcons.income),
@@ -517,6 +620,7 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
                 ],
               ),
             ],
+          ),
           ),
         ),
       ),
@@ -532,10 +636,10 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
           child: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
+              color: Colors.white.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.1),
+                color: Colors.white.withValues(alpha: 0.18),
                 width: 0.5,
               ),
             ),
@@ -545,7 +649,7 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
                   width: 20,
                   height: 20,
                   decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.2),
+                    color: accent.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: Icon(icon, size: 10, color: accent),
@@ -555,9 +659,9 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
                   child: Text(
                     label,
                     style: AppTypography.caption.copyWith(
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 9,
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -657,17 +761,10 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
               child: Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      walletColor.base.withValues(alpha: 0.9),
-                      walletColor.highlight.withValues(alpha: 0.55),
-                    ],
-                  ),
+                  color: walletColor.base,
                   borderRadius: AppRadius.card,
                   border: Border.all(
-                    color: walletColor.highlight.withValues(alpha: 0.25),
+                    color: walletColor.highlight.withValues(alpha: 0.3),
                     width: 0.5,
                   ),
                 ),
@@ -680,7 +777,7 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
                           width: 28,
                           height: 28,
                           decoration: BoxDecoration(
-                            color: accentColor.withValues(alpha: 0.2),
+                            color: accentColor.withValues(alpha: 0.25),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(icon, size: 14, color: accentColor),
@@ -690,7 +787,7 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
                           child: Text(
                             label,
                             style: AppTypography.caption.copyWith(
-                              color: Colors.white.withValues(alpha: 0.8),
+                              color: Colors.white,
                               fontWeight: FontWeight.w600,
                             ),
                             overflow: TextOverflow.ellipsis,

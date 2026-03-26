@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
+import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/providers/firebase_providers.dart';
 
 class GreetingHeader extends ConsumerWidget {
@@ -17,6 +18,15 @@ class GreetingHeader extends ConsumerWidget {
     return 'İyi geceler';
   }
 
+  String _monthName() {
+    const months = [
+      'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+      'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+    ];
+    final now = DateTime.now();
+    return '${months[now.month - 1]} ${now.year}';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
@@ -26,22 +36,46 @@ class GreetingHeader extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Text(
-            _greeting(),
-            style: AppTypography.bodyMedium.copyWith(
-              color: c.textTertiary,
-              fontWeight: FontWeight.w500,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _greeting(),
+                style: AppTypography.bodyMedium.copyWith(
+                  color: c.textTertiary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                firstName,
+                style: AppTypography.headlineMedium.copyWith(
+                  color: c.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 2),
-          Text(
-            firstName,
-            style: AppTypography.headlineMedium.copyWith(
-              color: c.textPrimary,
-              fontWeight: FontWeight.w700,
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: c.brandPrimary.withValues(alpha: 0.08),
+              borderRadius: AppRadius.pill,
+            ),
+            child: Text(
+              '${_monthName()} · Mali Özetin',
+              style: AppTypography.caption.copyWith(
+                color: c.brandPrimary,
+                fontWeight: FontWeight.w500,
+                fontSize: 10,
+              ),
             ),
           ),
         ],

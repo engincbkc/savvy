@@ -183,46 +183,46 @@ enum AffordabilityStatus {
 }
 
 enum SimulationType {
-  credit,
-  housing,
   car,
-  rent,
-  investment,
+  housing,
+  credit,
+  vacation,
+  tech,
   custom;
 
   String get label => switch (this) {
-        credit => 'Kredi Çekimi',
-        housing => 'Ev Alımı',
         car => 'Araç Alımı',
-        rent => 'Kira Değişimi',
-        investment => 'Yatırım',
-        custom => 'Özel Senaryo',
+        housing => 'Ev Alımı',
+        credit => 'Kredi Çekimi',
+        vacation => 'Tatil Planı',
+        tech => 'Teknoloji',
+        custom => 'Diğer',
       };
 
   String get subtitle => switch (this) {
-        credit => 'İhtiyaç, konut veya ticari kredi',
-        housing => 'FuzulEv, EminEvim, konut kredisi',
         car => 'Taşıt kredisi + aylık giderler',
-        rent => 'Kira artış senaryosu',
-        investment => 'Yatırım getiri analizi',
-        custom => 'Kendi senaryonuzu oluşturun',
+        housing => 'Konut kredisi, peşinat planı',
+        credit => 'İhtiyaç, konut veya ticari kredi',
+        vacation => 'Yurtiçi & yurtdışı tatil bütçesi',
+        tech => 'Telefon, bilgisayar, kamera...',
+        custom => 'Kendi senaryonu oluştur',
       };
 
   IconData get icon => switch (this) {
-        credit => LucideIcons.creditCard,
-        housing => LucideIcons.home,
         car => LucideIcons.car,
-        rent => LucideIcons.building2,
-        investment => LucideIcons.lineChart,
+        housing => LucideIcons.home,
+        credit => LucideIcons.creditCard,
+        vacation => LucideIcons.plane,
+        tech => LucideIcons.smartphone,
         custom => LucideIcons.sparkles,
       };
 
   Color get color => switch (this) {
-        credit => const Color(0xFF3F83F8),
-        housing => const Color(0xFF1A56DB),
         car => const Color(0xFF0E9F6E),
-        rent => const Color(0xFFD97706),
-        investment => const Color(0xFF8B5CF6),
+        housing => const Color(0xFF1A56DB),
+        credit => const Color(0xFF3F83F8),
+        vacation => const Color(0xFFE8590C),
+        tech => const Color(0xFF8B5CF6),
         custom => const Color(0xFF6B7280),
       };
 }
