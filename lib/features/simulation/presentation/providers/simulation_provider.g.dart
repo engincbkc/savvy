@@ -75,7 +75,7 @@ final class SimulationNotifierProvider
 }
 
 String _$simulationNotifierHash() =>
-    r'b1ca491f1125a9ce0fa25748e5a027534a31dce8';
+    r'c840b92b2457430df62c06ac931594898377808c';
 
 abstract class _$SimulationNotifier extends $AsyncNotifier<void> {
   FutureOr<void> build();
@@ -94,3 +94,60 @@ abstract class _$SimulationNotifier extends $AsyncNotifier<void> {
     element.handleCreate(ref, build);
   }
 }
+
+/// Future projections that include "included" simulations.
+/// Adds each included simulation's monthly payment as an extra expense.
+
+@ProviderFor(simulationAwareProjections)
+final simulationAwareProjectionsProvider =
+    SimulationAwareProjectionsProvider._();
+
+/// Future projections that include "included" simulations.
+/// Adds each included simulation's monthly payment as an extra expense.
+
+final class SimulationAwareProjectionsProvider
+    extends
+        $FunctionalProvider<
+          List<MonthSummary>,
+          List<MonthSummary>,
+          List<MonthSummary>
+        >
+    with $Provider<List<MonthSummary>> {
+  /// Future projections that include "included" simulations.
+  /// Adds each included simulation's monthly payment as an extra expense.
+  SimulationAwareProjectionsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'simulationAwareProjectionsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$simulationAwareProjectionsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<MonthSummary>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<MonthSummary> create(Ref ref) {
+    return simulationAwareProjections(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<MonthSummary> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<MonthSummary>>(value),
+    );
+  }
+}
+
+String _$simulationAwareProjectionsHash() =>
+    r'38b3cd42049f44eff2f0e4e8aef2c9657ee8814a';

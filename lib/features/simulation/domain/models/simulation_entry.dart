@@ -14,6 +14,7 @@ abstract class SimulationEntry with _$SimulationEntry {
     @Default('sparkles') String iconName,
     @Default('#3F83F8') String colorHex,
     @Default({}) Map<String, dynamic> parameters,
+    @Default(false) bool isIncluded,
     @Default(false) bool isDeleted,
     required DateTime createdAt,
     DateTime? updatedAt,

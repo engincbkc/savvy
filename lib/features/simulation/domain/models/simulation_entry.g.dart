@@ -15,6 +15,7 @@ _SimulationEntry _$SimulationEntryFromJson(Map<String, dynamic> json) =>
       iconName: json['iconName'] as String? ?? 'sparkles',
       colorHex: json['colorHex'] as String? ?? '#3F83F8',
       parameters: json['parameters'] as Map<String, dynamic>? ?? const {},
+      isIncluded: json['isIncluded'] as bool? ?? false,
       isDeleted: json['isDeleted'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),
       updatedAt: json['updatedAt'] == null
@@ -31,6 +32,7 @@ Map<String, dynamic> _$SimulationEntryToJson(_SimulationEntry instance) =>
       'iconName': instance.iconName,
       'colorHex': instance.colorHex,
       'parameters': instance.parameters,
+      'isIncluded': instance.isIncluded,
       'isDeleted': instance.isDeleted,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt?.toIso8601String(),
