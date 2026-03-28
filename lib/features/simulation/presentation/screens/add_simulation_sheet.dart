@@ -395,6 +395,8 @@ class _AddSimulationSheetState extends ConsumerState<AddSimulationSheet> {
                   _SliderSection(
                     label: 'Yıllık Faiz',
                     valueText: '%${_annualRate.toStringAsFixed(1)}',
+                    minLabel: '%0',
+                    maxLabel: '%5',
                     valueColor: _annualRate < 2
                         ? c.income
                         : _annualRate < 3.5
@@ -528,7 +530,7 @@ class _AddSimulationSheetState extends ConsumerState<AddSimulationSheet> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(type.icon,
-                                  size: 14,
+                                  size: 18,
                                   color: isSelected
                                       ? type.color
                                       : c.textTertiary),
@@ -751,12 +753,16 @@ class _SliderSection extends StatelessWidget {
   final String valueText;
   final Color? valueColor;
   final Widget child;
+  final String? minLabel;
+  final String? maxLabel;
 
   const _SliderSection({
     required this.label,
     required this.valueText,
     this.valueColor,
     required this.child,
+    this.minLabel,
+    this.maxLabel,
   });
 
   @override
@@ -784,6 +790,29 @@ class _SliderSection extends StatelessWidget {
           ],
         ),
         child,
+        if (minLabel != null || maxLabel != null)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  minLabel ?? '',
+                  style: AppTypography.caption.copyWith(
+                    color: c.textTertiary,
+                    fontSize: 9,
+                  ),
+                ),
+                Text(
+                  maxLabel ?? '',
+                  style: AppTypography.caption.copyWith(
+                    color: c.textTertiary,
+                    fontSize: 9,
+                  ),
+                ),
+              ],
+            ),
+          ),
         const SizedBox(height: AppSpacing.sm),
       ],
     );

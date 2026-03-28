@@ -50,7 +50,7 @@ class TransactionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dismissible(
-      key: ValueKey('$title-$amount'),
+      key: ValueKey(Object.hashAll([title, amount, categoryIcon, type])),
       direction: DismissDirection.horizontal,
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.endToStart) {

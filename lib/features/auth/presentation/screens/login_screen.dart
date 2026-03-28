@@ -102,18 +102,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       }
     });
 
+    final colors = AppColors.of(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFF0F4FF),
-              Color(0xFFFAFBFF),
-              Colors.white,
-            ],
-            stops: [0.0, 0.4, 1.0],
+            colors: isDark
+                ? [
+                    colors.surfaceBackground,
+                    colors.surfaceBackground,
+                  ]
+                : [
+                    colors.brandPrimary.withValues(alpha: 0.06),
+                    colors.surfaceBackground.withValues(alpha: 0.5),
+                    colors.surfaceBackground,
+                  ],
+            stops: isDark ? [0.0, 1.0] : [0.0, 0.4, 1.0],
           ),
         ),
         child: SafeArea(

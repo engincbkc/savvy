@@ -80,8 +80,8 @@ class FinancialCard extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      width: 32,
-                      height: 32,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
                         color: _color,
                         borderRadius: AppRadius.chip,

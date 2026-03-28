@@ -57,7 +57,7 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _date,
-      firstDate: DateTime(2020),
+      firstDate: DateTime(2015),
       lastDate: DateTime.now().add(const Duration(days: 366)),
     );
     if (picked != null) setState(() => _date = picked);
@@ -189,8 +189,8 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
                     child: FieldChip(
                       icon: Icons.event_busy_rounded,
                       label: _recurringEndDate != null
-                          ? 'Bitis: ${formatDateTR(_recurringEndDate!)}'
-                          : 'Bitis Tarihi (opsiyonel)',
+                          ? 'Bitiş: ${formatDateTR(_recurringEndDate!)}'
+                          : 'Bitiş Tarihi (opsiyonel)',
                     ),
                   ),
                 ],
@@ -280,10 +280,12 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
                   controller: _noteController,
                   textInputAction: TextInputAction.done,
                   maxLength: 200,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'Not (opsiyonel)',
-                    prefixIcon: Icon(AppIcons.note, size: 18),
-                    counterText: '',
+                    prefixIcon: const Icon(AppIcons.note, size: 18),
+                    counterStyle: AppTypography.caption.copyWith(
+                      color: c.textTertiary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),

@@ -5,6 +5,7 @@ import 'package:savvy/core/constants/financial_enums.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
+import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/utils/currency_formatter.dart';
 import 'package:savvy/features/savings/domain/models/savings.dart';
 import 'package:savvy/features/transactions/presentation/providers/transaction_form_provider.dart';
@@ -49,7 +50,7 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
     final picked = await showDatePicker(
       context: context,
       initialDate: _date,
-      firstDate: DateTime(2020),
+      firstDate: DateTime(2015),
       lastDate: DateTime.now().add(const Duration(days: 366)),
     );
     if (picked != null) setState(() => _date = picked);
@@ -154,10 +155,12 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
                   controller: _noteController,
                   textInputAction: TextInputAction.done,
                   maxLength: 200,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     hintText: 'Not (opsiyonel)',
-                    prefixIcon: Icon(AppIcons.note, size: 18),
-                    counterText: '',
+                    prefixIcon: const Icon(AppIcons.note, size: 18),
+                    counterStyle: AppTypography.caption.copyWith(
+                      color: c.textTertiary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),

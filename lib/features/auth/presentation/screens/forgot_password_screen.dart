@@ -93,7 +93,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             onFieldSubmitted: (_) => _submit(),
             decoration: const InputDecoration(
               hintText: 'E-posta adresiniz',
-              prefixIcon: Icon(AppIcons.person, size: 20),
+              prefixIcon: Icon(Icons.email_outlined, size: 20),
             ),
             validator: (v) {
               if (v == null || v.trim().isEmpty) return 'E-posta giriniz';

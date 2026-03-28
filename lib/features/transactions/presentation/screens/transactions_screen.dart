@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,7 +40,9 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
   late TabController _tabController;
   String? _selectedMonth; // null = Tümü
   TransactionFilters _filters = const TransactionFilters();
+  TransactionFilters _pendingFilters = const TransactionFilters();
   bool _headerShadow = false;
+  Timer? _filterDebounce;
 
   @override
   void initState() {
@@ -49,8 +53,22 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
 
   @override
   void dispose() {
+    _filterDebounce?.cancel();
     _tabController.dispose();
     super.dispose();
+  }
+
+  void _onFiltersChanged(TransactionFilters f) {
+    _pendingFilters = f;
+    _filterDebounce?.cancel();
+    // Search queries debounce; other filters apply immediately
+    if (f.searchQuery != _filters.searchQuery) {
+      _filterDebounce = Timer(const Duration(milliseconds: 300), () {
+        if (mounted) setState(() => _filters = _pendingFilters);
+      });
+    } else {
+      setState(() => _filters = f);
+    }
   }
 
   // Apply filters to any list of items
@@ -267,7 +285,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
                     child: FilterBar(
                       filters: _filters,
                       activeTabIndex: _tabController.index,
-                      onChanged: (f) => setState(() => _filters = f),
+                      onChanged: _onFiltersChanged,
                     ),
                   ),
                 ),
