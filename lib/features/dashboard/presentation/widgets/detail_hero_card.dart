@@ -11,14 +11,12 @@ class DetailHeroCard extends StatelessWidget {
   final double netWithCarryOver;
   final double netBalance;
   final double carryOver;
-  final int healthScore;
 
   const DetailHeroCard({
     super.key,
     required this.netWithCarryOver,
     required this.netBalance,
     required this.carryOver,
-    required this.healthScore,
   });
 
   List<Color> get _gradient {
@@ -104,16 +102,6 @@ class DetailHeroCard extends StatelessWidget {
                   color: carryOver >= 0
                       ? const Color(0xFF86EFAC)
                       : const Color(0xFFFCA5A5),
-                ),
-                Container(
-                  width: 1,
-                  height: 30,
-                  color: AppColors.textInverse.withValues(alpha: 0.2),
-                ),
-                HeroStat(
-                  label: 'Sağlık',
-                  value: '$healthScore',
-                  color: AppColors.textInverse,
                 ),
               ],
             ),

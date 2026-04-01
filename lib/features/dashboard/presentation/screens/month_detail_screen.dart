@@ -8,7 +8,6 @@ import 'package:savvy/features/dashboard/presentation/providers/dashboard_provid
 import 'package:savvy/core/utils/year_month_helper.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/detail_hero_card.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/breakdown_section.dart';
-import 'package:savvy/features/dashboard/presentation/widgets/rates_card.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/month_transactions.dart';
 
 class MonthDetailScreen extends ConsumerWidget {
@@ -55,7 +54,6 @@ class MonthDetailScreen extends ConsumerWidget {
                     netWithCarryOver: summary.netWithCarryOver,
                     netBalance: summary.netBalance,
                     carryOver: summary.carryOver,
-                    healthScore: summary.healthScore,
                   ),
 
                   const SizedBox(height: AppSpacing.lg),
@@ -65,15 +63,6 @@ class MonthDetailScreen extends ConsumerWidget {
                     totalIncome: summary.totalIncome,
                     totalExpense: summary.totalExpense,
                     totalSavings: summary.totalSavings,
-                  ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // ── Rates & Progress ──
-                  RatesCard(
-                    savingsRate: summary.savingsRate,
-                    expenseRate: summary.expenseRate,
-                    healthScore: summary.healthScore,
                   ),
 
                   const SizedBox(height: AppSpacing.xl),
