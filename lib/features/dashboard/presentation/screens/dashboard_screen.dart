@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+import 'package:savvy/core/design/tokens/app_colors.dart';
+import 'package:savvy/core/design/tokens/app_radius.dart';
+import 'package:savvy/core/design/tokens/app_shadow.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
+import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:savvy/shared/widgets/loading_shimmer.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/greeting_header.dart';
@@ -157,11 +162,93 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           ),
                         ),
 
+                      // 7) Nakit Akış Tahmini entry
+                      if (projections.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.xl),
+                        _StaggeredEntry(
+                          delay: 600,
+                          child: _ForecastEntryCard(),
+                        ),
+                      ],
+
                       const SizedBox(height: 100),
                     ]),
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Tappable card that navigates to the 12-month cash flow forecast screen.
+class _ForecastEntryCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        context.go('/dashboard/forecast');
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.base,
+          vertical: AppSpacing.md,
+        ),
+        decoration: BoxDecoration(
+          color: c.brandPrimary.withValues(alpha: 0.07),
+          borderRadius: AppRadius.card,
+          border: Border.all(
+            color: c.brandPrimary.withValues(alpha: 0.18),
+          ),
+          boxShadow: AppShadow.xs,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: c.brandPrimary.withValues(alpha: 0.12),
+                borderRadius: AppRadius.chip,
+              ),
+              child: Icon(
+                LucideIcons.trendingUp,
+                size: 18,
+                color: c.brandPrimary,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Gelecek 12 Ay',
+                    style: AppTypography.titleSmall.copyWith(
+                      color: c.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    'Nakit akış tahmini ve kümülatif projeksiyon',
+                    style: AppTypography.caption.copyWith(
+                      color: c.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: c.brandPrimary,
+            ),
+          ],
+        ),
       ),
     );
   }

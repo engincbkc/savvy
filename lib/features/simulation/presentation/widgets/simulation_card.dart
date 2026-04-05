@@ -26,7 +26,7 @@ class SimulationCard extends StatelessWidget {
       final hex = simulation.colorHex.replaceFirst('#', '');
       return Color(int.parse('FF$hex', radix: 16));
     } catch (_) {
-      return simulation.type.color;
+      return simulation.template?.color ?? const Color(0xFF6B7280);
     }
   }
 
@@ -106,7 +106,7 @@ class SimulationCard extends StatelessWidget {
                   border: Border.all(color: color.withValues(alpha: 0.15)),
                 ),
                 child: Icon(
-                  simulation.type.icon,
+                  simulation.template?.icon ?? Icons.auto_awesome,
                   color: color,
                   size: 22,
                 ),
@@ -137,7 +137,7 @@ class SimulationCard extends StatelessWidget {
                             borderRadius: AppRadius.pill,
                           ),
                           child: Text(
-                            simulation.type.label,
+                            simulation.template?.label ?? 'Özel',
                             style: AppTypography.caption.copyWith(
                                 color: color, fontWeight: FontWeight.w600),
                           ),

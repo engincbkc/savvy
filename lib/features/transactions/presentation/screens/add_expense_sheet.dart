@@ -16,7 +16,55 @@ import 'package:uuid/uuid.dart';
 
 class AddExpenseSheet extends ConsumerStatefulWidget {
   final ScrollController? scrollController;
-  const AddExpenseSheet({super.key, this.scrollController});
+  final double? initialAmount;
+  final ExpenseCategory? initialCategory;
+  final String? initialNote;
+  final ExpenseType? initialExpenseType;
+
+  const AddExpenseSheet({
+    super.key,
+    this.scrollController,
+    this.initialAmount,
+    this.initialCategory,
+    this.initialNote,
+    this.initialExpenseType,
+  });
+
+  /// Convenience static method to open AddExpenseSheet as a bottom sheet,
+  /// optionally pre-filling values.
+  static Future<void> show(
+    BuildContext context, {
+    double? initialAmount,
+    ExpenseCategory? initialCategory,
+    String? initialNote,
+    ExpenseType? initialExpenseType,
+  }) {
+    return showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        maxChildSize: 0.9,
+        minChildSize: 0.4,
+        expand: false,
+        builder: (sheetCtx, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: AppColors.of(sheetCtx).surfaceCard,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: AddExpenseSheet(
+            scrollController: scrollController,
+            initialAmount: initialAmount,
+            initialCategory: initialCategory,
+            initialNote: initialNote,
+            initialExpenseType: initialExpenseType,
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   ConsumerState<AddExpenseSheet> createState() => _AddExpenseSheetState();
@@ -37,7 +85,22 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
   @override
   void initState() {
     super.initState();
+    // Apply pre-fill values if provided
+    if (widget.initialAmount != null) {
+      _amountController.text =
+          widget.initialAmount!.toStringAsFixed(0).replaceAll('.', ',');
+    }
+    if (widget.initialCategory != null) {
+      _category = widget.initialCategory!;
+    }
+    if (widget.initialNote != null) {
+      _noteController.text = widget.initialNote!;
+    }
+    if (widget.initialExpenseType != null) {
+      _expenseType = widget.initialExpenseType!;
+    }
     _amountController.addListener(_onAmountChanged);
+    _amountOk = isAmountValid(_amountController.text);
   }
 
   void _onAmountChanged() {
@@ -106,7 +169,9 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final formState = ref.watch(transactionFormProvider);
+    final isLoading = ref.watch(
+      transactionFormProvider.select((s) => s.isLoading),
+    );
     final c = AppColors.of(context);
 
     return Padding(
@@ -291,7 +356,7 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
                 const SizedBox(height: AppSpacing.xl),
 
                 FormSubmitButton(
-                  isLoading: formState.isLoading,
+                  isLoading: isLoading,
                   label: 'Gider Ekle',
                   color: c.expense,
                   enabled: _amountOk,

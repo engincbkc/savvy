@@ -1,5 +1,7 @@
 import 'dart:math';
 import 'package:savvy/core/constants/financial_enums.dart';
+import 'package:savvy/features/planned_changes/domain/models/planned_change.dart';
+import 'package:savvy/features/transactions/domain/models/expense.dart';
 
 /// ALL financial calculations happen here — nowhere else.
 /// BL-001: No math in UI. No math in Repository.
@@ -142,6 +144,23 @@ class FinancialCalculator {
     return (currentAmount / targetAmount).clamp(0.0, 1.0);
   }
 
+  /// Mevcut aylık net gelirin belirli bir oranını aylık birikim önerisi olarak döndür.
+  /// Varsayılan oran %20 (tasarruf hedefi).
+  static double suggestedMonthlySaving(double monthlyNet, {double rate = 0.20}) {
+    return (monthlyNet * rate).clamp(0.0, double.infinity);
+  }
+
+  /// Mevcut birikim hızının hedefe yetip yetmediğini kontrol et.
+  /// [monthlyNet]: mevcut aylık net birikim/artı
+  /// [requiredMonthly]: hedefe zamanında ulaşmak için gereken aylık birikim
+  /// true → yeterli hız, false → yetersiz hız
+  static bool isOnTrackForGoal({
+    required double monthlyNet,
+    required double requiredMonthly,
+  }) {
+    return requiredMonthly > 0 && monthlyNet >= requiredMonthly;
+  }
+
   // ─── Loan / Installment ──────────────────────────────────────────
 
   /// Monthly loan payment (EMI - Equal Monthly Installment)
@@ -167,6 +186,24 @@ class FinancialCalculator {
     required double principal,
   }) =>
       totalPayment - principal;
+
+  // ─── Kredi Vergi Maliyeti (KKDF + BSMV) ─────────────────────────
+
+  /// Gerçek yıllık oran: nominal oran üzerine KKDF (%15) ve BSMV (%10) eklenir.
+  /// Formül: efektifOran = nominalOran × (1 + kkdf + bsmv)
+  /// Türkiye 2026 oranları: KKDF %15, BSMV %10
+  static double realAnnualRateWithTaxes(double nominalAnnualRate) {
+    const kkdf = 0.15;
+    const bsmv = 0.10;
+    return nominalAnnualRate * (1 + kkdf + bsmv);
+  }
+
+  /// Toplam faiz üzerindeki KKDF + BSMV tutarı.
+  /// Toplam vergi oranı: %25 (0.15 + 0.10)
+  static double creditTaxAmount(double totalInterest) {
+    const rate = 0.25; // 0.15 KKDF + 0.10 BSMV
+    return totalInterest * rate;
+  }
 
   static AffordabilityStatus loanAffordability({
     required double monthlyPayment,
@@ -234,11 +271,18 @@ class FinancialCalculator {
     return 0.40;
   }
 
+  // ─── Salary Cache ──────────────────────────────────────────────────
+  static final Map<double, AnnualSalaryBreakdown> _salaryCache = {};
+
+  static void clearSalaryCache() => _salaryCache.clear();
+
   /// Full 12-month gross-to-net with proper cumulative tax, SGK tavan,
   /// asgari ücret GV istisnası, and damga vergisi istisnası.
   static AnnualSalaryBreakdown calculateAnnualNetSalary({
     required double grossMonthly,
   }) {
+    final cached = _salaryCache[grossMonthly];
+    if (cached != null) return cached;
     final months = <MonthlySalaryDetail>[];
     double cumBase = 0;
     double cumTax = 0;
@@ -310,7 +354,7 @@ class FinancialCalculator {
     final totalNet = months.fold(0.0, (s, m) => s + m.netTakeHome);
     final totalGross = grossMonthly * 12;
 
-    return AnnualSalaryBreakdown(
+    final result = AnnualSalaryBreakdown(
       grossMonthly: grossMonthly,
       months: months,
       totalNet: totalNet,
@@ -322,6 +366,8 @@ class FinancialCalculator {
           months.fold(0.0, (s, m) => s + m.stampTax - m.stampExemption),
       effectiveTaxRate: totalGross > 0 ? (totalGross - totalNet) / totalGross : 0,
     );
+    _salaryCache[grossMonthly] = result;
+    return result;
   }
 
   /// Simple single-month gross-to-net (backward compat, returns January values)
@@ -372,6 +418,70 @@ class FinancialCalculator {
     required int months,
   }) =>
       currentSavings + (monthlySavings * months);
+
+  // ─── Debt Tracking ───────────────────────────────────────────────
+
+  /// Total remaining debt across all installment expenses.
+  /// Uses recurringEndDate to calculate remaining months.
+  static double totalRemainingDebt(List<Expense> expenses) {
+    final now = DateTime.now();
+    return expenses
+        .where((e) =>
+            e.isRecurring &&
+            e.recurringEndDate != null &&
+            e.recurringEndDate!.isAfter(now))
+        .fold(0.0, (sum, e) {
+          final remaining = _monthsRemaining(now, e.recurringEndDate!);
+          return sum + e.amount * remaining;
+        });
+  }
+
+  /// Total monthly debt payment.
+  static double monthlyDebtPayment(List<Expense> expenses) {
+    final now = DateTime.now();
+    return expenses
+        .where((e) =>
+            e.isRecurring &&
+            e.recurringEndDate != null &&
+            e.recurringEndDate!.isAfter(now))
+        .fold(0.0, (sum, e) => sum + e.amount);
+  }
+
+  /// Date when all installments end.
+  static DateTime? debtFreeDate(List<Expense> expenses) {
+    final now = DateTime.now();
+    final endDates = expenses
+        .where((e) =>
+            e.isRecurring &&
+            e.recurringEndDate != null &&
+            e.recurringEndDate!.isAfter(now))
+        .map((e) => e.recurringEndDate!)
+        .toList();
+    if (endDates.isEmpty) return null;
+    return endDates.reduce((a, b) => a.isAfter(b) ? a : b);
+  }
+
+  // ─── PlannedChange Resolution ────────────────────────────────────
+
+  /// Resolves the effective amount for a given date, considering planned changes.
+  /// Returns the newAmount of the last PlannedChange whose effectiveDate <=
+  /// targetDate, or baseAmount if no applicable change exists.
+  static double resolveAmountForDate({
+    required double baseAmount,
+    required List<PlannedChange> plannedChanges,
+    required DateTime targetDate,
+  }) {
+    final applicable = plannedChanges
+        .where((c) => !c.effectiveDate.isAfter(targetDate))
+        .toList()
+      ..sort((a, b) => a.effectiveDate.compareTo(b.effectiveDate));
+    if (applicable.isEmpty) return baseAmount;
+    return applicable.last.newAmount;
+  }
+
+  static int _monthsRemaining(DateTime from, DateTime to) {
+    return ((to.year - from.year) * 12 + to.month - from.month).clamp(0, 999);
+  }
 }
 
 /// Brüt → Net maaş hesaplama sonucu (basit, tek ay)

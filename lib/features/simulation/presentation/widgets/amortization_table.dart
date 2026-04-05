@@ -4,7 +4,7 @@ import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/utils/currency_formatter.dart';
-import 'package:savvy/features/simulation/domain/simulation_calculator.dart';
+import 'package:savvy/features/simulation/domain/models/simulation_result.dart';
 
 class AmortizationTable extends StatelessWidget {
   final List<AmortizationRow> schedule;

@@ -50,6 +50,65 @@ final class AllSimulationsProvider
 
 String _$allSimulationsHash() => r'3d09af415fc2ea6b0b8da8418c1ee2df6439f9fe';
 
+/// Builds the dynamic projection base from all active recurring incomes/expenses.
+/// Each screen passes this to [SimulationCalculator.calculateScenario] so that
+/// the 12-month projection respects start/end dates of recurring items.
+
+@ProviderFor(projectionBaseItems)
+final projectionBaseItemsProvider = ProjectionBaseItemsProvider._();
+
+/// Builds the dynamic projection base from all active recurring incomes/expenses.
+/// Each screen passes this to [SimulationCalculator.calculateScenario] so that
+/// the 12-month projection respects start/end dates of recurring items.
+
+final class ProjectionBaseItemsProvider
+    extends
+        $FunctionalProvider<
+          List<ProjectionBaseItem>,
+          List<ProjectionBaseItem>,
+          List<ProjectionBaseItem>
+        >
+    with $Provider<List<ProjectionBaseItem>> {
+  /// Builds the dynamic projection base from all active recurring incomes/expenses.
+  /// Each screen passes this to [SimulationCalculator.calculateScenario] so that
+  /// the 12-month projection respects start/end dates of recurring items.
+  ProjectionBaseItemsProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'projectionBaseItemsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$projectionBaseItemsHash();
+
+  @$internal
+  @override
+  $ProviderElement<List<ProjectionBaseItem>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  List<ProjectionBaseItem> create(Ref ref) {
+    return projectionBaseItems(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<ProjectionBaseItem> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<ProjectionBaseItem>>(value),
+    );
+  }
+}
+
+String _$projectionBaseItemsHash() =>
+    r'3ce790350ccb2a55859d85c0ceda9a6c5a9dc54b';
+
 @ProviderFor(SimulationNotifier)
 final simulationProvider = SimulationNotifierProvider._();
 
@@ -75,7 +134,7 @@ final class SimulationNotifierProvider
 }
 
 String _$simulationNotifierHash() =>
-    r'c840b92b2457430df62c06ac931594898377808c';
+    r'6923103acc923590e98021223e1770c4344f0757';
 
 abstract class _$SimulationNotifier extends $AsyncNotifier<void> {
   FutureOr<void> build();
@@ -96,14 +155,12 @@ abstract class _$SimulationNotifier extends $AsyncNotifier<void> {
 }
 
 /// Future projections that include "included" simulations.
-/// Adds each included simulation's monthly payment as an extra expense.
 
 @ProviderFor(simulationAwareProjections)
 final simulationAwareProjectionsProvider =
     SimulationAwareProjectionsProvider._();
 
 /// Future projections that include "included" simulations.
-/// Adds each included simulation's monthly payment as an extra expense.
 
 final class SimulationAwareProjectionsProvider
     extends
@@ -114,7 +171,6 @@ final class SimulationAwareProjectionsProvider
         >
     with $Provider<List<MonthSummary>> {
   /// Future projections that include "included" simulations.
-  /// Adds each included simulation's monthly payment as an extra expense.
   SimulationAwareProjectionsProvider._()
     : super(
         from: null,
@@ -150,4 +206,4 @@ final class SimulationAwareProjectionsProvider
 }
 
 String _$simulationAwareProjectionsHash() =>
-    r'38b3cd42049f44eff2f0e4e8aef2c9657ee8814a';
+    r'7c07a560ca639771dd6c3cea7fa6eb32b9c2bb3d';

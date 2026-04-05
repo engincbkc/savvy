@@ -244,3 +244,51 @@ final class SimulationRepositoryProvider
 
 String _$simulationRepositoryHash() =>
     r'1c2caa6ade8071375a6eaea0db7490f7e041b0ce';
+
+@ProviderFor(budgetLimitRepository)
+final budgetLimitRepositoryProvider = BudgetLimitRepositoryProvider._();
+
+final class BudgetLimitRepositoryProvider
+    extends
+        $FunctionalProvider<
+          BudgetLimitRepository,
+          BudgetLimitRepository,
+          BudgetLimitRepository
+        >
+    with $Provider<BudgetLimitRepository> {
+  BudgetLimitRepositoryProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'budgetLimitRepositoryProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$budgetLimitRepositoryHash();
+
+  @$internal
+  @override
+  $ProviderElement<BudgetLimitRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  BudgetLimitRepository create(Ref ref) {
+    return budgetLimitRepository(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(BudgetLimitRepository value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<BudgetLimitRepository>(value),
+    );
+  }
+}
+
+String _$budgetLimitRepositoryHash() =>
+    r'67e371cfcaefe20e6f8fa7cf754d073436fb88e2';

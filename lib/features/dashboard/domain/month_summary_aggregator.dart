@@ -32,8 +32,13 @@ class MonthSummaryAggregator {
     yearMonths.add(DateTime.now().toYearMonth());
 
     // Only include months up to current month (future months handled by projections)
-    final currentYm = DateTime.now().toYearMonth();
-    yearMonths.removeWhere((ym) => ym.compareTo(currentYm) > 0);
+    // Show at most 1 past month (previous month only).
+    final now = DateTime.now();
+    final currentYm = now.toYearMonth();
+    final oneMonthAgo = DateTime(now.year, now.month - 1, 1).toYearMonth();
+    yearMonths.removeWhere(
+      (ym) => ym.compareTo(currentYm) > 0 || ym.compareTo(oneMonthAgo) < 0,
+    );
 
     // Sort chronologically
     final sorted = yearMonths.toList()..sort();
@@ -42,9 +47,14 @@ class MonthSummaryAggregator {
     double cumulativeCarryOver = 0;
     final summaries = <MonthSummary>[];
 
+    // Pre-filter recurring items for projection
+    final recurringIncomes = incomes.where((i) => i.isRecurring).toList();
+    final recurringExpenses = expenses.where((e) => e.isRecurring).toList();
+
     for (final ym in sorted) {
       final range = YearMonthRange.from(ym);
 
+      // Direct transactions in this month
       final monthIncomeList = incomes.where(
         (i) => i.date.toYearMonth() == ym,
       );
@@ -56,7 +66,9 @@ class MonthSummaryAggregator {
       );
 
       final month = range.start.month; // 1-indexed
-      final totalIncome = monthIncomeList.fold(0.0, (sum, i) {
+
+      // Start with direct income entries
+      double totalIncome = monthIncomeList.fold(0.0, (sum, i) {
         return sum +
             FinancialCalculator.resolveNetForMonth(
               amount: i.amount,
@@ -64,8 +76,44 @@ class MonthSummaryAggregator {
               month: month,
             );
       });
-      final totalExpense =
+
+      // Add recurring incomes that started before this month
+      // but don't have a direct entry in this month
+      final directIncomeIds = monthIncomeList.map((i) => i.id).toSet();
+      for (final ri in recurringIncomes) {
+        if (directIncomeIds.contains(ri.id)) continue;
+        if (ri.date.toYearMonth().compareTo(ym) >= 0) {
+          continue; // not started yet
+        }
+        if (ri.recurringEndDate != null &&
+            ri.recurringEndDate!.isBefore(range.start)) {
+          continue; // ended
+        }
+        totalIncome += FinancialCalculator.resolveNetForMonth(
+          amount: ri.amount,
+          isGross: ri.isGross,
+          month: month,
+        );
+      }
+
+      // Start with direct expense entries
+      double totalExpense =
           monthExpenseList.fold(0.0, (sum, e) => sum + e.amount);
+
+      // Add recurring expenses that started before this month
+      final directExpenseIds = monthExpenseList.map((e) => e.id).toSet();
+      for (final re in recurringExpenses) {
+        if (directExpenseIds.contains(re.id)) continue;
+        if (re.date.toYearMonth().compareTo(ym) >= 0) {
+          continue;
+        }
+        if (re.recurringEndDate != null &&
+            re.recurringEndDate!.isBefore(range.start)) {
+          continue;
+        }
+        totalExpense += re.amount;
+      }
+
       final totalSavings =
           monthSavingsList.fold(0.0, (sum, s) => sum + s.amount);
 

@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Savvy (debug)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "deviceId": "94F056A7-A7DC-417D-9D7A-C4F1E4F2C4F7",
+      "args": []
+    },
+    {
+      "name": "Savvy + Gemini (debug)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "debug",
+      "deviceId": "94F056A7-A7DC-417D-9D7A-C4F1E4F2C4F7",
+      "args": [
+        "--dart-define=GEMINI_API_KEY=YOUR_KEY_HERE"
+      ]
+    },
+    {
+      "name": "Savvy (profile)",
+      "request": "launch",
+      "type": "dart",
+      "flutterMode": "profile",
+      "deviceId": "94F056A7-A7DC-417D-9D7A-C4F1E4F2C4F7",
+      "args": []
+    }
+  ]
+}

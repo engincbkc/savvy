@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
@@ -84,6 +85,94 @@ class SettingsScreen extends ConsumerWidget {
 
                 const SizedBox(height: AppSpacing.xl),
 
+                // ─── Finansal Araçlar Section ──────────────────────────
+                _StaggeredEntry(
+                  delay: 60,
+                  child: SectionHeader(title: 'Finansal Araçlar'),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+
+                _StaggeredEntry(
+                  delay: 80,
+                  child: SettingsCard(
+                    children: [
+                      ModernTile(
+                        icon: LucideIcons.sparkles,
+                        iconColor: const Color(0xFF7E3AF2),
+                        iconBgColor: const Color(0xFF7E3AF2),
+                        title: 'AI Danışman',
+                        subtitle: 'Finansal verilerinizi analiz edin',
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          context.push('/ai-advisor');
+                        },
+                      ),
+                      tileDivider(
+                          color: AppColors.of(context)
+                              .borderDefault
+                              .withValues(alpha: 0.3)),
+                      ModernTile(
+                        icon: LucideIcons.creditCard,
+                        iconColor: AppColors.of(context).expense,
+                        iconBgColor: AppColors.of(context).expense,
+                        title: 'Borç Takibi',
+                        subtitle: 'Taksit takvimi ve borçsuz tarih',
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          context.push('/debt');
+                        },
+                      ),
+                      tileDivider(
+                          color: AppColors.of(context)
+                              .borderDefault
+                              .withValues(alpha: 0.3)),
+                      ModernTile(
+                        icon: LucideIcons.target,
+                        iconColor: AppColors.of(context).savings,
+                        iconBgColor: AppColors.of(context).savings,
+                        title: 'Bütçe Limitleri',
+                        subtitle: 'Kategori bazlı harcama limitleri',
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          context.push('/budget');
+                        },
+                      ),
+                      tileDivider(
+                          color: AppColors.of(context)
+                              .borderDefault
+                              .withValues(alpha: 0.3)),
+                      ModernTile(
+                        icon: LucideIcons.fileText,
+                        iconColor: AppColors.of(context).brandPrimary,
+                        iconBgColor: AppColors.of(context).brandPrimary,
+                        title: 'Vergi Raporu',
+                        subtitle: 'Yıllık brüt→net vergi özeti',
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          context.push('/settings/tax-report');
+                        },
+                      ),
+                      tileDivider(
+                          color: AppColors.of(context)
+                              .borderDefault
+                              .withValues(alpha: 0.3)),
+                      ModernTile(
+                        icon: LucideIcons.users,
+                        iconColor: const Color(0xFF0E9F6E),
+                        iconBgColor: const Color(0xFF0E9F6E),
+                        title: 'Aile Bütçesi',
+                        subtitle: 'Kişi bazlı katkı ve harcama analizi',
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          context.push('/family');
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.xl),
+
                 // ─── Preferences Section ───────────────────────────────
                 _StaggeredEntry(
                   delay: 80,
@@ -111,6 +200,18 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       tileDivider(color: AppColors.of(context).borderDefault.withValues(alpha: 0.3)),
                       _WalletColorTile(ref: ref),
+                      tileDivider(color: AppColors.of(context).borderDefault.withValues(alpha: 0.3)),
+                      ModernTile(
+                        icon: LucideIcons.bell,
+                        iconColor: const Color(0xFFF59E0B),
+                        iconBgColor: const Color(0xFFF59E0B),
+                        title: 'Bildirimler',
+                        subtitle: 'Taksit, bütçe ve özet bildirimleri',
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          context.push('/settings/notifications');
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -128,6 +229,18 @@ class SettingsScreen extends ConsumerWidget {
                   delay: 240,
                   child: SettingsCard(
                     children: [
+                      ModernTile(
+                        icon: AppIcons.upload,
+                        iconColor: AppColors.of(context).brandPrimary,
+                        iconBgColor: AppColors.of(context).brandPrimary,
+                        title: 'CSV İçe Aktar',
+                        subtitle: 'Gelir, gider ve birikim yükle',
+                        onTap: () {
+                          HapticFeedback.lightImpact();
+                          context.push('/settings/import');
+                        },
+                      ),
+                      tileDivider(color: AppColors.of(context).borderDefault.withValues(alpha: 0.3)),
                       ModernTile(
                         icon: AppIcons.download,
                         iconColor: AppColors.of(context).income,

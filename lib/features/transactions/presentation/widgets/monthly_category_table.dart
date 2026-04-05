@@ -91,21 +91,16 @@ MonthlyCategoryData buildMonthlyCategoryData<T>(
     // Project recurring items into future months
     if (isRecurring != null && isRecurring(item)) {
       final endDate = getRecurringEndDate?.call(item);
-      final bounded = isYearBounded != null && isYearBounded(item);
-      // Brüt maaş: yıl sonuna kadar. Diğerleri: bitiş tarihine veya 12 aya kadar.
-      final defaultLimit = bounded
-          ? (12 - itemDate.month)
-          : 12;
+      final isGross = isYearBounded != null && isYearBounded(item);
+      // Brüt maaş: 60 aya kadar (5 yıl). Diğerleri: 12 aya kadar.
+      final defaultLimit = isGross ? 60 : 12;
       final projLimit = endDate != null
           ? ((endDate.year - itemDate.year) * 12 + endDate.month - itemDate.month).clamp(1, maxProjectionMonths)
           : defaultLimit;
       for (int m = 1; m <= projLimit; m++) {
         final futureDate = DateTime(itemDate.year, itemDate.month + m, 1);
-        final futureYm = futureDate.toYearMonth();
-
         if (endDate != null && futureDate.isAfter(endDate)) break;
-        if (bounded && futureDate.year > itemDate.year) break;
-
+        final futureYm = futureDate.toYearMonth();
         final projAmount = getAmountForMonth != null
             ? getAmountForMonth(item, futureDate.month)
             : getAmount(item);

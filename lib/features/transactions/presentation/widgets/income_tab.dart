@@ -26,6 +26,7 @@ class IncomeTab extends ConsumerWidget {
   final double total;
   /// 1-indexed month for gross→net resolution (1=Ocak, 12=Aralık)
   final int displayMonth;
+  final bool isTumuMode;
 
   const IncomeTab({
     super.key,
@@ -33,6 +34,7 @@ class IncomeTab extends ConsumerWidget {
     required this.allIncomes,
     required this.total,
     required this.displayMonth,
+    this.isTumuMode = false,
   });
 
   @override
@@ -47,13 +49,7 @@ class IncomeTab extends ConsumerWidget {
 
     // Brüt ve normal gelirleri ayır
     final grossIncomes = incomes.where((i) => i.isGross).toList();
-    // Eski brüt kayıtları tespit et (note'da "Brüt:" içerenler, isGross=false)
-    final legacyGrossIncomes = incomes
-        .where((i) => !i.isGross && i.note != null && i.note!.contains('Brüt:'))
-        .toList();
-    final regularIncomes = incomes
-        .where((i) => !i.isGross && !(i.note != null && i.note!.contains('Brüt:')))
-        .toList();
+    final regularIncomes = incomes.where((i) => !i.isGross).toList();
 
     // Kategori gruplama
     final grouped = <IncomeCategory, List<Income>>{};
@@ -84,7 +80,7 @@ class IncomeTab extends ConsumerWidget {
       isYearBounded: (i) => i.isGross,
     );
 
-    final displayCount = grossIncomes.length + regularIncomes.length + legacyGrossIncomes.length;
+    final displayCount = grossIncomes.length + regularIncomes.length;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -109,16 +105,6 @@ class IncomeTab extends ConsumerWidget {
           ),
         if (monthlyData.months.length > 1)
           const SizedBox(height: AppSpacing.xl),
-
-        // Eski brüt kayıt temizleme banner'ı
-        if (legacyGrossIncomes.isNotEmpty)
-          _LegacyGrossCleanupBanner(
-            count: legacyGrossIncomes.length,
-            color: AppColors.of(context).income,
-            onCleanup: () => _cleanupLegacyGross(context, ref, legacyGrossIncomes),
-          ),
-        if (legacyGrossIncomes.isNotEmpty)
-          const SizedBox(height: AppSpacing.base),
 
         // Brüt Maaş Kartları (premium grouped card)
         ...grossIncomes.map((i) => Padding(
@@ -188,21 +174,12 @@ class IncomeTab extends ConsumerWidget {
     );
   }
 
-  void _cleanupLegacyGross(
-      BuildContext context, WidgetRef ref, List<Income> legacyIncomes) {
-    showDeleteConfirmation(
-      context: context,
-      type: '${legacyIncomes.length} eski brüt kayıt',
-      onConfirm: () {
-        final ids = legacyIncomes.map((i) => i.id).toList();
-        ref.read(transactionFormProvider.notifier).deleteMultipleIncomes(ids);
-      },
-    );
-  }
-
   double _resolveAmount(Income income) =>
       FinancialCalculator.resolveNetForMonth(
-        amount: income.amount, isGross: income.isGross, month: displayMonth);
+        amount: income.amount,
+        isGross: income.isGross,
+        month: isTumuMode ? income.date.month : displayMonth,
+      );
 
   void _showDetail(BuildContext context, Income income) {
     showModalBottomSheet(useRootNavigator: true, 
@@ -549,85 +526,3 @@ class _GrossSalaryCardState extends State<_GrossSalaryCard> {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════
-// Legacy Gross Cleanup Banner
-// ═══════════════════════════════════════════════════════════════════
-
-class _LegacyGrossCleanupBanner extends StatelessWidget {
-  final int count;
-  final Color color;
-  final VoidCallback onCleanup;
-
-  const _LegacyGrossCleanupBanner({
-    required this.count,
-    required this.color,
-    required this.onCleanup,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final c = AppColors.of(context);
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.base),
-      decoration: BoxDecoration(
-        color: Colors.amber.withValues(alpha: 0.08),
-        borderRadius: AppRadius.card,
-        border: Border.all(
-          color: Colors.amber.withValues(alpha: 0.2),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.info_outline_rounded,
-            color: Colors.amber.shade700,
-            size: 20,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Eski brüt kayıtlar tespit edildi',
-                  style: AppTypography.labelMedium.copyWith(
-                    color: c.textPrimary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '$count ayrı kayıt var. Temizleyip tek brüt maaş kaydı oluşturabilirsin.',
-                  style: AppTypography.caption.copyWith(
-                    color: c.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          GestureDetector(
-            onTap: onCleanup,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.xs,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.amber.shade700,
-                borderRadius: AppRadius.chip,
-              ),
-              child: Text(
-                'Temizle',
-                style: AppTypography.labelSmall.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

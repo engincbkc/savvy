@@ -20,7 +20,7 @@ class SimulationRepository {
     if (raw == null) return null;
     final data = {...raw, 'id': doc.id};
 
-    // Timestamp → ISO8601 String (null-safe)
+    // Timestamp -> ISO8601 String (null-safe)
     if (data['createdAt'] is Timestamp) {
       data['createdAt'] =
           (data['createdAt'] as Timestamp).toDate().toIso8601String();
@@ -33,6 +33,13 @@ class SimulationRepository {
           (data['updatedAt'] as Timestamp).toDate().toIso8601String();
     } else {
       data.remove('updatedAt');
+    }
+
+    // Ensure changes is a List<Map> for fromJson
+    if (data['changes'] != null && data['changes'] is List) {
+      data['changes'] = (data['changes'] as List)
+          .map((e) => e is Map<String, dynamic> ? e : <String, dynamic>{})
+          .toList();
     }
 
     return data;
@@ -66,8 +73,19 @@ class SimulationRepository {
     return SimulationEntry.fromJson(map);
   }
 
-  Future<void> add(SimulationEntry simulation) async {
+  /// Converts SimulationEntry to a Firestore-safe Map.
+  /// Handles nested SimulationChange objects that need explicit toJson().
+  Map<String, dynamic> _toFirestoreJson(SimulationEntry simulation) {
     final json = simulation.toJson();
+    // Ensure nested changes are serialized as Maps
+    if (simulation.changes.isNotEmpty) {
+      json['changes'] = simulation.changes.map((c) => c.toJson()).toList();
+    }
+    return json;
+  }
+
+  Future<void> add(SimulationEntry simulation) async {
+    final json = _toFirestoreJson(simulation);
     json.remove('id');
     json.remove('createdAt');
     json.remove('updatedAt');
@@ -80,7 +98,7 @@ class SimulationRepository {
   }
 
   Future<void> update(SimulationEntry simulation) async {
-    final json = simulation.toJson();
+    final json = _toFirestoreJson(simulation);
     json.remove('id');
     json.remove('createdAt');
     await _collection.doc(simulation.id).update({

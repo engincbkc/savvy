@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
@@ -42,6 +43,19 @@ class MonthDetailScreen extends ConsumerWidget {
                     icon: const Icon(Icons.arrow_back_ios_rounded),
                     onPressed: () => context.go('/dashboard'),
                   ),
+                  actions: [
+                    IconButton(
+                      icon: Icon(
+                        LucideIcons.gitCompare,
+                        color: AppColors.of(context).textSecondary,
+                        size: 20,
+                      ),
+                      tooltip: 'Ay Karşılaştır',
+                      onPressed: () => context.push(
+                        '/dashboard/compare?month=$yearMonth',
+                      ),
+                    ),
+                  ],
                 ),
                 SliverPadding(
                   padding: AppSpacing.screenH,

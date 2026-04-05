@@ -55,12 +55,26 @@ Riverpod generator v4, provider isimlerini farkli uretiyor:
 - Settings: profile, dark mode toggle, export, about, logout tiles
 
 ## Yapilacaklar
-- Firebase configure (Auth + Firestore enable, flutterfire configure)
-- Transactions list screen (real data, filtreleme)
-- Simulation UI screens (credit, rent, car forms + results)
-- Settings: dark mode state persistence, export CSV
-- AI Advisor feature (Gemini integration)
-- SavingsGoals CRUD screens
+> Detayli yol haritasi: `doc/ROADMAP.md`
+
+### Faz 1 (Oncelik: Yuksek)
+- Periyodik islem yonetim ekrani (tum tekrar eden gelir/giderleri tek ekranda gor/yonet)
+- Gelir/gider adim degisikligi (maas artisi, kira zammi projeksiyona yansitma)
+- Borc takip modulu (taksit takvimi, "ne zaman borcsuz" projeksiyonu)
+- Butce/kategori limitleri (aylik harcama limiti + uyari)
+
+### Faz 2 (Oncelik: Orta)
+- Nakit akis tahmini (12 ay forward view, milestone'lar)
+- Bildirimler & hatirlaticilar
+- Ay vs ay karsilastirma
+- CSV/Excel import
+- Vergi raporu / yillik ozet
+
+### Faz 3 (Oncelik: Dusuk)
+- AI Advisor (Gemini entegrasyonu)
+- Aile/coklu kisi destegi
+- Hedef bazli akilli planlama
+- Hizli giris & home screen widget
 
 ## Klasor Yapisi
 ```

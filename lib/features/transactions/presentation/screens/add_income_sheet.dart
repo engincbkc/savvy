@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,6 +40,7 @@ class _AddIncomeSheetState extends ConsumerState<AddIncomeSheet> {
   bool _useGrossCalc = false;
   AnnualSalaryBreakdown? _annualBreakdown;
   int _selectedMonthIndex = 0;
+  Timer? _grossDebounce;
 
   @override
   void initState() {
@@ -53,23 +56,28 @@ class _AddIncomeSheetState extends ConsumerState<AddIncomeSheet> {
   }
 
   void _onGrossChanged() {
+    _grossDebounce?.cancel();
     final text = _grossController.text;
+
     if (text.isEmpty) {
       setState(() => _annualBreakdown = null);
       return;
     }
-    final cleaned =
-        text.replaceAll('.', '').replaceAll(',', '.').replaceAll(' ', '');
-    final gross = double.tryParse(cleaned);
-    if (gross == null || gross <= 0) {
-      setState(() => _annualBreakdown = null);
-      return;
-    }
 
-    final breakdown =
-        FinancialCalculator.calculateAnnualNetSalary(grossMonthly: gross);
-    setState(() => _annualBreakdown = breakdown);
-    _syncNetAmount();
+    _grossDebounce = Timer(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+      final cleaned =
+          text.replaceAll('.', '').replaceAll(',', '.').replaceAll(' ', '');
+      final gross = double.tryParse(cleaned);
+      if (gross == null || gross <= 0) {
+        setState(() => _annualBreakdown = null);
+        return;
+      }
+      final breakdown =
+          FinancialCalculator.calculateAnnualNetSalary(grossMonthly: gross);
+      setState(() => _annualBreakdown = breakdown);
+      _syncNetAmount();
+    });
   }
 
   void _syncNetAmount() {
@@ -99,6 +107,7 @@ class _AddIncomeSheetState extends ConsumerState<AddIncomeSheet> {
 
   @override
   void dispose() {
+    _grossDebounce?.cancel();
     _amountController.dispose();
     _grossController.dispose();
     _noteController.dispose();
@@ -184,7 +193,9 @@ class _AddIncomeSheetState extends ConsumerState<AddIncomeSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final formState = ref.watch(transactionFormProvider);
+    final isLoading = ref.watch(
+      transactionFormProvider.select((s) => s.isLoading),
+    );
     final c = AppColors.of(context);
     final isSalary = _category == IncomeCategory.salary;
 
@@ -365,7 +376,7 @@ class _AddIncomeSheetState extends ConsumerState<AddIncomeSheet> {
                 const SizedBox(height: AppSpacing.xl),
 
                 FormSubmitButton(
-                  isLoading: formState.isLoading,
+                  isLoading: isLoading,
                   label: _useGrossCalc
                       ? 'Brüt Maaş Ekle'
                       : 'Gelir Ekle',

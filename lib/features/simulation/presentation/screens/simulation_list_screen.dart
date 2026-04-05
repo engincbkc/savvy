@@ -7,14 +7,13 @@ import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
-import 'package:savvy/core/design/tokens/app_animation.dart';
 import 'package:savvy/core/utils/currency_formatter.dart';
 import 'package:savvy/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/monthly_flow_table.dart';
 import 'package:savvy/features/simulation/domain/models/simulation_entry.dart';
 import 'package:savvy/features/simulation/presentation/providers/simulation_provider.dart';
-import 'package:savvy/features/simulation/presentation/screens/add_simulation_sheet.dart';
-import 'package:savvy/features/simulation/presentation/widgets/simulation_hat_clippers.dart';
+import 'package:savvy/features/simulation/presentation/widgets/sim_stacked_cards.dart';
+import 'package:go_router/go_router.dart';
 import 'package:savvy/shared/widgets/loading_shimmer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -58,12 +57,7 @@ class _SimulationListScreenState extends ConsumerState<SimulationListScreen>
 
   void _openAddPage() {
     HapticFeedback.lightImpact();
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => const AddSimulationSheet(),
-      ),
-    );
+    context.go('/simulate/new');
   }
 
   static const _dahilEtKey = 'simulation_dahil_et_info_shown';
@@ -261,14 +255,53 @@ class _SimulationListScreenState extends ConsumerState<SimulationListScreen>
                     AppSpacing.lg, AppSpacing.base, AppSpacing.lg, 0),
                 child: Row(
                   children: [
-                    Text(
-                      'Simülasyonlar',
-                      style: AppTypography.headlineMedium.copyWith(
-                        color: colors.textPrimary,
-                        fontWeight: FontWeight.w700,
+                    Flexible(
+                      child: Text(
+                        'Simülasyonlar',
+                        style: AppTypography.headlineMedium.copyWith(
+                          color: colors.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const Spacer(),
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        context.go('/simulate/compare');
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.surfaceOverlay,
+                          borderRadius: AppRadius.pill,
+                          border: Border.all(color: colors.borderDefault),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.compare_arrows_rounded,
+                              size: 16,
+                              color: colors.textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Karşılaştır',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: colors.textSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
                     GestureDetector(
                       onTap: _openAddPage,
                       child: Container(
@@ -307,6 +340,9 @@ class _SimulationListScreenState extends ConsumerState<SimulationListScreen>
               ),
 
               const SizedBox(height: AppSpacing.lg),
+
+              // ── Included simulations compound effect banner ─
+              _IncludedSimsBanner(sims: sims),
 
               // ── Monthly Flow Table ─────────────────────────
               if (summaries.isNotEmpty || projections.isNotEmpty)
@@ -390,7 +426,7 @@ class _SimulationListScreenState extends ConsumerState<SimulationListScreen>
                 // The animated stacked/expanded cards
                 Padding(
                   padding: AppSpacing.screenH,
-                  child: _StackedCards(
+                  child: SimStackedCards(
                     sims: sims,
                     expandAnimation: _expandCtrl,
                     onToggleInclude: _handleToggleInclude,
@@ -517,730 +553,81 @@ class _SimulationListScreenState extends ConsumerState<SimulationListScreen>
   }
 }
 
-// ─── Stacked Cards Widget ─────────────────────────────────────
-class _StackedCards extends StatelessWidget {
+/// Banner shown at the top of the list when one or more simulations are included.
+/// Displays the count and net monthly impact of all included simulations.
+class _IncludedSimsBanner extends StatelessWidget {
   final List<SimulationEntry> sims;
-  final AnimationController expandAnimation;
-  final void Function(SimulationEntry sim) onToggleInclude;
-  final void Function(String id) onDelete;
-  final VoidCallback onExpandToggle;
 
-  static const _peekH = 30.0; // visible hat peek per stacked card
-  static const _cardSpacing = 16.0; // spacing when expanded
-  static const _cardH = 210.0; // estimated card height for layout
-
-  const _StackedCards({
-    required this.sims,
-    required this.expandAnimation,
-    required this.onToggleInclude,
-    required this.onDelete,
-    required this.onExpandToggle,
-  });
+  const _IncludedSimsBanner({required this.sims});
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: expandAnimation,
-      builder: (context, _) {
-        final t = expandAnimation.value; // 0 = stacked, 1 = expanded
-        return GestureDetector(
-          // Drag to expand/collapse
-          onVerticalDragUpdate: (d) {
-            final delta = d.primaryDelta ?? 0;
-            expandAnimation.value =
-                (expandAnimation.value + delta / 300).clamp(0.0, 1.0);
-          },
-          onVerticalDragEnd: (d) {
-            final vel = d.primaryVelocity ?? 0;
-            if (vel > 200) {
-              // Swiped down → expand
-              expandAnimation.forward();
-            } else if (vel < -200) {
-              // Swiped up → collapse
-              expandAnimation.reverse();
-            } else {
-              // Snap to nearest
-              if (expandAnimation.value > 0.5) {
-                expandAnimation.forward();
-              } else {
-                expandAnimation.reverse();
-              }
-            }
-          },
-          child: _buildStack(context, t),
-        );
-      },
-    );
-  }
+    final included = sims.where((s) => s.isIncluded).toList();
+    if (included.isEmpty) return const SizedBox.shrink();
 
-  Widget _buildStack(BuildContext context, double t) {
-    final count = sims.length;
-    if (count == 0) return const SizedBox.shrink();
-
-    // ── Fully expanded (t ≈ 1): simple Column ──
-    if (t > 0.95) {
-      return Column(
-        children: List.generate(count, (i) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: _cardSpacing),
-            child: _FlipSimCard(
-              sim: sims[i],
-              onToggleInclude: () => onToggleInclude(sims[i]),
-              onDelete: () => onDelete(sims[i].id),
-            ),
-          );
-        }),
-      );
+    double totalImpact = 0;
+    for (final sim in included) {
+      totalImpact += simulationMonthlyPayment(sim);
     }
 
-    // ── Collapsed (t ≈ 0) & mid-animation ──
-    //
-    // Layout (collapsed):
-    //   top=0          : card[count-1] peek (clipped to _peekH)
-    //   top=_peekH     : card[count-2] peek (clipped to _peekH)
-    //   ...
-    //   top=(count-2)*_peekH : card[1] peek (clipped to _peekH)
-    //   top=(count-1)*_peekH : card[0] FULL (fully visible, on top)
-    //
-    // Drawing order: card[count-1] first (bottom z), card[0] last (top z).
-    // During animation, peek cards grow to full height and spacing increases.
-
-    final collapsedTotalH = _peekH * (count - 1) + _cardH;
-    final expandedTotalH = count * (_cardH + _cardSpacing);
-    final totalH = collapsedTotalH + (expandedTotalH - collapsedTotalH) * t;
-
-    return SizedBox(
-      height: totalH,
-      child: Stack(
-        clipBehavior: Clip.hardEdge,
-        children: List.generate(count, (drawIdx) {
-          // Draw from back (last card) to front (card 0)
-          final i = count - 1 - drawIdx;
-
-          // Reversed index for positioning: card 0 is at the bottom
-          // of the visual stack, card[count-1] is at the top
-          final reversedI = count - 1 - i;
-
-          // Collapsed position: peek cards stacked at top, card 0 at bottom
-          final collapsedTop = reversedI * _peekH;
-          // Expanded position: all cards evenly spaced
-          final expandedTop = i * (_cardH + _cardSpacing);
-          final top = collapsedTop + (expandedTop - collapsedTop) * t;
-
-          // Card 0 is always fully visible. Other cards are clipped
-          // to _peekH when collapsed and grow to full height when expanded.
-          final isTopCard = i == 0;
-
-          if (isTopCard) {
-            // Card 0: always full, on top of z-order
-            return Positioned(
-              top: top,
-              left: 0,
-              right: 0,
-              child: _FlipSimCard(
-                sim: sims[i],
-                onToggleInclude: () => onToggleInclude(sims[i]),
-                onDelete: () => onDelete(sims[i].id),
-              ),
-            );
-          }
-
-          // Peek cards: clipped height interpolates from _peekH to full
-          final clipH = _peekH + (_cardH - _peekH) * t;
-
-          return Positioned(
-            top: top,
-            left: 0,
-            right: 0,
-            height: clipH,
-            child: IgnorePointer(
-              ignoring: t < 0.5,
-              child: ClipRect(
-                child: OverflowBox(
-                  alignment: Alignment.topCenter,
-                  maxHeight: _cardH,
-                  minHeight: _cardH,
-                  child: _FlipSimCard(
-                    sim: sims[i],
-                    onToggleInclude: () => onToggleInclude(sims[i]),
-                    onDelete: () => onDelete(sims[i].id),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-}
-
-// ─── Flip Simulation Card ─────────────────────────────────────
-class _FlipSimCard extends StatefulWidget {
-  final SimulationEntry sim;
-  final VoidCallback onToggleInclude;
-  final VoidCallback onDelete;
-
-  const _FlipSimCard({
-    required this.sim,
-    required this.onToggleInclude,
-    required this.onDelete,
-  });
-
-  @override
-  State<_FlipSimCard> createState() => _FlipSimCardState();
-}
-
-class _FlipSimCardState extends State<_FlipSimCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _flipCtrl;
-  late Animation<double> _flipAnim;
-  bool _showBack = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _flipCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-    _flipAnim = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _flipCtrl, curve: Curves.easeInOutBack),
-    );
-  }
-
-  @override
-  void dispose() {
-    _flipCtrl.dispose();
-    super.dispose();
-  }
-
-  void _flip() {
-    HapticFeedback.lightImpact();
-    if (_showBack) {
-      _flipCtrl.reverse();
-    } else {
-      _flipCtrl.forward();
-    }
-    _showBack = !_showBack;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _flipAnim,
-      builder: (context, _) {
-        final angle = _flipAnim.value * math.pi;
-        final isFront = angle < math.pi / 2;
-
-        return GestureDetector(
-          onTap: _flip,
-          child: Transform(
-            alignment: Alignment.center,
-            transform: Matrix4.identity()
-              ..setEntry(3, 2, 0.001)
-              ..rotateY(angle),
-            child: isFront
-                ? _FrontCard(
-                    sim: widget.sim,
-                    onToggleInclude: widget.onToggleInclude,
-                    onDelete: widget.onDelete,
-                  )
-                : Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.identity()..rotateY(math.pi),
-                    child: _BackCard(sim: widget.sim),
-                  ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-// ─── Front Card — "Şapkalı Kart" Tasarımı ──────────────────────
-class _FrontCard extends StatelessWidget {
-  final SimulationEntry sim;
-  final VoidCallback onToggleInclude;
-  final VoidCallback onDelete;
-
-  static const _hatHeight = 78.0;
-
-  const _FrontCard({
-    required this.sim,
-    required this.onToggleInclude,
-    required this.onDelete,
-  });
-
-  @override
-  Widget build(BuildContext context) {
     final c = AppColors.of(context);
-    final typeColor = sim.type.color;
-    final hatGradient = getHatGradientColors(sim.type.name);
-    final params = sim.parameters;
-    final principal = (params['principal'] as num?)?.toDouble() ?? 0;
-    final monthlyPayment = (params['monthlyPayment'] as num?)?.toDouble();
-    final termMonths = (params['termMonths'] as num?)?.toInt();
+    final isPositive = totalImpact <= 0;
+    final impactColor = isPositive ? c.income : c.expense;
+    final bgColor = impactColor.withValues(alpha: 0.08);
+    final borderColor = impactColor.withValues(alpha: 0.2);
 
-    // Green glow when included
-    const includedGlow = Color(0xFF22C55E);
+    // Net impact: positive monthly payment = extra expense = negative net
+    final netImpact = -totalImpact;
+    final netText = CurrencyFormatter.withSign(netImpact);
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: AppRadius.cardLg,
-        color: c.surfaceCard,
-        border: Border.all(
-          color: sim.isIncluded
-              ? includedGlow.withValues(alpha: 0.5)
-              : c.borderDefault.withValues(alpha: 0.4),
-          width: sim.isIncluded ? 2 : 1,
+    return Padding(
+      padding: AppSpacing.screenH,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
         ),
-        boxShadow: [
-          if (sim.isIncluded)
-            BoxShadow(
-              color: includedGlow.withValues(alpha: 0.20),
-              blurRadius: 20,
-              spreadRadius: 1,
-              offset: const Offset(0, 4),
-            )
-          else
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: AppRadius.cardLg,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: AppRadius.card,
+          border: Border.all(color: borderColor),
+        ),
+        child: Row(
           children: [
-            // ── Hat Section (~35%) — category silhouette ──
-            ClipPath(
-              clipper: getSimulationClipper(sim.type.name),
-              child: Container(
-                height: _hatHeight,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: hatGradient,
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    // Watermark icon — large, faded
-                    Positioned(
-                      right: 16,
-                      top: 8,
-                      child: Icon(
-                        sim.type.icon,
-                        size: 52,
-                        color: Colors.white.withValues(alpha: 0.18),
-                      ),
-                    ),
-                    // Category label on hat
-                    Positioned(
-                      left: AppSpacing.lg,
-                      top: AppSpacing.md,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.18),
-                          borderRadius: AppRadius.pill,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(sim.type.icon,
-                                size: 12, color: Colors.white),
-                            const SizedBox(width: 5),
-                            Text(
-                              sim.type.label,
-                              style: AppTypography.caption.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            Icon(
+              LucideIcons.info,
+              size: 16,
+              color: impactColor,
             ),
-
-            // ── Content Section (~65%) — fully opaque ──
-            Container(
-              width: double.infinity,
-              color: c.surfaceCard,
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.md,
-                AppSpacing.lg,
-                0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Top row: Dahil Et toggle (sol üst) + Sil + Özet
-                  Row(
-                    children: [
-                      // Include toggle — sol üst
-                      GestureDetector(
-                        onTap: onToggleInclude,
-                        child: AnimatedContainer(
-                          duration: AppDuration.fast,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: sim.isIncluded
-                                ? includedGlow.withValues(alpha: 0.12)
-                                : c.surfaceOverlay,
-                            borderRadius: AppRadius.pill,
-                            border: Border.all(
-                              color: sim.isIncluded
-                                  ? includedGlow.withValues(alpha: 0.4)
-                                  : c.borderDefault
-                                      .withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                sim.isIncluded
-                                    ? Icons.check_circle_rounded
-                                    : Icons.circle_outlined,
-                                size: 14,
-                                color: sim.isIncluded
-                                    ? includedGlow
-                                    : c.textTertiary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                sim.isIncluded ? 'Dahil' : 'Dahil Et',
-                                style: AppTypography.caption.copyWith(
-                                  color: sim.isIncluded
-                                      ? includedGlow
-                                      : c.textTertiary,
-                                  fontWeight: sim.isIncluded
-                                      ? FontWeight.w700
-                                      : FontWeight.w500,
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const Spacer(),
-
-                      // Özet flip hint
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(LucideIcons.rotateCcw,
-                              size: 11, color: c.textTertiary),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Özet',
-                            style: AppTypography.caption.copyWith(
-                              color: c.textTertiary,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(width: AppSpacing.sm),
-
-                      // Delete button
-                      GestureDetector(
-                        onTap: onDelete,
-                        child: Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            color: c.expense.withValues(alpha: 0.08),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(LucideIcons.trash2,
-                              size: 13, color: c.expense),
-                        ),
-                      ),
-                    ],
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: RichText(
+                text: TextSpan(
+                  style: AppTypography.bodySmall.copyWith(
+                    color: c.textSecondary,
                   ),
-
-                  const SizedBox(height: AppSpacing.sm),
-
-                  // Title
-                  Text(
-                    sim.title,
-                    style: AppTypography.headlineSmall.copyWith(
-                      color: c.textPrimary,
-                      fontWeight: FontWeight.w700,
+                  children: [
+                    TextSpan(
+                      text: '${included.length} simülasyon dahil',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: c.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-
-                  // Principal amount
-                  if (principal > 0) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      CurrencyFormatter.formatNoDecimal(principal),
-                      style: AppTypography.numericLarge.copyWith(
-                        color: typeColor,
+                    const TextSpan(text: ' — aylık net etki: '),
+                    TextSpan(
+                      text: netText,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: impactColor,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
-
-                  const SizedBox(height: AppSpacing.sm),
-
-                  // Payment + term row
-                  if (monthlyPayment != null || termMonths != null)
-                    Row(
-                      children: [
-                        if (monthlyPayment != null)
-                          Text(
-                            '${CurrencyFormatter.formatNoDecimal(monthlyPayment)}/ay',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: c.textSecondary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        if (termMonths != null) ...[
-                          if (monthlyPayment != null)
-                            Text(' · ',
-                                style: AppTypography.caption
-                                    .copyWith(color: c.textTertiary)),
-                          Text(
-                            '$termMonths ay',
-                            style: AppTypography.caption.copyWith(
-                              color: c.textTertiary,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                ],
+                ),
               ),
-            ),
-
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Back Card (Summary) ──────────────────────────────────────
-class _BackCard extends StatelessWidget {
-  final SimulationEntry sim;
-
-  const _BackCard({required this.sim});
-
-  @override
-  Widget build(BuildContext context) {
-    final c = AppColors.of(context);
-    final typeColor = sim.type.color;
-    final params = sim.parameters;
-    final monthlyPayment =
-        (params['monthlyPayment'] as num?)?.toDouble();
-    final totalPayment =
-        (params['totalPayment'] as num?)?.toDouble();
-    final totalInterest =
-        (params['totalInterest'] as num?)?.toDouble();
-    final termMonths = (params['termMonths'] as num?)?.toInt();
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: AppRadius.cardLg,
-        color: c.surfaceCard,
-        border: Border.all(
-          color: typeColor.withValues(alpha: 0.2),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: typeColor.withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              children: [
-                Icon(sim.type.icon, size: 18, color: typeColor),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    sim.title,
-                    style: AppTypography.titleMedium.copyWith(
-                      color: c.textPrimary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(LucideIcons.rotateCcw,
-                        size: 11, color: c.textTertiary),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Geri',
-                      style: AppTypography.caption.copyWith(
-                        color: c.textTertiary,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-
-            Divider(
-              color: c.borderDefault.withValues(alpha: 0.3),
-              height: AppSpacing.xl,
-            ),
-
-            // Summary 2x2 grid
-            Row(
-              children: [
-                Expanded(
-                  child: _SummaryCell(
-                    label: 'Aylık Taksit',
-                    value: monthlyPayment != null
-                        ? CurrencyFormatter.formatNoDecimal(
-                            monthlyPayment)
-                        : '-',
-                    icon: LucideIcons.calendar,
-                    color: c.brandPrimary,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: _SummaryCell(
-                    label: 'Toplam Ödeme',
-                    value: totalPayment != null
-                        ? CurrencyFormatter.formatNoDecimal(
-                            totalPayment)
-                        : '-',
-                    icon: LucideIcons.banknote,
-                    color: c.income,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              children: [
-                Expanded(
-                  child: _SummaryCell(
-                    label: 'Toplam Faiz',
-                    value: totalInterest != null
-                        ? CurrencyFormatter.formatNoDecimal(
-                            totalInterest)
-                        : '-',
-                    icon: LucideIcons.percent,
-                    color: c.expense,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: _SummaryCell(
-                    label: 'Vade',
-                    value:
-                        termMonths != null ? '$termMonths ay' : '-',
-                    icon: LucideIcons.clock,
-                    color: c.savings,
-                  ),
-                ),
-              ],
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ─── Summary Cell ─────────────────────────────────────────────
-class _SummaryCell extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const _SummaryCell({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final c = AppColors.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: c.surfaceOverlay.withValues(alpha: 0.5),
-        borderRadius: AppRadius.card,
-        border:
-            Border.all(color: c.borderDefault.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 12, color: color),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: AppTypography.caption.copyWith(
-                  color: c.textTertiary,
-                  fontWeight: FontWeight.w500,
-                  fontSize: 10,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value,
-              style: AppTypography.numericMedium.copyWith(
-                color: c.textPrimary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -182,6 +182,60 @@ enum AffordabilityStatus {
       };
 }
 
+/// Quick-start templates for creating simulations.
+/// Each maps to a set of pre-configured SimulationChange items.
+enum SimulationTemplate {
+  credit,
+  housing,
+  car,
+  rentChange,
+  salaryChange,
+  investment,
+  custom;
+
+  String get label => switch (this) {
+        credit => 'Kredi Çekimi',
+        housing => 'Ev Alımı',
+        car => 'Araç Alımı',
+        rentChange => 'Kira Değişimi',
+        salaryChange => 'İş Değişikliği / Zam',
+        investment => 'Yatırım',
+        custom => 'Özel Senaryo',
+      };
+
+  String get subtitle => switch (this) {
+        credit => 'İhtiyaç, konut veya ticari kredi',
+        housing => 'Konut kredisi, peşinat, FuzulEv',
+        car => 'Taşıt kredisi + aylık giderler',
+        rentChange => 'Kira artışı veya yeni eve taşınma',
+        salaryChange => 'Zam, terfi veya iş değişikliği',
+        investment => 'Vadeli mevduat, fon, hisse...',
+        custom => 'Gelir/gider ekleyerek kendi senaryonu oluştur',
+      };
+
+  IconData get icon => switch (this) {
+        credit => LucideIcons.creditCard,
+        housing => LucideIcons.home,
+        car => LucideIcons.car,
+        rentChange => LucideIcons.building2,
+        salaryChange => LucideIcons.briefcase,
+        investment => LucideIcons.trendingUp,
+        custom => LucideIcons.sparkles,
+      };
+
+  Color get color => switch (this) {
+        credit => const Color(0xFF3F83F8),
+        housing => const Color(0xFF1A56DB),
+        car => const Color(0xFF0E9F6E),
+        rentChange => const Color(0xFFE8590C),
+        salaryChange => const Color(0xFF8B5CF6),
+        investment => const Color(0xFF0891B2),
+        custom => const Color(0xFF6B7280),
+      };
+}
+
+/// Legacy type enum — kept for backward compat with old Firestore data.
+@Deprecated('Use SimulationTemplate instead')
 enum SimulationType {
   car,
   housing,

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
@@ -21,6 +23,7 @@ import 'package:savvy/features/transactions/presentation/widgets/expense_tab.dar
 import 'package:savvy/features/transactions/presentation/widgets/savings_tab.dart';
 import 'package:savvy/features/transactions/presentation/widgets/transaction_shared_widgets.dart';
 import 'package:savvy/features/transactions/presentation/widgets/filter_bar.dart';
+import 'package:savvy/features/transactions/presentation/widgets/quick_expense_sheet.dart';
 import 'package:savvy/shared/widgets/loading_shimmer.dart';
 
 
@@ -183,15 +186,17 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
     savings.sort((a, b) => b.date.compareTo(a.date));
 
     // Seçili ayı belirle (brüt→net çözümlemesi için)
+    final isTumuMode = _selectedMonth == null;
     final resolveMonth = _selectedMonth != null
         ? int.parse(_selectedMonth!.split('-')[1])
         : DateTime.now().month;
     final totalIncome = incomes.fold(0.0, (sum, i) {
+      final month = isTumuMode ? i.date.month : resolveMonth;
       return sum +
           FinancialCalculator.resolveNetForMonth(
             amount: i.amount,
             isGross: i.isGross,
-            month: resolveMonth,
+            month: month,
           );
     });
     final totalExpense = expenses.fold(0.0, (sum, e) => sum + e.amount);
@@ -226,6 +231,37 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
                           ),
                         ),
                         const Spacer(),
+                        // Hızlı Gider butonu
+                        IconButton(
+                          onPressed: () {
+                            HapticFeedback.selectionClick();
+                            QuickExpenseSheet.show(context);
+                          },
+                          icon: Icon(
+                            LucideIcons.zap,
+                            size: 20,
+                            color: AppColors.of(context).expense,
+                          ),
+                          tooltip: 'Hızlı Gider',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                              minWidth: 36, minHeight: 36),
+                        ),
+                        // Periyodik yönetim butonu
+                        IconButton(
+                          onPressed: () =>
+                              context.push('/transactions/recurring'),
+                          icon: Icon(
+                            AppIcons.recurring,
+                            size: 20,
+                            color: AppColors.of(context).textSecondary,
+                          ),
+                          tooltip: 'Periyodik İşlemler',
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(
+                              minWidth: 36, minHeight: 36),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
                         QuickSummaryChip(net: totalIncome - totalExpense),
                       ],
                     ),
@@ -353,6 +389,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
                           allIncomes: allIncomes,
                           total: totalIncome,
                           displayMonth: resolveMonth,
+                          isTumuMode: isTumuMode,
                         ),
                         ExpenseTab(
                           expenses: expenses,

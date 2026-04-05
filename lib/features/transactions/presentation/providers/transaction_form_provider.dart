@@ -15,25 +15,31 @@ class TransactionFormNotifier extends _$TransactionFormNotifier {
 
   Future<bool> addIncome(Income income) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final result = await AsyncValue.guard(() async {
       await ref.read(incomeRepositoryProvider).add(income);
     });
+    if (!ref.mounted) return true;
+    state = result;
     return !state.hasError;
   }
 
   Future<bool> addExpense(Expense expense) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final result = await AsyncValue.guard(() async {
       await ref.read(expenseRepositoryProvider).add(expense);
     });
+    if (!ref.mounted) return true;
+    state = result;
     return !state.hasError;
   }
 
   Future<bool> addSavings(Savings savings) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final result = await AsyncValue.guard(() async {
       await ref.read(savingsRepositoryProvider).add(savings);
     });
+    if (!ref.mounted) return true;
+    state = result;
     return !state.hasError;
   }
 
@@ -41,25 +47,31 @@ class TransactionFormNotifier extends _$TransactionFormNotifier {
 
   Future<bool> updateIncome(Income income) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final result = await AsyncValue.guard(() async {
       await ref.read(incomeRepositoryProvider).update(income);
     });
+    if (!ref.mounted) return true;
+    state = result;
     return !state.hasError;
   }
 
   Future<bool> updateExpense(Expense expense) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final result = await AsyncValue.guard(() async {
       await ref.read(expenseRepositoryProvider).update(expense);
     });
+    if (!ref.mounted) return true;
+    state = result;
     return !state.hasError;
   }
 
   Future<bool> updateSavings(Savings savings) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final result = await AsyncValue.guard(() async {
       await ref.read(savingsRepositoryProvider).update(savings);
     });
+    if (!ref.mounted) return true;
+    state = result;
     return !state.hasError;
   }
 
@@ -77,25 +89,31 @@ class TransactionFormNotifier extends _$TransactionFormNotifier {
 
   Future<bool> deleteIncome(String id) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final result = await AsyncValue.guard(() async {
       await ref.read(incomeRepositoryProvider).softDelete(id);
     });
+    if (!ref.mounted) return true;
+    state = result;
     return !state.hasError;
   }
 
   Future<bool> deleteExpense(String id) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final result = await AsyncValue.guard(() async {
       await ref.read(expenseRepositoryProvider).softDelete(id);
     });
+    if (!ref.mounted) return true;
+    state = result;
     return !state.hasError;
   }
 
   Future<bool> deleteSavings(String id) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    final result = await AsyncValue.guard(() async {
       await ref.read(savingsRepositoryProvider).softDelete(id);
     });
+    if (!ref.mounted) return true;
+    state = result;
     return !state.hasError;
   }
 }
