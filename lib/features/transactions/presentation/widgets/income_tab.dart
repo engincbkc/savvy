@@ -78,6 +78,7 @@ class IncomeTab extends ConsumerWidget {
         amount: i.amount, isGross: i.isGross, month: month,
       ),
       isYearBounded: (i) => i.isGross,
+      getMonthlyOverrides: (i) => i.monthlyOverrides,
     );
 
     final displayCount = grossIncomes.length + regularIncomes.length;
@@ -250,6 +251,13 @@ class _GrossSalaryCard extends StatefulWidget {
 
 class _GrossSalaryCardState extends State<_GrossSalaryCard> {
   bool _expanded = false;
+  late int _selectedMonthIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedMonthIndex = widget.displayMonth - 1;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -257,8 +265,8 @@ class _GrossSalaryCardState extends State<_GrossSalaryCard> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final breakdown = FinancialCalculator.calculateAnnualNetSalary(
         grossMonthly: widget.income.amount);
-    final currentNet = breakdown.months[widget.displayMonth - 1].netTakeHome;
-    final monthName = FinancialCalculator.monthNamesTR[widget.displayMonth - 1];
+    final currentNet = breakdown.months[_selectedMonthIndex].netTakeHome;
+    final monthName = FinancialCalculator.monthNamesTR[_selectedMonthIndex];
 
     return Dismissible(
       key: ValueKey(widget.income.id),
@@ -424,8 +432,10 @@ class _GrossSalaryCardState extends State<_GrossSalaryCard> {
                 itemCount: 12,
                 itemBuilder: (context, index) {
                   final m = breakdown.months[index];
-                  final isCurrentMonth = index == widget.displayMonth - 1;
-                  return Container(
+                  final isCurrentMonth = index == _selectedMonthIndex;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedMonthIndex = index),
+                    child: Container(
                     width: 52,
                     margin: const EdgeInsets.symmetric(horizontal: 2),
                     alignment: Alignment.center,
@@ -464,6 +474,7 @@ class _GrossSalaryCardState extends State<_GrossSalaryCard> {
                         ),
                       ],
                     ),
+                  ),
                   );
                 },
               ),
@@ -508,8 +519,9 @@ class _GrossSalaryCardState extends State<_GrossSalaryCard> {
                     AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
                 child: SalaryBreakdownPanel(
                   breakdown: breakdown,
-                  selectedMonthIndex: widget.displayMonth - 1,
-                  onMonthSelected: (_) {},
+                  selectedMonthIndex: _selectedMonthIndex,
+                  onMonthSelected: (index) =>
+                      setState(() => _selectedMonthIndex = index),
                   accentColor: widget.color,
                 ),
               ),

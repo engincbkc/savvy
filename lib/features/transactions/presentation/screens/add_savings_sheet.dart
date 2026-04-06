@@ -47,11 +47,9 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
+    final picked = await showSavvyDatePicker(
       context: context,
       initialDate: _date,
-      firstDate: DateTime(2015),
-      lastDate: DateTime.now().add(const Duration(days: 366)),
     );
     if (picked != null) setState(() => _date = picked);
   }
@@ -139,7 +137,7 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
                 const SizedBox(height: AppSpacing.xl),
 
                 // Date
-                FormSectionLabel(text: 'Tarih', icon: AppIcons.calendar),
+                FormSectionLabel(text: 'Başlangıç Tarihi', icon: AppIcons.calendar),
                 const SizedBox(height: AppSpacing.sm),
                 GestureDetector(
                   onTap: _pickDate,

@@ -35,14 +35,19 @@ class AuthNotifier extends _$AuthNotifier {
     required String password,
   }) async {
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    try {
       final credential =
           await ref.read(firebaseAuthProvider).createUserWithEmailAndPassword(
                 email: email.trim(),
                 password: password,
               );
-      await credential.user?.updateDisplayName(name.trim());
-    });
+      // updateDisplayName may complete after provider is disposed (auth
+      // redirect). Fire-and-forget so we don't set state on a dead ref.
+      credential.user?.updateDisplayName(name.trim());
+      if (ref.mounted) state = const AsyncData(null);
+    } catch (e, st) {
+      if (ref.mounted) state = AsyncError(e, st);
+    }
   }
 
   Future<void> resetPassword({required String email}) async {

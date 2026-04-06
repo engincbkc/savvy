@@ -145,15 +145,14 @@ class _EditSavingsSheetState extends ConsumerState<EditSavingsSheet> {
               ),
               const SizedBox(height: AppSpacing.xl),
 
-              FormSectionLabel(text: 'Tarih', icon: AppIcons.calendar),
+              FormSectionLabel(text: 'Başlangıç Tarihi', icon: AppIcons.calendar),
               const SizedBox(height: AppSpacing.sm),
               GestureDetector(
                 onTap: () async {
-                  final picked = await showDatePicker(
+                  final picked = await showSavvyDatePicker(
                     context: context,
                     initialDate: _date,
                     firstDate: DateTime(2020),
-                    lastDate: DateTime.now().add(const Duration(days: 366)),
                   );
                   if (picked != null) {
                     setState(() => _date = picked);

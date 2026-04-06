@@ -91,9 +91,8 @@ double totalSavingsAmount(Ref ref) {
 }
 
 /// Future month projections based on recurring incomes/expenses.
-/// Projects 12 months ahead from current month.
-/// Future-dated savings are included in their respective months when
-/// includeSavings toggle is on.
+/// Uses MonthSummaryAggregator (same engine as buildMonthlyCategoryData)
+/// so dashboard and transactions screens always show consistent numbers.
 @riverpod
 List<MonthSummary> futureProjections(Ref ref) {
   final allInc = ref.watch(allIncomesProvider).value ?? [];
@@ -107,98 +106,43 @@ List<MonthSummary> futureProjections(Ref ref) {
   // Get the latest cumulative balance as starting carry-over
   final latestCarryOver = summaries.first.netWithCarryOver;
 
-  // Find recurring incomes/expenses (active, not ended)
+  // Use the same aggregator to build all month totals, then pick
+  // only the 12 future months.
+  final allMonthData = MonthSummaryAggregator.buildAllMonthTotals(
+    incomes: allInc,
+    expenses: allExp,
+    savings: allSav,
+  );
+
   final now = DateTime.now();
-  final recurringIncomes = allInc.where((i) =>
-      i.isRecurring &&
-      (i.recurringEndDate == null || i.recurringEndDate!.isAfter(now)));
-  final recurringExpenses = allExp.where((e) =>
-      e.isRecurring &&
-      (e.recurringEndDate == null || e.recurringEndDate!.isAfter(now)));
 
-  // One-time future incomes/expenses
-  final futureOneTimeIncomes =
-      allInc.where((i) => !i.isRecurring && i.date.isAfter(now));
-  final futureOneTimeExpenses =
-      allExp.where((e) => !e.isRecurring && e.date.isAfter(now));
-
-  // Future savings (dated after current month)
-  final currentYm = now.toYearMonth();
-  final futureSavings =
-      allSav.where((s) => s.date.toYearMonth().compareTo(currentYm) > 0);
-
-  // Project 12 months ahead
+  // Collect 12 future months
   double cumCarry = latestCarryOver;
   final projections = <MonthSummary>[];
 
   for (int m = 1; m <= 12; m++) {
     final futureDate = DateTime(now.year, now.month + m, 1);
     final ym = futureDate.toYearMonth();
-    final range = YearMonthRange.from(ym);
 
-    // Recurring incomes (check end date, resolve gross→net)
-    double projIncome = 0;
-    for (final i in recurringIncomes) {
-      if (i.recurringEndDate != null &&
-          i.recurringEndDate!.isBefore(futureDate)) {
-        continue;
-      }
-      projIncome += FinancialCalculator.resolveNetForMonth(
-        amount: i.amount,
-        isGross: i.isGross,
-        month: futureDate.month,
-      );
-    }
-    // One-time future incomes in this month
-    for (final i in futureOneTimeIncomes) {
-      if (!i.date.isBefore(range.start) && i.date.isBefore(range.end)) {
-        projIncome += FinancialCalculator.resolveNetForMonth(
-          amount: i.amount,
-          isGross: i.isGross,
-          month: futureDate.month,
-        );
-      }
-    }
+    final totalIncome = allMonthData.incomeTotals[ym] ?? 0;
+    final totalExpense = allMonthData.expenseTotals[ym] ?? 0;
+    final monthSavings = allMonthData.savingsTotals[ym] ?? 0;
 
-    // Future savings in this month — add as income when toggle on
-    double monthSavings = 0;
-    for (final s in futureSavings) {
-      if (s.date.toYearMonth() == ym) {
-        monthSavings += s.amount;
-      }
-    }
-    if (includeSavings && monthSavings > 0) {
-      projIncome += monthSavings;
-    }
+    final effectiveIncome =
+        includeSavings ? totalIncome + monthSavings : totalIncome;
 
-    // Recurring expenses (check end date)
-    double projExpense = 0;
-    for (final e in recurringExpenses) {
-      if (e.recurringEndDate != null &&
-          e.recurringEndDate!.isBefore(futureDate)) {
-        continue;
-      }
-      projExpense += e.amount;
-    }
-    // One-time future expenses in this month
-    for (final e in futureOneTimeExpenses) {
-      if (!e.date.isBefore(range.start) && e.date.isBefore(range.end)) {
-        projExpense += e.amount;
-      }
-    }
-
-    final netBalance = projIncome - projExpense;
+    final netBalance = effectiveIncome - totalExpense;
     final netWithCarry = netBalance + cumCarry;
-    final savingsRate = projIncome > 0
-        ? ((projIncome - projExpense) / projIncome).clamp(0.0, 1.0)
+    final savingsRate = totalIncome > 0
+        ? ((totalIncome - totalExpense) / totalIncome).clamp(0.0, 1.0)
         : 0.0;
     final expenseRate =
-        projIncome > 0 ? (projExpense / projIncome).clamp(0.0, 2.0) : 0.0;
+        totalIncome > 0 ? (totalExpense / totalIncome).clamp(0.0, 2.0) : 0.0;
 
     projections.add(MonthSummary(
       yearMonth: ym,
-      totalIncome: projIncome,
-      totalExpense: projExpense,
+      totalIncome: totalIncome,
+      totalExpense: totalExpense,
       totalSavings: monthSavings,
       netBalance: netBalance,
       carryOver: cumCarry,

@@ -64,6 +64,7 @@ class ExpenseTab extends ConsumerWidget {
       (e) => e.amount,
       isRecurring: (e) => e.isRecurring,
       getRecurringEndDate: (e) => e.recurringEndDate,
+      getMonthlyOverrides: (e) => e.monthlyOverrides,
     );
 
     return ListView(

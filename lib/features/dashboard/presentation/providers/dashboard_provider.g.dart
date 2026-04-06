@@ -652,17 +652,15 @@ String _$totalSavingsAmountHash() =>
     r'389a9eed80faafc81de85fdfac8b554ed6dc59d2';
 
 /// Future month projections based on recurring incomes/expenses.
-/// Projects 12 months ahead from current month.
-/// Future-dated savings are included in their respective months when
-/// includeSavings toggle is on.
+/// Uses MonthSummaryAggregator (same engine as buildMonthlyCategoryData)
+/// so dashboard and transactions screens always show consistent numbers.
 
 @ProviderFor(futureProjections)
 final futureProjectionsProvider = FutureProjectionsProvider._();
 
 /// Future month projections based on recurring incomes/expenses.
-/// Projects 12 months ahead from current month.
-/// Future-dated savings are included in their respective months when
-/// includeSavings toggle is on.
+/// Uses MonthSummaryAggregator (same engine as buildMonthlyCategoryData)
+/// so dashboard and transactions screens always show consistent numbers.
 
 final class FutureProjectionsProvider
     extends
@@ -673,9 +671,8 @@ final class FutureProjectionsProvider
         >
     with $Provider<List<MonthSummary>> {
   /// Future month projections based on recurring incomes/expenses.
-  /// Projects 12 months ahead from current month.
-  /// Future-dated savings are included in their respective months when
-  /// includeSavings toggle is on.
+  /// Uses MonthSummaryAggregator (same engine as buildMonthlyCategoryData)
+  /// so dashboard and transactions screens always show consistent numbers.
   FutureProjectionsProvider._()
     : super(
         from: null,
@@ -710,4 +707,4 @@ final class FutureProjectionsProvider
   }
 }
 
-String _$futureProjectionsHash() => r'44ec5210fb25127be1344a4e030a19c828bc2cba';
+String _$futureProjectionsHash() => r'4fdf229b81349af2a2a262b6ba345922371ba136';

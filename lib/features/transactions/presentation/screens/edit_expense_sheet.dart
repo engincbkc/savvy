@@ -192,7 +192,7 @@ class _EditExpenseSheetState extends ConsumerState<EditExpenseSheet> {
                 const SizedBox(height: AppSpacing.sm),
                 GestureDetector(
                   onTap: () async {
-                    final picked = await showDatePicker(
+                    final picked = await showSavvyDatePicker(
                       context: context,
                       initialDate: _recurringEndDate ?? _date.add(const Duration(days: 365)),
                       firstDate: _date,
@@ -275,11 +275,10 @@ class _EditExpenseSheetState extends ConsumerState<EditExpenseSheet> {
                   Expanded(
                     child: GestureDetector(
                       onTap: () async {
-                        final picked = await showDatePicker(
+                        final picked = await showSavvyDatePicker(
                           context: context,
                           initialDate: _date,
                           firstDate: DateTime(2020),
-                          lastDate: DateTime.now().add(const Duration(days: 366)),
                         );
                         if (picked != null) {
                           setState(() => _date = picked);

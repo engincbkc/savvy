@@ -52,6 +52,8 @@ MonthlyCategoryData buildMonthlyCategoryData<T>(
   DateTime? Function(T)? getRecurringEndDate,
   double Function(T, int month)? getAmountForMonth,
   bool Function(T)? isYearBounded, // true = yıl sonuna kadar (brüt maaş gibi)
+  /// Returns per-month override map (yearMonth → amount).
+  Map<String, double> Function(T)? getMonthlyOverrides,
   int maxProjectionMonths = 240,
 }) {
   if (items.isEmpty) {
@@ -81,18 +83,21 @@ MonthlyCategoryData buildMonthlyCategoryData<T>(
     final ym = itemDate.toYearMonth();
     final cat = getCategory(item);
     final icon = getIcon(item);
+    final overrides = getMonthlyOverrides?.call(item) ?? const {};
 
-    // Add the actual transaction (use month-specific amount if available)
-    final actualAmount = getAmountForMonth != null
-        ? getAmountForMonth(item, itemDate.month)
-        : getAmount(item);
-    addEntry(ym, cat, actualAmount, icon);
+    // Add the actual transaction — prefer override, then month-specific, then default
+    double resolveAmount(String yearMonth, int month) {
+      if (overrides.containsKey(yearMonth)) return overrides[yearMonth]!;
+      if (getAmountForMonth != null) return getAmountForMonth(item, month);
+      return getAmount(item);
+    }
+
+    addEntry(ym, cat, resolveAmount(ym, itemDate.month), icon);
 
     // Project recurring items into future months
     if (isRecurring != null && isRecurring(item)) {
       final endDate = getRecurringEndDate?.call(item);
       final isGross = isYearBounded != null && isYearBounded(item);
-      // Brüt maaş: 60 aya kadar (5 yıl). Diğerleri: 12 aya kadar.
       final defaultLimit = isGross ? 60 : 12;
       final projLimit = endDate != null
           ? ((endDate.year - itemDate.year) * 12 + endDate.month - itemDate.month).clamp(1, maxProjectionMonths)
@@ -101,10 +106,7 @@ MonthlyCategoryData buildMonthlyCategoryData<T>(
         final futureDate = DateTime(itemDate.year, itemDate.month + m, 1);
         if (endDate != null && futureDate.isAfter(endDate)) break;
         final futureYm = futureDate.toYearMonth();
-        final projAmount = getAmountForMonth != null
-            ? getAmountForMonth(item, futureDate.month)
-            : getAmount(item);
-        addEntry(futureYm, cat, projAmount, icon);
+        addEntry(futureYm, cat, resolveAmount(futureYm, futureDate.month), icon);
       }
     }
   }
@@ -133,14 +135,18 @@ MonthlyCategoryData buildMonthlyCategoryData<T>(
 // ─── Table Widget ────────────────────────────────────────────────────────
 
 /// Horizontally scrollable category × month breakdown table.
+/// Supports tappable cells and resizable columns for Excel-like UX.
 class MonthlyCategoryTable extends StatefulWidget {
   final MonthlyCategoryData data;
   final Color color;
+  /// Called when a cell is tapped: (category label, yearMonth, current value)
+  final void Function(String category, String yearMonth, double value)? onCellTap;
 
   const MonthlyCategoryTable({
     super.key,
     required this.data,
     required this.color,
+    this.onCellTap,
   });
 
   @override
@@ -153,7 +159,9 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
   int _visibleMonths = 12; // kullanıcının seçtiği görüntüleme aralığı
 
   static const _rangeOptions = [6, 12, 24, 60, 0]; // 0 = tümü
-  static const _colW = 72.0;
+  static const _defaultColW = 72.0;
+  static const _minColW = 52.0;
+  static const _maxColW = 140.0;
   static const _labelW = 80.0;
   static const _labelCollapsedW = 36.0;
   static const _headerH = 36.0;
@@ -161,11 +169,15 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
   static const _totalH = 36.0;
   static const _dividerH = 1.0;
 
+  double _colW = _defaultColW;
+  // Tracks currently tapped cell for highlight
+  String? _tappedCellKey; // "category|yearMonth"
+
   @override
   void initState() {
     super.initState();
     final len = widget.data.months.length;
-    final initialOffset = len > 3 ? (len - 3) * _colW : 0.0;
+    final initialOffset = len > 3 ? (len - 3) * _defaultColW : 0.0;
     _collapsed = initialOffset > 20;
     _scrollController = ScrollController(initialScrollOffset: initialOffset);
     _scrollController.addListener(_onScroll);
@@ -370,54 +382,79 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
 
                 // Scrollable month columns
                 Expanded(
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    child: Row(
-                      children: visibleMonths.map((ym) {
-                        final monthTotal = filteredTotals[ym] ?? 0;
-                        return SizedBox(
-                          width: _colW,
-                          child: Column(
-                            children: [
-                              // Month header
-                              SizedBox(
-                                height: _headerH,
-                                child: Center(
-                                  child: Text(
-                                    MonthLabels.short(ym),
-                                    style:
-                                        AppTypography.labelSmall.copyWith(
-                                      color: AppColors.of(context).textPrimary,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 11,
+                  child: GestureDetector(
+                    onScaleUpdate: (details) {
+                      if (details.pointerCount >= 2) {
+                        setState(() {
+                          _colW = (_colW * details.scale).clamp(_minColW, _maxColW);
+                        });
+                      }
+                    },
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Row(
+                        children: visibleMonths.map((ym) {
+                          final monthTotal = filteredTotals[ym] ?? 0;
+                          return SizedBox(
+                            width: _colW,
+                            child: Column(
+                              children: [
+                                // Month header
+                                SizedBox(
+                                  height: _headerH,
+                                  child: Center(
+                                    child: Text(
+                                      MonthLabels.short(ym),
+                                      style:
+                                          AppTypography.labelSmall.copyWith(
+                                        color: AppColors.of(context).textPrimary,
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 11,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              const Divider(height: _dividerH),
-                              // Category values
-                              ...filteredCategories.map((cat) {
-                                final val = cat.monthAmounts[ym] ?? 0;
-                                return DataTableCellValue(
-                                  value: val,
+                                const Divider(height: _dividerH),
+                                // Category values — tappable
+                                ...filteredCategories.map((cat) {
+                                  final val = cat.monthAmounts[ym] ?? 0;
+                                  final cellKey = '${cat.label}|$ym';
+                                  final isTapped = _tappedCellKey == cellKey;
+                                  return GestureDetector(
+                                    onTap: widget.onCellTap != null && val > 0
+                                        ? () {
+                                            setState(() => _tappedCellKey =
+                                                isTapped ? null : cellKey);
+                                            widget.onCellTap!(cat.label, ym, val);
+                                          }
+                                        : null,
+                                    child: Container(
+                                      color: isTapped
+                                          ? widget.color.withValues(alpha: 0.08)
+                                          : null,
+                                      child: DataTableCellValue(
+                                        value: val,
+                                        color: widget.color,
+                                        height: _rowH,
+                                      ),
+                                    ),
+                                  );
+                                }),
+                                const Divider(height: _dividerH),
+                                // Monthly total
+                                DataTableCellValue(
+                                  value: monthTotal,
                                   color: widget.color,
-                                  height: _rowH,
-                                );
-                              }),
-                              const Divider(height: _dividerH),
-                              // Monthly total
-                              DataTableCellValue(
-                                value: monthTotal,
-                                color: widget.color,
-                                height: _totalH,
-                                bold: true,
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
+                                  height: _totalH,
+                                  bold: true,
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
                     ),
                   ),
                 ),

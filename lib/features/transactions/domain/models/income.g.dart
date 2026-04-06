@@ -21,6 +21,11 @@ _Income _$IncomeFromJson(Map<String, dynamic> json) => _Income(
   isGross: json['isGross'] as bool? ?? false,
   isDeleted: json['isDeleted'] as bool? ?? false,
   createdAt: DateTime.parse(json['createdAt'] as String),
+  monthlyOverrides:
+      (json['monthlyOverrides'] as Map<String, dynamic>?)?.map(
+        (k, e) => MapEntry(k, (e as num).toDouble()),
+      ) ??
+      const {},
 );
 
 Map<String, dynamic> _$IncomeToJson(_Income instance) => <String, dynamic>{
@@ -36,6 +41,7 @@ Map<String, dynamic> _$IncomeToJson(_Income instance) => <String, dynamic>{
   'isGross': instance.isGross,
   'isDeleted': instance.isDeleted,
   'createdAt': instance.createdAt.toIso8601String(),
+  'monthlyOverrides': instance.monthlyOverrides,
 };
 
 const _$IncomeCategoryEnumMap = {

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,6 +38,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         allExpensesAsync.isLoading ||
         allSavingsAsync.isLoading;
 
+    final allIncomes = allIncomesAsync.value ?? [];
+    final allExpenses = allExpensesAsync.value ?? [];
+    final hasData = allIncomes.isNotEmpty || allExpenses.isNotEmpty;
+
     final summaries = ref.watch(allMonthSummariesProvider);
     final projections = ref.watch(futureProjectionsProvider);
     final includeSavings = ref.watch(includeSavingsInProjectionProvider);
@@ -72,7 +78,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                       ),
                     ]),
                   )
-                : SliverList(
+                : !hasData
+                    ? SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: _DashboardEmptyState(),
+                      )
+                    : SliverList(
                     delegate: SliverChildListDelegate([
                       const SizedBox(height: AppSpacing.lg),
 
@@ -176,6 +187,155 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Empty state shown when user has no income or expenses yet.
+class _DashboardEmptyState extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.base),
+      child: Column(
+        children: [
+          const SizedBox(height: AppSpacing.xl2),
+          const GreetingHeader(),
+          const Spacer(),
+          // Glassmorphism card
+          ClipRRect(
+            borderRadius: AppRadius.cardLg,
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: Container(
+                padding: const EdgeInsets.all(AppSpacing.xl),
+                decoration: BoxDecoration(
+                  color: c.surfaceCard.withValues(alpha: 0.6),
+                  borderRadius: AppRadius.cardLg,
+                  border: Border.all(
+                    color: c.borderDefault.withValues(alpha: 0.3),
+                  ),
+                  boxShadow: AppShadow.sm,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: c.brandPrimary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        LucideIcons.wallet,
+                        size: 28,
+                        color: c.brandPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.base),
+                    Text(
+                      'Henüz gelir veya gideriniz\nbulunmamaktadır',
+                      style: AppTypography.titleMedium.copyWith(
+                        color: c.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'İlk işleminizi ekleyerek finansal takibinizi başlatın.',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: c.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _EmptyStateButton(
+                            label: 'Gelir Ekle',
+                            icon: LucideIcons.trendingUp,
+                            color: c.income,
+                            onTap: () => context.go('/transactions?tab=0'),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: _EmptyStateButton(
+                            label: 'Gider Ekle',
+                            icon: LucideIcons.trendingDown,
+                            color: c.expense,
+                            onTap: () => context.go('/transactions?tab=1'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const Spacer(flex: 2),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyStateButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _EmptyStateButton({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.md,
+          horizontal: AppSpacing.base,
+        ),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: AppRadius.card,
+          border: Border.all(
+            color: color.withValues(alpha: 0.25),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                style: AppTypography.labelMedium.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

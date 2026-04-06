@@ -5,9 +5,114 @@ import 'package:savvy/features/transactions/domain/models/income.dart';
 import 'package:savvy/features/transactions/domain/models/expense.dart';
 import 'package:savvy/features/savings/domain/models/savings.dart';
 
+/// Raw per-month totals produced by [MonthSummaryAggregator.buildAllMonthTotals].
+class MonthTotals {
+  final Map<String, double> incomeTotals;
+  final Map<String, double> expenseTotals;
+  final Map<String, double> savingsTotals;
+
+  const MonthTotals({
+    required this.incomeTotals,
+    required this.expenseTotals,
+    required this.savingsTotals,
+  });
+}
+
 /// Aggregates raw transactions into monthly summaries with carry-over.
 class MonthSummaryAggregator {
   MonthSummaryAggregator._();
+
+  /// Builds per-month income/expense/savings totals using the same projection
+  /// logic as buildMonthlyCategoryData: each recurring item is projected
+  /// forward from its start date. This is the single source of truth shared
+  /// by both [buildSummaries] and [futureProjections].
+  static MonthTotals buildAllMonthTotals({
+    required List<Income> incomes,
+    required List<Expense> expenses,
+    required List<Savings> savings,
+  }) {
+    final incomeTotals = <String, double>{};
+    final expenseTotals = <String, double>{};
+    final savingsTotals = <String, double>{};
+
+    void addIncome(String ym, double amount) {
+      incomeTotals[ym] = (incomeTotals[ym] ?? 0) + amount;
+    }
+
+    void addExpense(String ym, double amount) {
+      expenseTotals[ym] = (expenseTotals[ym] ?? 0) + amount;
+    }
+
+    // ── Process incomes ──
+    for (final i in incomes) {
+      final startYm = i.date.toYearMonth();
+      final startAmount = i.monthlyOverrides[startYm] ?? i.amount;
+      addIncome(
+        startYm,
+        FinancialCalculator.resolveNetForMonth(
+          amount: startAmount,
+          isGross: i.isGross,
+          month: i.date.month,
+        ),
+      );
+
+      if (i.isRecurring) {
+        final endDate = i.recurringEndDate;
+        final projLimit = endDate != null
+            ? ((endDate.year - i.date.year) * 12 +
+                    endDate.month - i.date.month)
+                .clamp(1, 240)
+            : (i.isGross ? 60 : 12);
+        for (int m = 1; m <= projLimit; m++) {
+          final futureDate = DateTime(i.date.year, i.date.month + m, 1);
+          if (endDate != null && futureDate.isAfter(endDate)) break;
+          final futureYm = futureDate.toYearMonth();
+          final overrideAmount = i.monthlyOverrides[futureYm] ?? i.amount;
+          addIncome(
+            futureYm,
+            FinancialCalculator.resolveNetForMonth(
+              amount: overrideAmount,
+              isGross: i.isGross,
+              month: futureDate.month,
+            ),
+          );
+        }
+      }
+    }
+
+    // ── Process expenses ──
+    for (final e in expenses) {
+      final startYm = e.date.toYearMonth();
+      addExpense(startYm, e.monthlyOverrides[startYm] ?? e.amount);
+
+      if (e.isRecurring) {
+        final endDate = e.recurringEndDate;
+        final projLimit = endDate != null
+            ? ((endDate.year - e.date.year) * 12 +
+                    endDate.month - e.date.month)
+                .clamp(1, 240)
+            : 12;
+        for (int m = 1; m <= projLimit; m++) {
+          final futureDate = DateTime(e.date.year, e.date.month + m, 1);
+          if (endDate != null && futureDate.isAfter(endDate)) break;
+          final futureYm = futureDate.toYearMonth();
+          addExpense(futureYm, e.monthlyOverrides[futureYm] ?? e.amount);
+        }
+      }
+    }
+
+    // ── Process savings ──
+    for (final s in savings) {
+      savingsTotals[s.date.toYearMonth()] =
+          (savingsTotals[s.date.toYearMonth()] ?? 0) + s.amount;
+    }
+
+    return MonthTotals(
+      incomeTotals: incomeTotals,
+      expenseTotals: expenseTotals,
+      savingsTotals: savingsTotals,
+    );
+  }
 
   /// Builds month summaries sorted most-recent-first with cumulative carry-over.
   static List<MonthSummary> buildSummaries({
@@ -18,109 +123,40 @@ class MonthSummaryAggregator {
   }) {
     if (incomes.isEmpty && expenses.isEmpty && savings.isEmpty) return [];
 
-    // Collect all unique yearMonths
-    final yearMonths = <String>{};
-    for (final i in incomes) {
-      yearMonths.add(i.date.toYearMonth());
-    }
-    for (final e in expenses) {
-      yearMonths.add(e.date.toYearMonth());
-    }
-    for (final s in savings) {
-      yearMonths.add(s.date.toYearMonth());
-    }
-    yearMonths.add(DateTime.now().toYearMonth());
+    final data = buildAllMonthTotals(
+      incomes: incomes,
+      expenses: expenses,
+      savings: savings,
+    );
 
-    // Only include months up to current month (future months handled by projections)
-    // Show at most 1 past month (previous month only).
+    // ── Determine which months to include (1 past + current) ──
+    final allYms = <String>{
+      ...data.incomeTotals.keys,
+      ...data.expenseTotals.keys,
+      ...data.savingsTotals.keys,
+    };
+    allYms.add(DateTime.now().toYearMonth());
+
     final now = DateTime.now();
     final currentYm = now.toYearMonth();
     final oneMonthAgo = DateTime(now.year, now.month - 1, 1).toYearMonth();
-    yearMonths.removeWhere(
+    allYms.removeWhere(
       (ym) => ym.compareTo(currentYm) > 0 || ym.compareTo(oneMonthAgo) < 0,
     );
 
-    // Sort chronologically
-    final sorted = yearMonths.toList()..sort();
+    final sorted = allYms.toList()..sort();
 
-    // Calculate summaries with cumulative carry-over
+    // ── Step 3: Build MonthSummary list with cumulative carry-over ──
     double cumulativeCarryOver = 0;
     final summaries = <MonthSummary>[];
 
-    // Pre-filter recurring items for projection
-    final recurringIncomes = incomes.where((i) => i.isRecurring).toList();
-    final recurringExpenses = expenses.where((e) => e.isRecurring).toList();
-
     for (final ym in sorted) {
-      final range = YearMonthRange.from(ym);
+      final totalIncome = data.incomeTotals[ym] ?? 0;
+      final totalExpense = data.expenseTotals[ym] ?? 0;
+      final totalSavings = data.savingsTotals[ym] ?? 0;
 
-      // Direct transactions in this month
-      final monthIncomeList = incomes.where(
-        (i) => i.date.toYearMonth() == ym,
-      );
-      final monthExpenseList = expenses.where(
-        (e) => e.date.toYearMonth() == ym,
-      );
-      final monthSavingsList = savings.where(
-        (s) => s.date.toYearMonth() == ym,
-      );
-
-      final month = range.start.month; // 1-indexed
-
-      // Start with direct income entries
-      double totalIncome = monthIncomeList.fold(0.0, (sum, i) {
-        return sum +
-            FinancialCalculator.resolveNetForMonth(
-              amount: i.amount,
-              isGross: i.isGross,
-              month: month,
-            );
-      });
-
-      // Add recurring incomes that started before this month
-      // but don't have a direct entry in this month
-      final directIncomeIds = monthIncomeList.map((i) => i.id).toSet();
-      for (final ri in recurringIncomes) {
-        if (directIncomeIds.contains(ri.id)) continue;
-        if (ri.date.toYearMonth().compareTo(ym) >= 0) {
-          continue; // not started yet
-        }
-        if (ri.recurringEndDate != null &&
-            ri.recurringEndDate!.isBefore(range.start)) {
-          continue; // ended
-        }
-        totalIncome += FinancialCalculator.resolveNetForMonth(
-          amount: ri.amount,
-          isGross: ri.isGross,
-          month: month,
-        );
-      }
-
-      // Start with direct expense entries
-      double totalExpense =
-          monthExpenseList.fold(0.0, (sum, e) => sum + e.amount);
-
-      // Add recurring expenses that started before this month
-      final directExpenseIds = monthExpenseList.map((e) => e.id).toSet();
-      for (final re in recurringExpenses) {
-        if (directExpenseIds.contains(re.id)) continue;
-        if (re.date.toYearMonth().compareTo(ym) >= 0) {
-          continue;
-        }
-        if (re.recurringEndDate != null &&
-            re.recurringEndDate!.isBefore(range.start)) {
-          continue;
-        }
-        totalExpense += re.amount;
-      }
-
-      final totalSavings =
-          monthSavingsList.fold(0.0, (sum, s) => sum + s.amount);
-
-      // includeSavings açıkken birikim gelire eklenir
-      final effectiveIncome = includeSavings
-          ? totalIncome + totalSavings
-          : totalIncome;
+      final effectiveIncome =
+          includeSavings ? totalIncome + totalSavings : totalIncome;
 
       final netBalance = FinancialCalculator.netBalance(
         totalIncome: effectiveIncome,

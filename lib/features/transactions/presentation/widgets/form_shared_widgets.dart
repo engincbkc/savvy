@@ -1,3 +1,6 @@
+import 'dart:ui';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
@@ -11,6 +14,161 @@ export 'form_validators.dart';
 export 'form_duration_picker.dart';
 
 import 'form_validators.dart';
+
+/// Modern glassmorphism date picker bottom sheet.
+/// Returns selected [DateTime] or null if dismissed.
+Future<DateTime?> showSavvyDatePicker({
+  required BuildContext context,
+  required DateTime initialDate,
+  DateTime? firstDate,
+  DateTime? lastDate,
+}) async {
+  final first = firstDate ?? DateTime(2015);
+  final last = lastDate ?? DateTime.now().add(const Duration(days: 366));
+  DateTime tempDate = initialDate;
+
+  return showModalBottomSheet<DateTime>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (ctx) {
+      final c = AppColors.of(ctx);
+      final isDark = Theme.of(ctx).brightness == Brightness.dark;
+
+      return StatefulBuilder(
+        builder: (ctx, setModalState) {
+          return ClipRRect(
+            borderRadius: AppRadius.bottomSheet,
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? c.surfaceCard.withValues(alpha: 0.85)
+                      : Colors.white.withValues(alpha: 0.92),
+                  borderRadius: AppRadius.bottomSheet,
+                  border: Border.all(
+                    color: c.borderDefault.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: AppSpacing.sm),
+                      // Handle
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: c.borderDefault,
+                          borderRadius: AppRadius.pill,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.base),
+
+                      // Header
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg),
+                        child: Row(
+                          children: [
+                            Icon(Icons.calendar_month_rounded,
+                                size: 20, color: c.brandPrimary),
+                            const SizedBox(width: AppSpacing.sm),
+                            Text(
+                              'Tarih Seçin',
+                              style: AppTypography.titleMedium.copyWith(
+                                color: c.textPrimary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const Spacer(),
+                            // Selected date preview
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color:
+                                    c.brandPrimary.withValues(alpha: 0.1),
+                                borderRadius: AppRadius.pill,
+                              ),
+                              child: Text(
+                                formatDateTR(tempDate),
+                                style: AppTypography.labelMedium.copyWith(
+                                  color: c.brandPrimary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.base),
+
+                      // Cupertino date picker
+                      SizedBox(
+                        height: 220,
+                        child: CupertinoTheme(
+                          data: CupertinoThemeData(
+                            brightness: isDark
+                                ? Brightness.dark
+                                : Brightness.light,
+                            primaryColor: c.brandPrimary,
+                            textTheme: CupertinoTextThemeData(
+                              dateTimePickerTextStyle:
+                                  AppTypography.titleMedium.copyWith(
+                                color: c.textPrimary,
+                              ),
+                            ),
+                          ),
+                          child: CupertinoDatePicker(
+                            mode: CupertinoDatePickerMode.date,
+                            initialDateTime: initialDate.isBefore(first)
+                                ? first
+                                : initialDate.isAfter(last)
+                                    ? last
+                                    : initialDate,
+                            minimumDate: first,
+                            maximumDate: last,
+                            use24hFormat: true,
+                            onDateTimeChanged: (date) {
+                              setModalState(() => tempDate = date);
+                            },
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: AppSpacing.base),
+
+                      // Confirm button
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.lg),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                              Navigator.pop(ctx, tempDate);
+                            },
+                            child: const Text('Seç'),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.base),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    },
+  );
+}
 
 /// Shared date formatter for form sheets.
 String formatDateTR(DateTime d) =>
@@ -186,20 +344,22 @@ class AmountInputField extends StatelessWidget {
               textInputAction: TextInputAction.next,
               style: AppTypography.numericHero.copyWith(
                 color: strongColor,
-                fontSize: 36,
+                fontSize: 38,
+                fontWeight: FontWeight.w800,
               ),
               textAlign: TextAlign.center,
               decoration: InputDecoration(
                 hintText: '0',
                 hintStyle: AppTypography.numericHero.copyWith(
                   color: color.withValues(alpha: 0.2),
-                  fontSize: 36,
+                  fontSize: 38,
                 ),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
-                suffixText: '₺',
-                suffixStyle: AppTypography.numericLarge.copyWith(
-                  color: color.withValues(alpha: 0.4),
+                prefixText: '₺ ',
+                prefixStyle: AppTypography.numericLarge.copyWith(
+                  color: color.withValues(alpha: 0.5),
+                  fontSize: 24,
                 ),
               ),
               validator: validateAmount,

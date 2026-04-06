@@ -23,6 +23,8 @@ bool isAmountValid(String text) {
 }
 
 /// TextInputFormatter that adds thousand separators (Turkish dot style: 60000 → 60.000).
+/// Preserves cursor position correctly: counts digits to the left of cursor
+/// before formatting, then restores the same digit-count position after.
 class ThousandFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -32,7 +34,19 @@ class ThousandFormatter extends TextInputFormatter {
     // Strip all non-digit, non-comma chars
     final digitsOnly = newValue.text.replaceAll(RegExp(r'[^\d,]'), '');
     if (digitsOnly.isEmpty) {
-      return newValue.copyWith(text: '', selection: const TextSelection.collapsed(offset: 0));
+      return newValue.copyWith(
+        text: '',
+        selection: const TextSelection.collapsed(offset: 0),
+      );
+    }
+
+    // Count how many "significant" chars (digits + comma) are to the LEFT
+    // of the cursor in the raw input — separators (dots) don't count.
+    final cursorPos = newValue.selection.baseOffset.clamp(0, newValue.text.length);
+    int digitsBeforeCursor = 0;
+    for (int i = 0; i < cursorPos && i < newValue.text.length; i++) {
+      final ch = newValue.text[i];
+      if (ch != '.') digitsBeforeCursor++;
     }
 
     // Split by comma (decimal separator in TR)
@@ -50,9 +64,20 @@ class ThousandFormatter extends TextInputFormatter {
     }
     final formatted = '$buffer$decPart';
 
+    // Restore cursor: walk through formatted string, counting significant
+    // chars (non-dot) until we reach the same count as before.
+    int newCursorPos = 0;
+    int counted = 0;
+    for (int i = 0; i < formatted.length; i++) {
+      if (counted >= digitsBeforeCursor) break;
+      newCursorPos = i + 1;
+      if (formatted[i] != '.') counted++;
+    }
+    newCursorPos = newCursorPos.clamp(0, formatted.length);
+
     return TextEditingValue(
       text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
+      selection: TextSelection.collapsed(offset: newCursorPos),
     );
   }
 }

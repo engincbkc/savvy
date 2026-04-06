@@ -20,6 +20,10 @@ abstract class Income with _$Income {
     @Default(false) bool isGross,
     @Default(false) bool isDeleted,
     required DateTime createdAt,
+    /// Per-month amount overrides for recurring items.
+    /// Key: "YYYY-MM", Value: override amount for that month.
+    /// Months not present use the default [amount].
+    @Default({}) Map<String, double> monthlyOverrides,
   }) = _Income;
 
   factory Income.fromJson(Map<String, dynamic> json) => _$IncomeFromJson(json);

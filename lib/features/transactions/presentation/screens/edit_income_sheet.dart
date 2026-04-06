@@ -396,12 +396,10 @@ class _EditIncomeSheetState extends ConsumerState<EditIncomeSheet> {
                     Expanded(
                       child: GestureDetector(
                         onTap: () async {
-                          final picked = await showDatePicker(
+                          final picked = await showSavvyDatePicker(
                             context: context,
                             initialDate: _date,
                             firstDate: DateTime(2020),
-                            lastDate:
-                                DateTime.now().add(const Duration(days: 366)),
                           );
                           if (picked != null) {
                             setState(() {
