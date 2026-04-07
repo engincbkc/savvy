@@ -82,28 +82,17 @@ class IncomeTab extends ConsumerWidget {
       getMonthlyOverrides: (i) => i.monthlyOverrides,
     );
 
-    final displayCount = grossIncomes.length + regularIncomes.length;
-
     return ListView(
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 100),
       children: [
-        // Özet — collapsible
-        CollapsibleSection(
-          title: 'Özet',
-          icon: AppIcons.income,
-          color: AppColors.of(context).income,
-          child: SummaryCard(
-            title: 'Toplam Gelir',
-            total: total,
-            color: AppColors.of(context).income,
-            gradient: const [Color(0xFF059669), Color(0xFF10B981)],
-            icon: AppIcons.income,
-            itemCount: displayCount,
-            categoryCount: grouped.length,
-            insights: _buildIncomeInsights(
-                grossIncomes, regularIncomes, total),
-          ),
+        // Özet — sade
+        _SimpleIncomeSummary(
+          grossIncomes: grossIncomes,
+          regularIncomes: regularIncomes,
+          total: total,
+          grouped: grouped,
+          resolveAmount: _resolveAmount,
         ),
         const SizedBox(height: AppSpacing.md),
 
@@ -278,49 +267,6 @@ class IncomeTab extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  List<SummaryInsight> _buildIncomeInsights(
-    List<Income> grossIncomes,
-    List<Income> regularIncomes,
-    double total,
-  ) {
-    // Brüt maaş toplamı
-    final grossTotal = grossIncomes.fold(0.0, (s, i) => s + _resolveAmount(i));
-    // Diğer gelir toplamı
-    final otherTotal = regularIncomes.fold(0.0, (s, i) => s + _resolveAmount(i));
-    // Periyodik
-    final recurringTotal =
-        [...grossIncomes, ...regularIncomes]
-            .where((i) => i.isRecurring)
-            .fold(0.0, (s, i) => s + _resolveAmount(i));
-    final recurringPct = total > 0 ? (recurringTotal / total * 100) : 0.0;
-
-    return [
-      if (grossIncomes.isNotEmpty)
-        SummaryInsight(
-          label: 'Brüt Maaş (Net)',
-          value: CurrencyFormatter.formatNoDecimal(grossTotal),
-          icon: Icons.account_balance_rounded,
-        ),
-      if (regularIncomes.isNotEmpty)
-        SummaryInsight(
-          label: 'Diğer Gelirler',
-          value: CurrencyFormatter.formatNoDecimal(otherTotal),
-          icon: Icons.payments_outlined,
-        ),
-      SummaryInsight(
-        label: 'Periyodik Gelir',
-        value: '${CurrencyFormatter.formatNoDecimal(recurringTotal)} (%${recurringPct.toStringAsFixed(0)})',
-        icon: Icons.sync_rounded,
-        isPositive: recurringPct > 50 ? true : null,
-      ),
-      SummaryInsight(
-        label: 'Gelir Kaynağı',
-        value: '${grossIncomes.length + regularIncomes.length} kaynak',
-        icon: Icons.diversity_3_rounded,
-      ),
-    ];
   }
 
   void _showEdit(BuildContext context, Income income) {
@@ -647,6 +593,123 @@ class _GrossSalaryCardState extends State<_GrossSalaryCard> {
         ),
       ),
       ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Sade gelir özeti
+// ═══════════════════════════════════════════════════════════════════
+
+class _SimpleIncomeSummary extends StatelessWidget {
+  final List<Income> grossIncomes;
+  final List<Income> regularIncomes;
+  final double total;
+  final Map<IncomeCategory, List<Income>> grouped;
+  final double Function(Income) resolveAmount;
+
+  const _SimpleIncomeSummary({
+    required this.grossIncomes,
+    required this.regularIncomes,
+    required this.total,
+    required this.grouped,
+    required this.resolveAmount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
+    final grossTotal = grossIncomes.fold(0.0, (s, i) => s + resolveAmount(i));
+    final otherTotal = regularIncomes.fold(0.0, (s, i) => s + resolveAmount(i));
+    final recurringCount = [...grossIncomes, ...regularIncomes]
+        .where((i) => i.isRecurring)
+        .length;
+    final sourceCount = grossIncomes.length + regularIncomes.length;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.base),
+      decoration: BoxDecoration(
+        color: c.surfaceCard,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: c.borderDefault.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        children: [
+          if (grossIncomes.isNotEmpty)
+            _IncRow(
+              icon: Icons.account_balance_rounded,
+              iconColor: c.income,
+              label: 'Maaş (net)',
+              value: CurrencyFormatter.formatNoDecimal(grossTotal),
+              detail: total > 0
+                  ? '%${(grossTotal / total * 100).toStringAsFixed(0)}'
+                  : '',
+            ),
+          if (grossIncomes.isNotEmpty && regularIncomes.isNotEmpty)
+            _thinDivider(c),
+          if (regularIncomes.isNotEmpty)
+            _IncRow(
+              icon: Icons.payments_outlined,
+              iconColor: c.textTertiary,
+              label: 'Diğer gelirler',
+              value: CurrencyFormatter.formatNoDecimal(otherTotal),
+              detail: total > 0
+                  ? '%${(otherTotal / total * 100).toStringAsFixed(0)}'
+                  : '',
+            ),
+          _thinDivider(c),
+          _IncRow(
+            icon: Icons.receipt_long_rounded,
+            iconColor: c.textTertiary,
+            label: '$sourceCount kaynak',
+            value: recurringCount > 0 ? '$recurringCount periyodik' : '',
+            detail: '${grouped.length} kategori',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _thinDivider(dynamic c) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Divider(height: 1, color: c.borderDefault.withValues(alpha: 0.3)),
+      );
+}
+
+class _IncRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+  final String detail;
+
+  const _IncRow({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+    required this.detail,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: iconColor),
+        const SizedBox(width: 8),
+        Text(label, style: AppTypography.bodySmall.copyWith(color: c.textSecondary)),
+        const Spacer(),
+        if (value.isNotEmpty)
+          Text(value, style: AppTypography.labelMedium.copyWith(
+            color: c.textPrimary, fontWeight: FontWeight.w600)),
+        if (detail.isNotEmpty) ...[
+          const SizedBox(width: 8),
+          Text(detail, style: AppTypography.caption.copyWith(
+            color: c.textTertiary, fontSize: 11)),
+        ],
+      ],
     );
   }
 }

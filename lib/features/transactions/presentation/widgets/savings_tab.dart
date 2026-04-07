@@ -85,21 +85,11 @@ class SavingsTab extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 100),
       children: [
-        // Özet — collapsible
-        CollapsibleSection(
-          title: 'Özet',
-          icon: AppIcons.savings,
-          color: AppColors.of(context).savings,
-          child: SummaryCard(
-            title: 'Toplam Birikim',
-            total: total,
-            color: AppColors.of(context).savings,
-            gradient: const [Color(0xFFB45309), Color(0xFFD97706)],
-            icon: AppIcons.savings,
-            itemCount: savings.length,
-            categoryCount: grouped.length,
-            insights: _buildSavingsInsights(savings, grouped, total),
-          ),
+        // Özet — sade
+        _SimpleSavingsSummary(
+          savings: savings,
+          grouped: grouped,
+          total: total,
         ),
         const SizedBox(height: AppSpacing.md),
 
@@ -229,53 +219,6 @@ class SavingsTab extends ConsumerWidget {
     );
   }
 
-  List<SummaryInsight> _buildSavingsInsights(
-    List<Savings> savings,
-    Map<SavingsCategory, List<Savings>> grouped,
-    double total,
-  ) {
-    // En büyük kategori
-    final topCat = grouped.entries.toList()
-      ..sort((a, b) {
-        final aT = a.value.fold(0.0, (s, i) => s + i.amount);
-        final bT = b.value.fold(0.0, (s, i) => s + i.amount);
-        return bT.compareTo(aT);
-      });
-    final topCatName = topCat.isNotEmpty ? topCat.first.key.label : '-';
-    final topCatAmount = topCat.isNotEmpty
-        ? topCat.first.value.fold(0.0, (s, i) => s + i.amount)
-        : 0.0;
-    final topCatPct = total > 0 ? (topCatAmount / total * 100) : 0.0;
-
-    // En büyük tek birikim
-    final maxSaving = savings.isNotEmpty
-        ? savings.reduce((a, b) => a.amount > b.amount ? a : b)
-        : null;
-
-    // Ortalama
-    final avg = savings.isNotEmpty ? total / savings.length : 0.0;
-
-    return [
-      SummaryInsight(
-        label: 'En Büyük Kategori',
-        value: '$topCatName (%${topCatPct.toStringAsFixed(0)})',
-        icon: Icons.emoji_events_rounded,
-      ),
-      SummaryInsight(
-        label: 'Ortalama Birikim',
-        value: CurrencyFormatter.formatNoDecimal(avg),
-        icon: Icons.functions_rounded,
-      ),
-      if (maxSaving != null)
-        SummaryInsight(
-          label: 'En Büyük İşlem',
-          value: CurrencyFormatter.formatNoDecimal(maxSaving.amount),
-          icon: Icons.star_outline_rounded,
-          isPositive: true,
-        ),
-    ];
-  }
-
   void _showEdit(BuildContext context, Savings s) {
     showModalBottomSheet(useRootNavigator: true,
       context: context,
@@ -288,6 +231,121 @@ class SavingsTab extends ConsumerWidget {
         ),
         child: EditSavingsSheet(savings: s),
       ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Sade birikim özeti
+// ═══════════════════════════════════════════════════════════════════
+
+class _SimpleSavingsSummary extends StatelessWidget {
+  final List<Savings> savings;
+  final Map<SavingsCategory, List<Savings>> grouped;
+  final double total;
+
+  const _SimpleSavingsSummary({
+    required this.savings,
+    required this.grouped,
+    required this.total,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
+    // En büyük birikim
+    final maxSaving = savings.isNotEmpty
+        ? savings.reduce((a, b) => a.amount > b.amount ? a : b)
+        : null;
+
+    // En büyük kategori
+    final topCat = grouped.entries.toList()
+      ..sort((a, b) {
+        final aT = a.value.fold(0.0, (s, i) => s + i.amount);
+        final bT = b.value.fold(0.0, (s, i) => s + i.amount);
+        return bT.compareTo(aT);
+      });
+    final topCatName = topCat.isNotEmpty ? topCat.first.key.label : '-';
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.base),
+      decoration: BoxDecoration(
+        color: c.surfaceCard,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: c.borderDefault.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        children: [
+          _SavRow(
+            icon: Icons.emoji_events_rounded,
+            iconColor: c.savings,
+            label: 'En büyük birikim',
+            value: maxSaving != null
+                ? CurrencyFormatter.formatNoDecimal(maxSaving.amount)
+                : '-',
+            detail: maxSaving != null ? maxSaving.category.label : '',
+          ),
+          _thinDivider(c),
+          _SavRow(
+            icon: Icons.category_rounded,
+            iconColor: c.textTertiary,
+            label: 'Ağırlıklı kategori',
+            value: topCatName,
+            detail: '${grouped.length} kategori',
+          ),
+          _thinDivider(c),
+          _SavRow(
+            icon: Icons.receipt_long_rounded,
+            iconColor: c.textTertiary,
+            label: '${savings.length} işlem',
+            value: '',
+            detail: 'Ort. ${CurrencyFormatter.formatNoDecimal(savings.isNotEmpty ? total / savings.length : 0)}',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _thinDivider(dynamic c) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Divider(height: 1, color: c.borderDefault.withValues(alpha: 0.3)),
+      );
+}
+
+class _SavRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+  final String detail;
+
+  const _SavRow({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+    required this.detail,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: iconColor),
+        const SizedBox(width: 8),
+        Text(label, style: AppTypography.bodySmall.copyWith(color: c.textSecondary)),
+        const Spacer(),
+        if (value.isNotEmpty)
+          Text(value, style: AppTypography.labelMedium.copyWith(
+            color: c.textPrimary, fontWeight: FontWeight.w600)),
+        if (detail.isNotEmpty) ...[
+          const SizedBox(width: 8),
+          Text(detail, style: AppTypography.caption.copyWith(
+            color: c.textTertiary, fontSize: 11)),
+        ],
+      ],
     );
   }
 }

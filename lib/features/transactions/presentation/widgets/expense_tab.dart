@@ -95,27 +95,12 @@ class ExpenseTab extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 100),
       children: [
-        // Özet kart — collapsible
-        CollapsibleSection(
-          title: 'Özet',
-          icon: AppIcons.expense,
-          color: AppColors.of(context).expense,
-          child: Column(
-            children: [
-              SummaryCard(
-                title: 'Toplam Gider',
-                total: total,
-                color: AppColors.of(context).expense,
-                gradient: const [Color(0xFFC81E1E), Color(0xFFEF4444)],
-                icon: AppIcons.expense,
-                itemCount: expenses.length,
-                categoryCount: grouped.length,
-                insights: _buildExpenseInsights(expenses, grouped, total),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              ExpenseTypeRow(byType: byType, total: total),
-            ],
-          ),
+        // Özet — sade, anlaşılır
+        _SimpleExpenseSummary(
+          expenses: expenses,
+          grouped: grouped,
+          byType: byType,
+          total: total,
         ),
         const SizedBox(height: AppSpacing.md),
 
@@ -249,68 +234,6 @@ class ExpenseTab extends ConsumerWidget {
     );
   }
 
-  List<SummaryInsight> _buildExpenseInsights(
-    List<Expense> expenses,
-    Map<ExpenseCategory, List<Expense>> grouped,
-    double total,
-  ) {
-    // En büyük kategori
-    final topCat = grouped.entries.toList()
-      ..sort((a, b) {
-        final aT = a.value.fold(0.0, (s, e) => s + e.amount);
-        final bT = b.value.fold(0.0, (s, e) => s + e.amount);
-        return bT.compareTo(aT);
-      });
-    final topCatName = topCat.isNotEmpty ? topCat.first.key.label : '-';
-    final topCatAmount = topCat.isNotEmpty
-        ? topCat.first.value.fold(0.0, (s, e) => s + e.amount)
-        : 0.0;
-    final topCatPct = total > 0 ? (topCatAmount / total * 100) : 0.0;
-
-    // Sabit vs değişken
-    final fixedTotal = expenses
-        .where((e) => e.expenseType == ExpenseType.fixed)
-        .fold(0.0, (s, e) => s + e.amount);
-    final variableTotal = total - fixedTotal;
-
-    // Ortalama gider
-    final avg = expenses.isNotEmpty ? total / expenses.length : 0.0;
-
-    // Periyodik toplam
-    final recurringTotal = expenses
-        .where((e) => e.isRecurring)
-        .fold(0.0, (s, e) => s + e.amount);
-
-    return [
-      SummaryInsight(
-        label: 'En Büyük Kategori',
-        value: '$topCatName (%${topCatPct.toStringAsFixed(0)})',
-        icon: Icons.category_rounded,
-      ),
-      SummaryInsight(
-        label: 'Ortalama Gider',
-        value: CurrencyFormatter.formatNoDecimal(avg),
-        icon: Icons.functions_rounded,
-      ),
-      SummaryInsight(
-        label: 'Sabit Giderler',
-        value: CurrencyFormatter.formatNoDecimal(fixedTotal),
-        icon: Icons.lock_outline_rounded,
-      ),
-      SummaryInsight(
-        label: 'Değişken Giderler',
-        value: CurrencyFormatter.formatNoDecimal(variableTotal),
-        icon: Icons.swap_vert_rounded,
-      ),
-      if (recurringTotal > 0)
-        SummaryInsight(
-          label: 'Periyodik Toplam',
-          value: CurrencyFormatter.formatNoDecimal(recurringTotal),
-          icon: Icons.sync_rounded,
-        ),
-    ];
-  }
-
   void _showEdit(BuildContext context, Expense expense) {
     showModalBottomSheet(useRootNavigator: true,
       context: context,
@@ -323,6 +246,145 @@ class ExpenseTab extends ConsumerWidget {
         ),
         child: EditExpenseSheet(expense: expense),
       ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Sade özet — kullanıcının hemen anladığı bilgiler
+// ═══════════════════════════════════════════════════════════════════
+
+class _SimpleExpenseSummary extends StatelessWidget {
+  final List<Expense> expenses;
+  final Map<ExpenseCategory, List<Expense>> grouped;
+  final Map<ExpenseType, double> byType;
+  final double total;
+
+  const _SimpleExpenseSummary({
+    required this.expenses,
+    required this.grouped,
+    required this.byType,
+    required this.total,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
+    // En çok harcanan kategori
+    final topCat = grouped.entries.toList()
+      ..sort((a, b) {
+        final aT = a.value.fold(0.0, (s, e) => s + e.amount);
+        final bT = b.value.fold(0.0, (s, e) => s + e.amount);
+        return bT.compareTo(aT);
+      });
+    final topCatName = topCat.isNotEmpty ? topCat.first.key.label : '-';
+    final topCatAmount = topCat.isNotEmpty
+        ? topCat.first.value.fold(0.0, (s, e) => s + e.amount)
+        : 0.0;
+
+    // Sabit vs değişken
+    final fixedTotal = expenses
+        .where((e) => e.expenseType == ExpenseType.fixed)
+        .fold(0.0, (s, e) => s + e.amount);
+    final recurringCount = expenses.where((e) => e.isRecurring).length;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.base),
+      decoration: BoxDecoration(
+        color: c.surfaceCard,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: c.borderDefault.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        children: [
+          // Satır 1: En çok harcama
+          _SummaryRow(
+            icon: Icons.arrow_upward_rounded,
+            iconColor: c.expense,
+            label: 'En çok harcama',
+            value: topCatName,
+            detail: CurrencyFormatter.formatNoDecimal(topCatAmount),
+          ),
+          _thinDivider(c),
+          // Satır 2: Sabit giderler
+          _SummaryRow(
+            icon: Icons.lock_outline_rounded,
+            iconColor: c.textTertiary,
+            label: 'Sabit giderler',
+            value: CurrencyFormatter.formatNoDecimal(fixedTotal),
+            detail: total > 0
+                ? '%${(fixedTotal / total * 100).toStringAsFixed(0)}'
+                : '%0',
+          ),
+          _thinDivider(c),
+          // Satır 3: İşlem sayısı + periyodik
+          _SummaryRow(
+            icon: Icons.receipt_long_rounded,
+            iconColor: c.textTertiary,
+            label: '${expenses.length} işlem',
+            value: recurringCount > 0 ? '$recurringCount periyodik' : '',
+            detail: '${grouped.length} kategori',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _thinDivider(dynamic c) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Divider(height: 1, color: c.borderDefault.withValues(alpha: 0.3)),
+      );
+}
+
+class _SummaryRow extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final String value;
+  final String detail;
+
+  const _SummaryRow({
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.value,
+    required this.detail,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: iconColor),
+        const SizedBox(width: 8),
+        Text(
+          label,
+          style: AppTypography.bodySmall.copyWith(
+            color: c.textSecondary,
+          ),
+        ),
+        const Spacer(),
+        if (value.isNotEmpty)
+          Text(
+            value,
+            style: AppTypography.labelMedium.copyWith(
+              color: c.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        if (detail.isNotEmpty) ...[
+          const SizedBox(width: 8),
+          Text(
+            detail,
+            style: AppTypography.caption.copyWith(
+              color: c.textTertiary,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
