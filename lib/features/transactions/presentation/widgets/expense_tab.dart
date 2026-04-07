@@ -289,39 +289,52 @@ class _SimpleExpenseSummary extends StatelessWidget {
         .fold(0.0, (s, e) => s + e.amount);
     final recurringCount = expenses.where((e) => e.isRecurring).length;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = c.expense;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.base),
       decoration: BoxDecoration(
-        color: c.surfaceCard,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: c.borderDefault.withValues(alpha: 0.4)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [accent.withValues(alpha: 0.12), accent.withValues(alpha: 0.04)]
+              : [accent.withValues(alpha: 0.06), accent.withValues(alpha: 0.02)],
+        ),
+        borderRadius: AppRadius.cardLg,
+        border: Border.all(color: accent.withValues(alpha: isDark ? 0.2 : 0.12)),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
-          // Satır 1: En çok harcama
           _SummaryRow(
             icon: Icons.arrow_upward_rounded,
-            iconColor: c.expense,
+            iconColor: accent,
             label: 'En çok harcama',
             value: topCatName,
             detail: CurrencyFormatter.formatNoDecimal(topCatAmount),
           ),
-          _thinDivider(c),
-          // Satır 2: Sabit giderler
+          _thinDivider(accent),
           _SummaryRow(
             icon: Icons.lock_outline_rounded,
-            iconColor: c.textTertiary,
+            iconColor: accent.withValues(alpha: 0.6),
             label: 'Sabit giderler',
             value: CurrencyFormatter.formatNoDecimal(fixedTotal),
             detail: total > 0
                 ? '%${(fixedTotal / total * 100).toStringAsFixed(0)}'
                 : '%0',
           ),
-          _thinDivider(c),
-          // Satır 3: İşlem sayısı + periyodik
+          _thinDivider(accent),
           _SummaryRow(
             icon: Icons.receipt_long_rounded,
-            iconColor: c.textTertiary,
+            iconColor: accent.withValues(alpha: 0.6),
             label: '${expenses.length} işlem',
             value: recurringCount > 0 ? '$recurringCount periyodik' : '',
             detail: '${grouped.length} kategori',
@@ -331,9 +344,20 @@ class _SimpleExpenseSummary extends StatelessWidget {
     );
   }
 
-  Widget _thinDivider(dynamic c) => Padding(
+  Widget _thinDivider(Color accent) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Divider(height: 1, color: c.borderDefault.withValues(alpha: 0.3)),
+        child: Container(
+          height: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                accent.withValues(alpha: 0),
+                accent.withValues(alpha: 0.15),
+                accent.withValues(alpha: 0),
+              ],
+            ),
+          ),
+        ),
       );
 }
 

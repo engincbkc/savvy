@@ -268,36 +268,52 @@ class _SimpleSavingsSummary extends StatelessWidget {
       });
     final topCatName = topCat.isNotEmpty ? topCat.first.key.label : '-';
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = c.savings;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.base),
       decoration: BoxDecoration(
-        color: c.surfaceCard,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: c.borderDefault.withValues(alpha: 0.4)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [accent.withValues(alpha: 0.12), accent.withValues(alpha: 0.04)]
+              : [accent.withValues(alpha: 0.06), accent.withValues(alpha: 0.02)],
+        ),
+        borderRadius: AppRadius.cardLg,
+        border: Border.all(color: accent.withValues(alpha: isDark ? 0.2 : 0.12)),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
           _SavRow(
             icon: Icons.emoji_events_rounded,
-            iconColor: c.savings,
+            iconColor: accent,
             label: 'En büyük birikim',
             value: maxSaving != null
                 ? CurrencyFormatter.formatNoDecimal(maxSaving.amount)
                 : '-',
             detail: maxSaving != null ? maxSaving.category.label : '',
           ),
-          _thinDivider(c),
+          _thinDivider(accent),
           _SavRow(
             icon: Icons.category_rounded,
-            iconColor: c.textTertiary,
+            iconColor: accent.withValues(alpha: 0.6),
             label: 'Ağırlıklı kategori',
             value: topCatName,
             detail: '${grouped.length} kategori',
           ),
-          _thinDivider(c),
+          _thinDivider(accent),
           _SavRow(
             icon: Icons.receipt_long_rounded,
-            iconColor: c.textTertiary,
+            iconColor: accent.withValues(alpha: 0.6),
             label: '${savings.length} işlem',
             value: '',
             detail: 'Ort. ${CurrencyFormatter.formatNoDecimal(savings.isNotEmpty ? total / savings.length : 0)}',
@@ -307,9 +323,20 @@ class _SimpleSavingsSummary extends StatelessWidget {
     );
   }
 
-  Widget _thinDivider(dynamic c) => Padding(
+  Widget _thinDivider(Color accent) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Divider(height: 1, color: c.borderDefault.withValues(alpha: 0.3)),
+        child: Container(
+          height: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                accent.withValues(alpha: 0),
+                accent.withValues(alpha: 0.15),
+                accent.withValues(alpha: 0),
+              ],
+            ),
+          ),
+        ),
       );
 }
 

@@ -627,19 +627,35 @@ class _SimpleIncomeSummary extends StatelessWidget {
         .length;
     final sourceCount = grossIncomes.length + regularIncomes.length;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = c.income;
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.base),
       decoration: BoxDecoration(
-        color: c.surfaceCard,
-        borderRadius: AppRadius.card,
-        border: Border.all(color: c.borderDefault.withValues(alpha: 0.4)),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [accent.withValues(alpha: 0.12), accent.withValues(alpha: 0.04)]
+              : [accent.withValues(alpha: 0.06), accent.withValues(alpha: 0.02)],
+        ),
+        borderRadius: AppRadius.cardLg,
+        border: Border.all(color: accent.withValues(alpha: isDark ? 0.2 : 0.12)),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         children: [
           if (grossIncomes.isNotEmpty)
             _IncRow(
               icon: Icons.account_balance_rounded,
-              iconColor: c.income,
+              iconColor: accent,
               label: 'Maaş (net)',
               value: CurrencyFormatter.formatNoDecimal(grossTotal),
               detail: total > 0
@@ -647,21 +663,21 @@ class _SimpleIncomeSummary extends StatelessWidget {
                   : '',
             ),
           if (grossIncomes.isNotEmpty && regularIncomes.isNotEmpty)
-            _thinDivider(c),
+            _thinDivider(accent),
           if (regularIncomes.isNotEmpty)
             _IncRow(
               icon: Icons.payments_outlined,
-              iconColor: c.textTertiary,
+              iconColor: accent.withValues(alpha: 0.6),
               label: 'Diğer gelirler',
               value: CurrencyFormatter.formatNoDecimal(otherTotal),
               detail: total > 0
                   ? '%${(otherTotal / total * 100).toStringAsFixed(0)}'
                   : '',
             ),
-          _thinDivider(c),
+          _thinDivider(accent),
           _IncRow(
             icon: Icons.receipt_long_rounded,
-            iconColor: c.textTertiary,
+            iconColor: accent.withValues(alpha: 0.6),
             label: '$sourceCount kaynak',
             value: recurringCount > 0 ? '$recurringCount periyodik' : '',
             detail: '${grouped.length} kategori',
@@ -671,9 +687,20 @@ class _SimpleIncomeSummary extends StatelessWidget {
     );
   }
 
-  Widget _thinDivider(dynamic c) => Padding(
+  Widget _thinDivider(Color accent) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Divider(height: 1, color: c.borderDefault.withValues(alpha: 0.3)),
+        child: Container(
+          height: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                accent.withValues(alpha: 0),
+                accent.withValues(alpha: 0.15),
+                accent.withValues(alpha: 0),
+              ],
+            ),
+          ),
+        ),
       );
 }
 
