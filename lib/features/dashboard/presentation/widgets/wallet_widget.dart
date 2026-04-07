@@ -872,80 +872,66 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
         ),
         const SizedBox(height: AppSpacing.md),
 
-        // Balance + Donut chart row
-        Row(
-          children: [
-            // Left: balance amount
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0, end: widget.cumulativeNet),
-                    duration: AppDuration.countUp,
-                    curve: AppCurve.decelerate,
-                    builder: (context, value, _) => Text(
-                      CurrencyFormatter.formatNoDecimal(value),
-                      style: AppTypography.numericHero.copyWith(
-                        color: Colors.white,
-                        fontSize: 30,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  if (monthNet != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.06),
-                        borderRadius: AppRadius.pill,
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.04),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            monthNet >= 0
-                                ? Icons.trending_up_rounded
-                                : Icons.trending_down_rounded,
-                            size: 13,
-                            color: monthNet >= 0
-                                ? const Color(0xFF6EE7B7)
-                                : const Color(0xFFFCA5A5),
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            'Bu ay ${monthNet >= 0 ? '+' : ''}${CurrencyFormatter.formatNoDecimal(monthNet)}',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: const Color(0xFFCBD5E1),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
+        // Balance row
+        TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: widget.cumulativeNet),
+          duration: AppDuration.countUp,
+          curve: AppCurve.decelerate,
+          builder: (context, value, _) => Text(
+            CurrencyFormatter.formatNoDecimal(value),
+            style: AppTypography.numericHero.copyWith(
+              color: Colors.white,
+              fontSize: 32,
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        if (monthNet != null)
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: 5,
+            ),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.06),
+              borderRadius: AppRadius.pill,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.04),
               ),
             ),
-
-            // Right: Donut chart
-            if (grandTotal > 0)
-              SizedBox(
-                width: 90,
-                height: 90,
-                child: _WalletDonutChart(
-                  income: income,
-                  expense: expense,
-                  savings: savings,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  monthNet >= 0
+                      ? Icons.trending_up_rounded
+                      : Icons.trending_down_rounded,
+                  size: 13,
+                  color: monthNet >= 0
+                      ? const Color(0xFF6EE7B7)
+                      : const Color(0xFFFCA5A5),
                 ),
-              ),
-          ],
-        ),
+                const SizedBox(width: 5),
+                Text(
+                  'Bu ay ${monthNet >= 0 ? '+' : ''}${CurrencyFormatter.formatNoDecimal(monthNet)}',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: const Color(0xFFCBD5E1),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Donut chart + legend
+        if (grandTotal > 0) ...[
+          const SizedBox(height: AppSpacing.lg),
+          _WalletDonutChart(
+            income: income,
+            expense: expense,
+            savings: savings,
+          ),
+        ],
       ],
     );
   }
@@ -1094,93 +1080,182 @@ class _WalletDonutChart extends StatelessWidget {
     required this.savings,
   });
 
+  static const _incomeColor = Color(0xFF34D399);
+  static const _expenseColor = Color(0xFFF87171);
+  static const _savingsColor = Color(0xFFFBBF24);
+
   @override
   Widget build(BuildContext context) {
     final total = income + expense + savings;
     if (total <= 0) return const SizedBox.shrink();
 
-    const incomeColor = Color(0xFF34D399);
-    const expenseColor = Color(0xFFFCA5A5);
-    const savingsColor = Color(0xFFFBBF24);
+    final incomePct = (income / total * 100);
+    final expensePct = (expense / total * 100);
+    final savingsPct = (savings / total * 100);
 
     final sections = <PieChartSectionData>[
       PieChartSectionData(
         value: income,
-        color: incomeColor,
-        radius: 10,
+        color: _incomeColor,
+        radius: 14,
         showTitle: false,
       ),
       PieChartSectionData(
         value: expense,
-        color: expenseColor,
-        radius: 10,
+        color: _expenseColor,
+        radius: 14,
         showTitle: false,
       ),
       if (savings > 0)
         PieChartSectionData(
           value: savings,
-          color: savingsColor,
-          radius: 10,
+          color: _savingsColor,
+          radius: 14,
           showTitle: false,
         ),
     ];
 
-    return Stack(
-      alignment: Alignment.center,
+    return Row(
       children: [
-        PieChart(
-          PieChartData(
-            sections: sections,
-            sectionsSpace: 2,
-            centerSpaceRadius: 28,
-            startDegreeOffset: -90,
-            borderData: FlBorderData(show: false),
+        // Chart
+        SizedBox(
+          width: 110,
+          height: 110,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              PieChart(
+                PieChartData(
+                  sections: sections,
+                  sectionsSpace: 2,
+                  centerSpaceRadius: 36,
+                  startDegreeOffset: -90,
+                  borderData: FlBorderData(show: false),
+                ),
+              ),
+              // Center: net balance indicator
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Net',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.5),
+                      fontSize: 9,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  Text(
+                    '%${incomePct > expensePct ? '+' : ''}${(incomePct - expensePct).toStringAsFixed(0)}',
+                    style: TextStyle(
+                      color: incomePct >= expensePct
+                          ? _incomeColor
+                          : _expenseColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-        // Center legend
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _LegendDot(color: incomeColor, label: 'G'),
-            const SizedBox(height: 2),
-            _LegendDot(color: expenseColor, label: 'Gd'),
-            if (savings > 0) ...[
-              const SizedBox(height: 2),
-              _LegendDot(color: savingsColor, label: 'B'),
+
+        const SizedBox(width: 12),
+
+        // Legend with amounts and percentages
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _LegendRow(
+                color: _incomeColor,
+                label: 'Gelir',
+                amount: income,
+                percentage: incomePct,
+              ),
+              const SizedBox(height: 8),
+              _LegendRow(
+                color: _expenseColor,
+                label: 'Gider',
+                amount: expense,
+                percentage: expensePct,
+              ),
+              if (savings > 0) ...[
+                const SizedBox(height: 8),
+                _LegendRow(
+                  color: _savingsColor,
+                  label: 'Birikim',
+                  amount: savings,
+                  percentage: savingsPct,
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ],
     );
   }
 }
 
-class _LegendDot extends StatelessWidget {
+class _LegendRow extends StatelessWidget {
   final Color color;
   final String label;
+  final double amount;
+  final double percentage;
 
-  const _LegendDot({required this.color, required this.label});
+  const _LegendRow({
+    required this.color,
+    required this.label,
+    required this.amount,
+    required this.percentage,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 5,
-          height: 5,
+          width: 8,
+          height: 8,
           decoration: BoxDecoration(
             color: color,
-            shape: BoxShape.circle,
+            borderRadius: BorderRadius.circular(2),
           ),
         ),
-        const SizedBox(width: 3),
+        const SizedBox(width: 6),
         Text(
           label,
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.6),
-            fontSize: 8,
-            fontWeight: FontWeight.w600,
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const Spacer(),
+        Text(
+          CurrencyFormatter.compact(amount),
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.9),
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            '%${percentage.toStringAsFixed(0)}',
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       ],
