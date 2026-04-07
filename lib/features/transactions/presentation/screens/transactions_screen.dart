@@ -126,20 +126,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
     final allExpenses = (allExpensesAsync.value ?? []);
     final allSavings = (allSavingsAsync.value ?? []);
 
-    // Tüm ayları topla
-    final months = <String>{};
-    for (final i in allIncomes) {
-      months.add(i.date.toYearMonth());
-    }
-    for (final e in allExpenses) {
-      months.add(e.date.toYearMonth());
-    }
-    for (final s in allSavings) {
-      months.add(s.date.toYearMonth());
-    }
-    months.add(DateTime.now().toYearMonth());
-    final sortedMonths = months.toList()..sort((a, b) => b.compareTo(a));
-
     // Month filtering
     var incomes = _selectedMonth == null
         ? allIncomes
@@ -173,15 +159,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
     final totalExpense = expenses.fold(0.0, (sum, e) => sum + e.amount);
     final totalSavings = savings.fold(0.0, (sum, s) => sum + s.amount);
 
-    // Seçili ayın label'ı
-    final selectedLabel = _selectedMonth == null
-        ? 'Tümü'
-        : MonthLabels.shortName(_selectedMonth!);
-
-    return Stack(
-      children: [
-        SafeArea(
-          child: Column(
+    return SafeArea(
+      child: Column(
         children: [
           // ── Header ──
           AnimatedContainer(
@@ -202,23 +181,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
                         'İşlemler',
                         style: AppTypography.headlineMedium.copyWith(
                           color: c.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      // Seçili ay badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: c.brandPrimary.withValues(alpha: 0.1),
-                          borderRadius: AppRadius.pill,
-                        ),
-                        child: Text(
-                          selectedLabel,
-                          style: AppTypography.labelSmall.copyWith(
-                            color: c.brandPrimary,
-                            fontWeight: FontWeight.w600,
-                          ),
                         ),
                       ),
                       const Spacer(),
@@ -285,42 +247,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
                   ),
                 ),
 
-                const SizedBox(height: AppSpacing.md),
-
-                // Ay seçici — kompakt
-                SizedBox(
-                  height: 36,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                    itemCount: sortedMonths.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        final isSelected = _selectedMonth == null;
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 6),
-                          child: _CompactMonthChip(
-                            label: 'Tümü',
-                            isSelected: isSelected,
-                            color: c.brandPrimary,
-                            onTap: () => setState(() => _selectedMonth = null),
-                          ),
-                        );
-                      }
-                      final ym = sortedMonths[index - 1];
-                      final isSelected = _selectedMonth == ym;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: _CompactMonthChip(
-                          label: MonthLabels.shortName(ym),
-                          isSelected: isSelected,
-                          color: c.brandPrimary,
-                          onTap: () => setState(() => _selectedMonth = ym),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                const SizedBox(height: AppSpacing.sm),
 
                 // Filtreler — sadece açıksa göster
                 AnimatedCrossFade(
@@ -342,15 +269,26 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
 
                 const SizedBox(height: AppSpacing.xs),
 
-                // Tab Bar
+                // Tab Bar + Ekle butonu
                 Padding(
                   padding: AppSpacing.screenH,
-                  child: ModernTabBar(
-                    controller: _tabController,
-                    tabs: [
-                      TabData('Gelir', totalIncome, c.income),
-                      TabData('Gider', totalExpense, c.expense),
-                      TabData('Birikim', totalSavings, c.savings),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ModernTabBar(
+                          controller: _tabController,
+                          tabs: [
+                            TabData('Gelir', totalIncome, c.income),
+                            TabData('Gider', totalExpense, c.expense),
+                            TabData('Birikim', totalSavings, c.savings),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      _AddButton(
+                        tabIndex: _tabController.index,
+                        onTap: () => _openAddSheet(context),
+                      ),
                     ],
                   ),
                 ),
@@ -417,20 +355,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
           ),
         ],
       ),
-        ),
-        // FAB — alt orta
-        Positioned(
-          bottom: AppSpacing.lg + 80,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: _AddTransactionFab(
-              tabIndex: _tabController.index,
-              onTap: () => _openAddSheet(context),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -462,86 +386,44 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
 }
 
 // ═══════════════════════════════════════════════════════════════════════
-// Compact Month Chip
+// Compact Add Button (sits next to tab bar)
 // ═══════════════════════════════════════════════════════════════════════
 
-class _CompactMonthChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final Color color;
+class _AddButton extends StatelessWidget {
+  final int tabIndex;
   final VoidCallback onTap;
 
-  const _CompactMonthChip({
-    required this.label,
-    required this.isSelected,
-    required this.color,
-    required this.onTap,
-  });
+  const _AddButton({required this.tabIndex, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final c = AppColors.of(context);
+    final color = switch (tabIndex) {
+      0 => AppColors.of(context).income,
+      1 => AppColors.of(context).expense,
+      _ => AppColors.of(context).savings,
+    };
+
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        HapticFeedback.mediumImpact();
         onTap();
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
-          color: isSelected ? color : Colors.transparent,
-          borderRadius: AppRadius.pill,
-          border: Border.all(
-            color: isSelected
-                ? color
-                : c.borderDefault.withValues(alpha: 0.4),
-          ),
+          color: color,
+          borderRadius: AppRadius.card,
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.3),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
-        child: Text(
-          label,
-          style: AppTypography.labelSmall.copyWith(
-            color: isSelected ? Colors.white : c.textSecondary,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            fontSize: 12,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// FAB
-// ═══════════════════════════════════════════════════════════════════════
-
-class _AddTransactionFab extends StatelessWidget {
-  final int tabIndex;
-  final VoidCallback onTap;
-
-  const _AddTransactionFab({required this.tabIndex, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final (color, label, icon) = switch (tabIndex) {
-      0 => (AppColors.of(context).income, 'Gelir Ekle', AppIcons.income),
-      1 => (AppColors.of(context).expense, 'Gider Ekle', AppIcons.expense),
-      _ => (AppColors.of(context).savings, 'Birikim Ekle', AppIcons.savings),
-    };
-
-    return FloatingActionButton.extended(
-      heroTag: 'txn_add_fab',
-      onPressed: onTap,
-      backgroundColor: color,
-      foregroundColor: Colors.white,
-      elevation: 6,
-      icon: Icon(icon, size: 18),
-      label: Text(
-        label,
-        style: AppTypography.labelMedium.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ),
+        child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
       ),
     );
   }
