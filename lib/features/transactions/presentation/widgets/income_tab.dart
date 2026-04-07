@@ -101,6 +101,8 @@ class IncomeTab extends ConsumerWidget {
             icon: AppIcons.income,
             itemCount: displayCount,
             categoryCount: grouped.length,
+            insights: _buildIncomeInsights(
+                grossIncomes, regularIncomes, total),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -276,6 +278,49 @@ class IncomeTab extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  List<SummaryInsight> _buildIncomeInsights(
+    List<Income> grossIncomes,
+    List<Income> regularIncomes,
+    double total,
+  ) {
+    // Brüt maaş toplamı
+    final grossTotal = grossIncomes.fold(0.0, (s, i) => s + _resolveAmount(i));
+    // Diğer gelir toplamı
+    final otherTotal = regularIncomes.fold(0.0, (s, i) => s + _resolveAmount(i));
+    // Periyodik
+    final recurringTotal =
+        [...grossIncomes, ...regularIncomes]
+            .where((i) => i.isRecurring)
+            .fold(0.0, (s, i) => s + _resolveAmount(i));
+    final recurringPct = total > 0 ? (recurringTotal / total * 100) : 0.0;
+
+    return [
+      if (grossIncomes.isNotEmpty)
+        SummaryInsight(
+          label: 'Brüt Maaş (Net)',
+          value: CurrencyFormatter.formatNoDecimal(grossTotal),
+          icon: Icons.account_balance_rounded,
+        ),
+      if (regularIncomes.isNotEmpty)
+        SummaryInsight(
+          label: 'Diğer Gelirler',
+          value: CurrencyFormatter.formatNoDecimal(otherTotal),
+          icon: Icons.payments_outlined,
+        ),
+      SummaryInsight(
+        label: 'Periyodik Gelir',
+        value: '${CurrencyFormatter.formatNoDecimal(recurringTotal)} (%${recurringPct.toStringAsFixed(0)})',
+        icon: Icons.sync_rounded,
+        isPositive: recurringPct > 50 ? true : null,
+      ),
+      SummaryInsight(
+        label: 'Gelir Kaynağı',
+        value: '${grossIncomes.length + regularIncomes.length} kaynak',
+        icon: Icons.diversity_3_rounded,
+      ),
+    ];
   }
 
   void _showEdit(BuildContext context, Income income) {

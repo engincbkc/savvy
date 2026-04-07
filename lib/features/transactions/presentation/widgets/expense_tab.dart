@@ -110,6 +110,7 @@ class ExpenseTab extends ConsumerWidget {
                 icon: AppIcons.expense,
                 itemCount: expenses.length,
                 categoryCount: grouped.length,
+                insights: _buildExpenseInsights(expenses, grouped, total),
               ),
               const SizedBox(height: AppSpacing.md),
               ExpenseTypeRow(byType: byType, total: total),
@@ -246,6 +247,68 @@ class ExpenseTab extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  List<SummaryInsight> _buildExpenseInsights(
+    List<Expense> expenses,
+    Map<ExpenseCategory, List<Expense>> grouped,
+    double total,
+  ) {
+    // En büyük kategori
+    final topCat = grouped.entries.toList()
+      ..sort((a, b) {
+        final aT = a.value.fold(0.0, (s, e) => s + e.amount);
+        final bT = b.value.fold(0.0, (s, e) => s + e.amount);
+        return bT.compareTo(aT);
+      });
+    final topCatName = topCat.isNotEmpty ? topCat.first.key.label : '-';
+    final topCatAmount = topCat.isNotEmpty
+        ? topCat.first.value.fold(0.0, (s, e) => s + e.amount)
+        : 0.0;
+    final topCatPct = total > 0 ? (topCatAmount / total * 100) : 0.0;
+
+    // Sabit vs değişken
+    final fixedTotal = expenses
+        .where((e) => e.expenseType == ExpenseType.fixed)
+        .fold(0.0, (s, e) => s + e.amount);
+    final variableTotal = total - fixedTotal;
+
+    // Ortalama gider
+    final avg = expenses.isNotEmpty ? total / expenses.length : 0.0;
+
+    // Periyodik toplam
+    final recurringTotal = expenses
+        .where((e) => e.isRecurring)
+        .fold(0.0, (s, e) => s + e.amount);
+
+    return [
+      SummaryInsight(
+        label: 'En Büyük Kategori',
+        value: '$topCatName (%${topCatPct.toStringAsFixed(0)})',
+        icon: Icons.category_rounded,
+      ),
+      SummaryInsight(
+        label: 'Ortalama Gider',
+        value: CurrencyFormatter.formatNoDecimal(avg),
+        icon: Icons.functions_rounded,
+      ),
+      SummaryInsight(
+        label: 'Sabit Giderler',
+        value: CurrencyFormatter.formatNoDecimal(fixedTotal),
+        icon: Icons.lock_outline_rounded,
+      ),
+      SummaryInsight(
+        label: 'Değişken Giderler',
+        value: CurrencyFormatter.formatNoDecimal(variableTotal),
+        icon: Icons.swap_vert_rounded,
+      ),
+      if (recurringTotal > 0)
+        SummaryInsight(
+          label: 'Periyodik Toplam',
+          value: CurrencyFormatter.formatNoDecimal(recurringTotal),
+          icon: Icons.sync_rounded,
+        ),
+    ];
   }
 
   void _showEdit(BuildContext context, Expense expense) {

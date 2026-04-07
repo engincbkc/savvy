@@ -13,6 +13,9 @@ class SummaryCard extends StatelessWidget {
   final IconData icon;
   final int itemCount;
   final int categoryCount;
+  /// Optional insight stats shown below the total.
+  /// Each entry: label → value string.
+  final List<SummaryInsight> insights;
 
   const SummaryCard({
     super.key,
@@ -23,6 +26,7 @@ class SummaryCard extends StatelessWidget {
     required this.icon,
     required this.itemCount,
     required this.categoryCount,
+    this.insights = const [],
   });
 
   @override
@@ -82,6 +86,7 @@ class SummaryCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Header row
                   Row(
                     children: [
                       Container(
@@ -97,9 +102,16 @@ class SummaryCard extends StatelessWidget {
                       Text(title,
                           style: AppTypography.titleMedium.copyWith(
                               color: Colors.white.withValues(alpha: 0.85))),
+                      const Spacer(),
+                      // Count badges
+                      _CountBadge(label: '$itemCount', sub: 'işlem'),
+                      const SizedBox(width: 6),
+                      _CountBadge(label: '$categoryCount', sub: 'kat.'),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.base),
+
+                  // Animated total
                   TweenAnimationBuilder<double>(
                     tween: Tween(begin: 0, end: total),
                     duration: AppDuration.countUp,
@@ -107,25 +119,25 @@ class SummaryCard extends StatelessWidget {
                     builder: (context, value, _) => Text(
                       CurrencyFormatter.formatNoDecimal(value),
                       style: AppTypography.numericLarge
-                          .copyWith(color: Colors.white),
+                          .copyWith(color: Colors.white, fontSize: 32),
                     ),
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      MiniChip(
-                        label: '$itemCount işlem',
-                        bgColor: Colors.white.withValues(alpha: 0.15),
-                        textColor: Colors.white.withValues(alpha: 0.9),
+
+                  // Insights grid
+                  if (insights.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        borderRadius: AppRadius.card,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.1),
+                        ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
-                      MiniChip(
-                        label: '$categoryCount kategori',
-                        bgColor: Colors.white.withValues(alpha: 0.15),
-                        textColor: Colors.white.withValues(alpha: 0.9),
-                      ),
-                    ],
-                  ),
+                      child: _buildInsightsGrid(),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -134,8 +146,159 @@ class SummaryCard extends StatelessWidget {
       ),
     );
   }
+
+  Widget _buildInsightsGrid() {
+    // 2 columns layout
+    final rows = <Widget>[];
+    for (int i = 0; i < insights.length; i += 2) {
+      rows.add(Row(
+        children: [
+          Expanded(child: _InsightTile(insight: insights[i])),
+          if (i + 1 < insights.length) ...[
+            Container(
+              width: 1,
+              height: 32,
+              color: Colors.white.withValues(alpha: 0.1),
+            ),
+            Expanded(child: _InsightTile(insight: insights[i + 1])),
+          ] else
+            const Expanded(child: SizedBox()),
+        ],
+      ));
+      if (i + 2 < insights.length) {
+        rows.add(Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Container(
+            height: 1,
+            color: Colors.white.withValues(alpha: 0.06),
+          ),
+        ));
+      }
+    }
+    return Column(children: rows);
+  }
 }
 
+// ═══════════════════════════════════════════════════════════════════
+// Insight Data
+// ═══════════════════════════════════════════════════════════════════
+
+class SummaryInsight {
+  final String label;
+  final String value;
+  final IconData? icon;
+  /// If true, value is shown in green-ish. If false, red-ish. Null = neutral.
+  final bool? isPositive;
+
+  const SummaryInsight({
+    required this.label,
+    required this.value,
+    this.icon,
+    this.isPositive,
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Private Widgets
+// ═══════════════════════════════════════════════════════════════════
+
+class _InsightTile extends StatelessWidget {
+  final SummaryInsight insight;
+
+  const _InsightTile({required this.insight});
+
+  @override
+  Widget build(BuildContext context) {
+    final valueColor = insight.isPositive == null
+        ? Colors.white
+        : insight.isPositive!
+            ? const Color(0xFFBBF7D0) // light green
+            : const Color(0xFFFECACA); // light red
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              if (insight.icon != null) ...[
+                Icon(insight.icon, size: 10,
+                    color: Colors.white.withValues(alpha: 0.5)),
+                const SizedBox(width: 3),
+              ],
+              Flexible(
+                child: Text(
+                  insight.label,
+                  style: AppTypography.caption.copyWith(
+                    color: Colors.white.withValues(alpha: 0.55),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 9,
+                    letterSpacing: 0.2,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            insight.value,
+            style: AppTypography.numericSmall.copyWith(
+              color: valueColor,
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CountBadge extends StatelessWidget {
+  final String label;
+  final String sub;
+
+  const _CountBadge({required this.label, required this.sub});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: AppRadius.pill,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: AppTypography.numericSmall.copyWith(
+              color: Colors.white.withValues(alpha: 0.95),
+              fontWeight: FontWeight.w700,
+              fontSize: 11,
+            ),
+          ),
+          const SizedBox(width: 2),
+          Text(
+            sub,
+            style: AppTypography.caption.copyWith(
+              color: Colors.white.withValues(alpha: 0.6),
+              fontSize: 9,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Backward compat — old MiniChip still used elsewhere
 class MiniChip extends StatelessWidget {
   final String label;
   final Color bgColor;

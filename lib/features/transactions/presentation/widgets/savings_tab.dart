@@ -98,6 +98,7 @@ class SavingsTab extends ConsumerWidget {
             icon: AppIcons.savings,
             itemCount: savings.length,
             categoryCount: grouped.length,
+            insights: _buildSavingsInsights(savings, grouped, total),
           ),
         ),
         const SizedBox(height: AppSpacing.md),
@@ -226,6 +227,53 @@ class SavingsTab extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  List<SummaryInsight> _buildSavingsInsights(
+    List<Savings> savings,
+    Map<SavingsCategory, List<Savings>> grouped,
+    double total,
+  ) {
+    // En büyük kategori
+    final topCat = grouped.entries.toList()
+      ..sort((a, b) {
+        final aT = a.value.fold(0.0, (s, i) => s + i.amount);
+        final bT = b.value.fold(0.0, (s, i) => s + i.amount);
+        return bT.compareTo(aT);
+      });
+    final topCatName = topCat.isNotEmpty ? topCat.first.key.label : '-';
+    final topCatAmount = topCat.isNotEmpty
+        ? topCat.first.value.fold(0.0, (s, i) => s + i.amount)
+        : 0.0;
+    final topCatPct = total > 0 ? (topCatAmount / total * 100) : 0.0;
+
+    // En büyük tek birikim
+    final maxSaving = savings.isNotEmpty
+        ? savings.reduce((a, b) => a.amount > b.amount ? a : b)
+        : null;
+
+    // Ortalama
+    final avg = savings.isNotEmpty ? total / savings.length : 0.0;
+
+    return [
+      SummaryInsight(
+        label: 'En Büyük Kategori',
+        value: '$topCatName (%${topCatPct.toStringAsFixed(0)})',
+        icon: Icons.emoji_events_rounded,
+      ),
+      SummaryInsight(
+        label: 'Ortalama Birikim',
+        value: CurrencyFormatter.formatNoDecimal(avg),
+        icon: Icons.functions_rounded,
+      ),
+      if (maxSaving != null)
+        SummaryInsight(
+          label: 'En Büyük İşlem',
+          value: CurrencyFormatter.formatNoDecimal(maxSaving.amount),
+          icon: Icons.star_outline_rounded,
+          isPositive: true,
+        ),
+    ];
   }
 
   void _showEdit(BuildContext context, Savings s) {
