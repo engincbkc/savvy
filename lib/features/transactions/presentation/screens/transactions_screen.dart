@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
@@ -23,7 +22,6 @@ import 'package:savvy/features/transactions/presentation/widgets/expense_tab.dar
 import 'package:savvy/features/transactions/presentation/widgets/savings_tab.dart';
 import 'package:savvy/features/transactions/presentation/widgets/transaction_shared_widgets.dart';
 import 'package:savvy/features/transactions/presentation/widgets/filter_bar.dart';
-import 'package:savvy/features/transactions/presentation/widgets/quick_expense_sheet.dart';
 import 'package:savvy/shared/widgets/loading_shimmer.dart';
 
 
@@ -45,6 +43,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
   TransactionFilters _filters = const TransactionFilters();
   TransactionFilters _pendingFilters = const TransactionFilters();
   bool _headerShadow = false;
+  bool _showFilters = false;
   Timer? _filterDebounce;
 
   @override
@@ -52,6 +51,8 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() => setState(() {}));
+    // Varsayılan: mevcut ay seçili
+    _selectedMonth = DateTime.now().toYearMonth();
   }
 
   @override
@@ -64,7 +65,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
   void _onFiltersChanged(TransactionFilters f) {
     _pendingFilters = f;
     _filterDebounce?.cancel();
-    // Search queries debounce; other filters apply immediately
     if (f.searchQuery != _filters.searchQuery) {
       _filterDebounce = Timer(const Duration(milliseconds: 300), () {
         if (mounted) setState(() => _filters = _pendingFilters);
@@ -74,7 +74,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
     }
   }
 
-  // Apply filters to any list of items
   List<T> _applyFilters<T>(
     List<T> items, {
     required DateTime Function(T) dateOf,
@@ -83,8 +82,6 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
     required String? Function(T) noteOf,
   }) {
     var result = items;
-
-    // Date range
     if (_filters.dateFrom != null) {
       result = result.where((i) => !dateOf(i).isBefore(_filters.dateFrom!)).toList();
     }
@@ -92,20 +89,17 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
       final end = _filters.dateTo!.add(const Duration(days: 1));
       result = result.where((i) => dateOf(i).isBefore(end)).toList();
     }
-    // Amount range
     if (_filters.amountMin != null) {
       result = result.where((i) => amountOf(i) >= _filters.amountMin!).toList();
     }
     if (_filters.amountMax != null) {
       result = result.where((i) => amountOf(i) <= _filters.amountMax!).toList();
     }
-    // Categories
     if (_filters.categories.isNotEmpty) {
       result = result
           .where((i) => _filters.categories.contains(categoryOf(i)))
           .toList();
     }
-    // Search
     if (_filters.searchQuery.isNotEmpty) {
       final q = _filters.searchQuery.toLowerCase();
       result = result.where((i) {
@@ -114,12 +108,12 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
         return note.contains(q) || cat.contains(q);
       }).toList();
     }
-
     return result;
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = AppColors.of(context);
     final allIncomesAsync = ref.watch(allIncomesProvider);
     final allExpensesAsync = ref.watch(allExpensesProvider);
     final allSavingsAsync = ref.watch(allSavingsProvider);
@@ -158,34 +152,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
         : allSavings.where((s) => s.date.toYearMonth() == _selectedMonth).toList();
 
     // Advanced filters
-    incomes = _applyFilters(
-      incomes,
-      dateOf: (i) => i.date,
-      amountOf: (i) => i.amount,
-      categoryOf: (i) => i.category.label,
-      noteOf: (i) => i.note,
-    );
-    expenses = _applyFilters(
-      expenses,
-      dateOf: (e) => e.date,
-      amountOf: (e) => e.amount,
-      categoryOf: (e) => e.category.label,
-      noteOf: (e) => e.note,
-    );
-    savings = _applyFilters(
-      savings,
-      dateOf: (s) => s.date,
-      amountOf: (s) => s.amount,
-      categoryOf: (s) => s.category.label,
-      noteOf: (s) => s.note,
-    );
+    incomes = _applyFilters(incomes, dateOf: (i) => i.date, amountOf: (i) => i.amount, categoryOf: (i) => i.category.label, noteOf: (i) => i.note);
+    expenses = _applyFilters(expenses, dateOf: (e) => e.date, amountOf: (e) => e.amount, categoryOf: (e) => e.category.label, noteOf: (e) => e.note);
+    savings = _applyFilters(savings, dateOf: (s) => s.date, amountOf: (s) => s.amount, categoryOf: (s) => s.category.label, noteOf: (s) => s.note);
 
-    // Sırala
     incomes.sort((a, b) => b.date.compareTo(a.date));
     expenses.sort((a, b) => b.date.compareTo(a.date));
     savings.sort((a, b) => b.date.compareTo(a.date));
 
-    // Seçili ayı belirle (brüt→net çözümlemesi için)
     final isTumuMode = _selectedMonth == null;
     final resolveMonth = _selectedMonth != null
         ? int.parse(_selectedMonth!.split('-')[1])
@@ -194,20 +168,22 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
       final month = isTumuMode ? i.date.month : resolveMonth;
       return sum +
           FinancialCalculator.resolveNetForMonth(
-            amount: i.amount,
-            isGross: i.isGross,
-            month: month,
-          );
+            amount: i.amount, isGross: i.isGross, month: month);
     });
     final totalExpense = expenses.fold(0.0, (sum, e) => sum + e.amount);
     final totalSavings = savings.fold(0.0, (sum, s) => sum + s.amount);
+
+    // Seçili ayın label'ı
+    final selectedLabel = _selectedMonth == null
+        ? 'Tümü'
+        : MonthLabels.shortName(_selectedMonth!);
 
     return Stack(
       children: [
         SafeArea(
           child: Column(
         children: [
-          // Header area with animated bottom shadow
+          // ── Header ──
           AnimatedContainer(
             duration: AppDuration.fast,
             curve: AppCurve.standard,
@@ -216,134 +192,166 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
             ),
             child: Column(
               children: [
-                // Başlık
-                _StaggeredEntry(
-                  delay: 0,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.lg, AppSpacing.base, AppSpacing.lg, 0),
-                    child: Row(
-                      children: [
-                        Text(
-                          'İşlemler',
-                          style: AppTypography.headlineMedium.copyWith(
-                            color: AppColors.of(context).textPrimary,
+                // Başlık satırı: sadece "İşlemler" + filtre ikonu
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg, AppSpacing.md, AppSpacing.lg, 0),
+                  child: Row(
+                    children: [
+                      Text(
+                        'İşlemler',
+                        style: AppTypography.headlineMedium.copyWith(
+                          color: c.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      // Seçili ay badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: c.brandPrimary.withValues(alpha: 0.1),
+                          borderRadius: AppRadius.pill,
+                        ),
+                        child: Text(
+                          selectedLabel,
+                          style: AppTypography.labelSmall.copyWith(
+                            color: c.brandPrimary,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const Spacer(),
-                        // Hızlı Gider butonu
-                        IconButton(
-                          onPressed: () {
-                            HapticFeedback.selectionClick();
-                            QuickExpenseSheet.show(context);
-                          },
-                          icon: Icon(
-                            LucideIcons.zap,
-                            size: 20,
-                            color: AppColors.of(context).expense,
+                      ),
+                      const Spacer(),
+                      // Filtre toggle
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _showFilters = !_showFilters);
+                        },
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: _showFilters || _filters.isActive
+                                ? c.brandPrimary.withValues(alpha: 0.1)
+                                : Colors.transparent,
+                            borderRadius: AppRadius.chip,
                           ),
-                          tooltip: 'Hızlı Gider',
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                              minWidth: 36, minHeight: 36),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Icon(
+                                Icons.tune_rounded,
+                                size: 20,
+                                color: _filters.isActive
+                                    ? c.brandPrimary
+                                    : c.textSecondary,
+                              ),
+                              if (_filters.isActive)
+                                Positioned(
+                                  top: 6,
+                                  right: 6,
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: c.brandPrimary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ),
-                        // Periyodik yönetim butonu
-                        IconButton(
-                          onPressed: () =>
-                              context.push('/transactions/recurring'),
-                          icon: Icon(
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      // Periyodik yönetim
+                      GestureDetector(
+                        onTap: () => context.push('/transactions/recurring'),
+                        child: Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            borderRadius: AppRadius.chip,
+                          ),
+                          child: Icon(
                             AppIcons.recurring,
                             size: 20,
-                            color: AppColors.of(context).textSecondary,
+                            color: c.textSecondary,
                           ),
-                          tooltip: 'Periyodik İşlemler',
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                              minWidth: 36, minHeight: 36),
                         ),
-                        const SizedBox(width: AppSpacing.xs),
-                        QuickSummaryChip(net: totalIncome - totalExpense),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
 
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.md),
 
-                // Ay seçici
-                _StaggeredEntry(
-                  delay: 80,
-                  child: SizedBox(
-                    height: 44,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                      itemCount: sortedMonths.length + 1,
-                      itemBuilder: (context, index) {
-                        if (index == 0) {
-                          final isSelected = _selectedMonth == null;
-                          return Padding(
-                            padding:
-                                const EdgeInsets.only(right: AppSpacing.sm),
-                            child: MonthChip(
-                              label: 'Tümü',
-                              isSelected: isSelected,
-                              onTap: () =>
-                                  setState(() => _selectedMonth = null),
-                            ),
-                          );
-                        }
-                        final ym = sortedMonths[index - 1];
-                        final isSelected = _selectedMonth == ym;
+                // Ay seçici — kompakt
+                SizedBox(
+                  height: 36,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                    itemCount: sortedMonths.length + 1,
+                    itemBuilder: (context, index) {
+                      if (index == 0) {
+                        final isSelected = _selectedMonth == null;
                         return Padding(
-                          padding: const EdgeInsets.only(right: AppSpacing.sm),
-                          child: MonthChip(
-                            label: MonthLabels.shortName(ym),
-                            year: ym.split('-')[0],
+                          padding: const EdgeInsets.only(right: 6),
+                          child: _CompactMonthChip(
+                            label: 'Tümü',
                             isSelected: isSelected,
-                            onTap: () =>
-                                setState(() => _selectedMonth = ym),
+                            color: c.brandPrimary,
+                            onTap: () => setState(() => _selectedMonth = null),
                           ),
                         );
-                      },
-                    ),
+                      }
+                      final ym = sortedMonths[index - 1];
+                      final isSelected = _selectedMonth == ym;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: _CompactMonthChip(
+                          label: MonthLabels.shortName(ym),
+                          isSelected: isSelected,
+                          color: c.brandPrimary,
+                          onTap: () => setState(() => _selectedMonth = ym),
+                        ),
+                      );
+                    },
                   ),
                 ),
 
-                const SizedBox(height: AppSpacing.sm),
-
-                // Filter bar
-                _StaggeredEntry(
-                  delay: 160,
-                  child: Padding(
-                    padding: AppSpacing.screenH,
+                // Filtreler — sadece açıksa göster
+                AnimatedCrossFade(
+                  firstChild: const SizedBox(height: AppSpacing.sm),
+                  secondChild: Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
                     child: FilterBar(
                       filters: _filters,
                       activeTabIndex: _tabController.index,
                       onChanged: _onFiltersChanged,
                     ),
                   ),
+                  crossFadeState: _showFilters
+                      ? CrossFadeState.showSecond
+                      : CrossFadeState.showFirst,
+                  duration: const Duration(milliseconds: 200),
                 ),
 
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.xs),
 
                 // Tab Bar
-                _StaggeredEntry(
-                  delay: 240,
-                  child: Padding(
-                    padding: AppSpacing.screenH,
-                    child: ModernTabBar(
-                      controller: _tabController,
-                      tabs: [
-                        TabData('Gelir', totalIncome,
-                            AppColors.of(context).income),
-                        TabData('Gider', totalExpense,
-                            AppColors.of(context).expense),
-                        TabData('Birikim', totalSavings,
-                            AppColors.of(context).savings),
-                      ],
-                    ),
+                Padding(
+                  padding: AppSpacing.screenH,
+                  child: ModernTabBar(
+                    controller: _tabController,
+                    tabs: [
+                      TabData('Gelir', totalIncome, c.income),
+                      TabData('Gider', totalExpense, c.expense),
+                      TabData('Birikim', totalSavings, c.savings),
+                    ],
                   ),
                 ),
 
@@ -410,13 +418,16 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
         ],
       ),
         ),
-        // FAB
+        // FAB — alt orta
         Positioned(
-          right: AppSpacing.lg,
-          bottom: AppSpacing.lg + 80, // navbar yüksekliği üstü
-          child: _AddTransactionFab(
-            tabIndex: _tabController.index,
-            onTap: () => _openAddSheet(context),
+          bottom: AppSpacing.lg + 80,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: _AddTransactionFab(
+              tabIndex: _tabController.index,
+              onTap: () => _openAddSheet(context),
+            ),
           ),
         ),
       ],
@@ -425,7 +436,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
 
   void _openAddSheet(BuildContext context) {
     HapticFeedback.mediumImpact();
-    showModalBottomSheet(useRootNavigator: true, 
+    showModalBottomSheet(useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -450,37 +461,59 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
   }
 }
 
-/// Staggered entrance animation for transaction screen sections.
-class _StaggeredEntry extends StatelessWidget {
-  final int delay;
-  final Widget child;
+// ═══════════════════════════════════════════════════════════════════════
+// Compact Month Chip
+// ═══════════════════════════════════════════════════════════════════════
 
-  const _StaggeredEntry({
-    required this.delay,
-    required this.child,
+class _CompactMonthChip extends StatelessWidget {
+  final String label;
+  final bool isSelected;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _CompactMonthChip({
+    required this.label,
+    required this.isSelected,
+    required this.color,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.0, end: 1.0),
-      duration: Duration(milliseconds: 600 + delay),
-      curve: AppCurve.enter,
-      builder: (context, value, child) {
-        final adjusted =
-            ((value * (600 + delay) - delay) / 600).clamp(0.0, 1.0);
-        return Opacity(
-          opacity: adjusted,
-          child: Transform.translate(
-            offset: Offset(0, 16 * (1 - adjusted)),
-            child: child,
-          ),
-        );
+    final c = AppColors.of(context);
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
       },
-      child: child,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? color : Colors.transparent,
+          borderRadius: AppRadius.pill,
+          border: Border.all(
+            color: isSelected
+                ? color
+                : c.borderDefault.withValues(alpha: 0.4),
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTypography.labelSmall.copyWith(
+            color: isSelected ? Colors.white : c.textSecondary,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            fontSize: 12,
+          ),
+        ),
+      ),
     );
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════════
+// FAB
+// ═══════════════════════════════════════════════════════════════════════
 
 class _AddTransactionFab extends StatelessWidget {
   final int tabIndex;
@@ -501,8 +534,8 @@ class _AddTransactionFab extends StatelessWidget {
       onPressed: onTap,
       backgroundColor: color,
       foregroundColor: Colors.white,
-      elevation: 4,
-      icon: Icon(icon, size: 20),
+      elevation: 6,
+      icon: Icon(icon, size: 18),
       label: Text(
         label,
         style: AppTypography.labelMedium.copyWith(
