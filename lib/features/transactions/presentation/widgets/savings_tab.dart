@@ -5,6 +5,7 @@ import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
+import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/utils/currency_formatter.dart';
 import 'package:savvy/features/transactions/presentation/widgets/delete_dialog.dart';
 import 'package:savvy/features/savings/domain/models/savings.dart';
@@ -14,6 +15,7 @@ import 'package:savvy/features/transactions/presentation/widgets/transaction_det
 import 'package:savvy/features/transactions/presentation/widgets/category_icons.dart';
 import 'package:savvy/features/transactions/presentation/widgets/monthly_category_table.dart';
 import 'package:savvy/features/transactions/presentation/widgets/transaction_shared_widgets.dart';
+import 'package:savvy/shared/widgets/collapsible_section.dart';
 import 'package:savvy/shared/widgets/empty_state.dart';
 import 'package:savvy/shared/widgets/portfolio_table.dart';
 
@@ -83,27 +85,39 @@ class SavingsTab extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 100),
       children: [
-        SummaryCard(
-          title: 'Toplam Birikim',
-          total: total,
-          color: AppColors.of(context).savings,
-          gradient: const [Color(0xFFB45309), Color(0xFFD97706)],
+        // Özet — collapsible
+        CollapsibleSection(
+          title: 'Özet',
           icon: AppIcons.savings,
-          itemCount: savings.length,
-          categoryCount: grouped.length,
-        ),
-        const SizedBox(height: AppSpacing.lg),
-
-        // Aylık kategori tablosu
-        if (monthlyData.months.length > 1)
-          MonthlyCategoryTable(
-            data: monthlyData,
+          color: AppColors.of(context).savings,
+          child: SummaryCard(
+            title: 'Toplam Birikim',
+            total: total,
             color: AppColors.of(context).savings,
+            gradient: const [Color(0xFFB45309), Color(0xFFD97706)],
+            icon: AppIcons.savings,
+            itemCount: savings.length,
+            categoryCount: grouped.length,
           ),
-        if (monthlyData.months.length > 1)
-          const SizedBox(height: AppSpacing.xl),
+        ),
+        const SizedBox(height: AppSpacing.md),
 
-        // Portföy-style birikim tablosu
+        // Aylık dağılım — collapsible
+        if (monthlyData.months.length > 1) ...[
+          CollapsibleSection(
+            title: 'Aylık Dağılım',
+            icon: Icons.calendar_view_month_rounded,
+            color: AppColors.of(context).savings,
+            initiallyExpanded: false,
+            child: MonthlyCategoryTable(
+              data: monthlyData,
+              color: AppColors.of(context).savings,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
+
+        // Portföy tablosu (kendi aç/kapat başlığı var)
         PortfolioTable(
           title: 'Birikim Portföyü',
           titleIcon: AppIcons.savings,
@@ -140,23 +154,42 @@ class SavingsTab extends ConsumerWidget {
           ],
         ),
 
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: AppSpacing.md),
 
-        CategoryAccordion(
+        // Kategoriler — collapsible
+        CollapsibleSection(
           title: 'Kategorilere Göre',
-          count: sortedCats.length,
+          icon: Icons.pie_chart_outline_rounded,
           color: AppColors.of(context).savings,
-          children: sortedCats.map((entry) {
-            final catTotal = entry.value.fold(0.0, (s, i) => s + i.amount);
-            return CategoryRow(
-              icon: savingsIcon(entry.key),
-              label: entry.key.label,
-              amount: catTotal,
-              percentage: total > 0 ? catTotal / total : 0.0,
-              color: AppColors.of(context).savings,
-              count: entry.value.length,
-            );
-          }).toList(),
+          initiallyExpanded: false,
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppColors.of(context).savings.withValues(alpha: 0.1),
+              borderRadius: AppRadius.pill,
+            ),
+            child: Text(
+              '${sortedCats.length}',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.of(context).savings,
+                fontWeight: FontWeight.w700,
+                fontSize: 10,
+              ),
+            ),
+          ),
+          child: Column(
+            children: sortedCats.map((entry) {
+              final catTotal = entry.value.fold(0.0, (s, i) => s + i.amount);
+              return CategoryRow(
+                icon: savingsIcon(entry.key),
+                label: entry.key.label,
+                amount: catTotal,
+                percentage: total > 0 ? catTotal / total : 0.0,
+                color: AppColors.of(context).savings,
+                count: entry.value.length,
+              );
+            }).toList(),
+          ),
         ),
       ],
     );

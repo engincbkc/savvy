@@ -17,6 +17,7 @@ import 'package:savvy/features/transactions/presentation/widgets/transaction_det
 import 'package:savvy/features/transactions/presentation/widgets/monthly_category_table.dart';
 import 'package:savvy/features/transactions/presentation/widgets/transaction_shared_widgets.dart';
 import 'package:savvy/shared/widgets/empty_state.dart';
+import 'package:savvy/shared/widgets/collapsible_section.dart';
 import 'package:savvy/shared/widgets/portfolio_table.dart';
 import 'package:savvy/shared/widgets/salary_breakdown_panel.dart';
 
@@ -87,39 +88,61 @@ class IncomeTab extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 100),
       children: [
-        SummaryCard(
-          title: 'Toplam Gelir',
-          total: total,
-          color: AppColors.of(context).income,
-          gradient: const [Color(0xFF059669), Color(0xFF10B981)],
+        // Özet — collapsible
+        CollapsibleSection(
+          title: 'Özet',
           icon: AppIcons.income,
-          itemCount: displayCount,
-          categoryCount: grouped.length,
-        ),
-        const SizedBox(height: AppSpacing.lg),
-
-        // Aylık kategori tablosu
-        if (monthlyData.months.length > 1)
-          MonthlyCategoryTable(
-            data: monthlyData,
+          color: AppColors.of(context).income,
+          child: SummaryCard(
+            title: 'Toplam Gelir',
+            total: total,
             color: AppColors.of(context).income,
+            gradient: const [Color(0xFF059669), Color(0xFF10B981)],
+            icon: AppIcons.income,
+            itemCount: displayCount,
+            categoryCount: grouped.length,
           ),
-        if (monthlyData.months.length > 1)
-          const SizedBox(height: AppSpacing.xl),
+        ),
+        const SizedBox(height: AppSpacing.md),
 
-        // Brüt Maaş Kartları (premium grouped card)
-        ...grossIncomes.map((i) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.base),
-              child: _GrossSalaryCard(
-                income: i,
-                displayMonth: displayMonth,
-                color: AppColors.of(context).income,
-                onDelete: () => _confirmDelete(context, ref, i.id, 'brüt maaş'),
-                onTap: () => _showDetail(context, i),
-              ),
-            )),
+        // Aylık dağılım — collapsible
+        if (monthlyData.months.length > 1) ...[
+          CollapsibleSection(
+            title: 'Aylık Dağılım',
+            icon: Icons.calendar_view_month_rounded,
+            color: AppColors.of(context).income,
+            initiallyExpanded: false,
+            child: MonthlyCategoryTable(
+              data: monthlyData,
+              color: AppColors.of(context).income,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
 
-        // Regular incomes — portfolio table
+        // Brüt Maaş — collapsible
+        if (grossIncomes.isNotEmpty)
+          CollapsibleSection(
+            title: 'Brüt Maaş',
+            icon: Icons.account_balance_rounded,
+            color: AppColors.of(context).income,
+            child: Column(
+              children: grossIncomes.map((i) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.base),
+                    child: _GrossSalaryCard(
+                      income: i,
+                      displayMonth: displayMonth,
+                      color: AppColors.of(context).income,
+                      onDelete: () => _confirmDelete(context, ref, i.id, 'brüt maaş'),
+                      onTap: () => _showDetail(context, i),
+                    ),
+                  )).toList(),
+            ),
+          ),
+        if (grossIncomes.isNotEmpty)
+          const SizedBox(height: AppSpacing.md),
+
+        // Regular incomes — portfolio table (kendi aç/kapat başlığı var)
         if (regularIncomes.isNotEmpty)
           PortfolioTable(
             title: grossIncomes.isNotEmpty ? 'Diğer Gelirler' : 'Tüm Gelirler',
@@ -170,24 +193,42 @@ class IncomeTab extends ConsumerWidget {
             ],
           ),
 
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: AppSpacing.md),
 
-        // Kategoriler — Akordiyon
-        CategoryAccordion(
+        // Kategoriler — collapsible
+        CollapsibleSection(
           title: 'Kategorilere Göre',
-          count: grouped.length,
+          icon: Icons.pie_chart_outline_rounded,
           color: AppColors.of(context).income,
-          children: sortedCats.map((entry) {
-            final catTotal = entry.value.fold(0.0, (s, i) => s + _resolveAmount(i));
-            return CategoryRow(
-              icon: incomeIcon(entry.key),
-              label: entry.key.label,
-              amount: catTotal,
-              percentage: total > 0 ? catTotal / total : 0.0,
-              color: AppColors.of(context).income,
-              count: entry.value.length,
-            );
-          }).toList(),
+          initiallyExpanded: false,
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: AppColors.of(context).income.withValues(alpha: 0.1),
+              borderRadius: AppRadius.pill,
+            ),
+            child: Text(
+              '${grouped.length}',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.of(context).income,
+                fontWeight: FontWeight.w700,
+                fontSize: 10,
+              ),
+            ),
+          ),
+          child: Column(
+            children: sortedCats.map((entry) {
+              final catTotal = entry.value.fold(0.0, (s, i) => s + _resolveAmount(i));
+              return CategoryRow(
+                icon: incomeIcon(entry.key),
+                label: entry.key.label,
+                amount: catTotal,
+                percentage: total > 0 ? catTotal / total : 0.0,
+                color: AppColors.of(context).income,
+                count: entry.value.length,
+              );
+            }).toList(),
+          ),
         ),
       ],
     );
