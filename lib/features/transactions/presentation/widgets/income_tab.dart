@@ -15,9 +15,9 @@ import 'package:savvy/features/transactions/presentation/screens/edit_income_she
 import 'package:savvy/features/transactions/presentation/widgets/category_icons.dart';
 import 'package:savvy/features/transactions/presentation/widgets/transaction_detail_sheet.dart';
 import 'package:savvy/features/transactions/presentation/widgets/monthly_category_table.dart';
-import 'package:savvy/features/transactions/presentation/widgets/swipeable_transaction_tile.dart';
 import 'package:savvy/features/transactions/presentation/widgets/transaction_shared_widgets.dart';
 import 'package:savvy/shared/widgets/empty_state.dart';
+import 'package:savvy/shared/widgets/portfolio_table.dart';
 import 'package:savvy/shared/widgets/salary_breakdown_panel.dart';
 
 class IncomeTab extends ConsumerWidget {
@@ -119,29 +119,56 @@ class IncomeTab extends ConsumerWidget {
               ),
             )),
 
-        if (regularIncomes.isNotEmpty) ...[
-          SectionHeader(
-              title: grossIncomes.isNotEmpty ? 'Diğer Gelirler' : 'Tüm Gelirler',
-              count: regularIncomes.length),
-          const SizedBox(height: AppSpacing.sm),
-        ],
-        ...regularIncomes.map((i) {
-          final netAmount = _resolveAmount(i);
-          return SwipeableTransactionTile(
-              key: ValueKey(i.id),
-              id: i.id,
-              title: i.category.label,
-              subtitle: i.note,
-              amount: netAmount,
-              date: i.date,
-              color: AppColors.of(context).income,
-              icon: incomeIcon(i.category),
-              isRecurring: i.isRecurring,
-              person: i.person,
-              onDelete: () => _confirmDelete(context, ref, i.id, 'gelir'),
-              onTap: () => _showDetail(context, i),
-            );
-        }),
+        // Regular incomes — portfolio table
+        if (regularIncomes.isNotEmpty)
+          PortfolioTable(
+            title: grossIncomes.isNotEmpty ? 'Diğer Gelirler' : 'Tüm Gelirler',
+            titleIcon: AppIcons.income,
+            color: AppColors.of(context).income,
+            rows: regularIncomes.map((i) {
+              final netAmount = _resolveAmount(i);
+              final dateStr =
+                  '${i.date.day.toString().padLeft(2, '0')}.${i.date.month.toString().padLeft(2, '0')}.${i.date.year}';
+              final sub = [
+                i.person ?? '',
+                i.source ?? '',
+              ].where((s) => s.isNotEmpty).join(' · ');
+              return PortfolioRow(
+                id: i.id,
+                title: i.category.label,
+                subtitle: sub.isNotEmpty ? '$sub · $dateStr' : dateStr,
+                amount: netAmount,
+                date: i.date,
+                icon: incomeIcon(i.category),
+                accentColor: AppColors.of(context).income,
+                isRecurring: i.isRecurring,
+              );
+            }).toList(),
+            columnHeaders: const ['TUTAR'],
+            buildColumns: (row) => [
+              CurrencyFormatter.formatNoDecimal(row.amount),
+            ],
+            buildActions: (row) => [
+              PortfolioAction(
+                icon: Icons.info_outline_rounded,
+                label: 'Detay',
+                onTap: () => _showDetail(
+                    context, regularIncomes.firstWhere((i) => i.id == row.id)),
+              ),
+              PortfolioAction(
+                icon: Icons.edit_rounded,
+                label: 'Düzenle',
+                onTap: () => _showEdit(
+                    context, regularIncomes.firstWhere((i) => i.id == row.id)),
+              ),
+              PortfolioAction(
+                icon: Icons.delete_outline_rounded,
+                label: 'Sil',
+                color: AppColors.of(context).expense,
+                onTap: () => _confirmDelete(context, ref, row.id, 'gelir'),
+              ),
+            ],
+          ),
 
         const SizedBox(height: AppSpacing.lg),
 

@@ -5,6 +5,7 @@ import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
+import 'package:savvy/core/utils/currency_formatter.dart';
 import 'package:savvy/features/transactions/presentation/widgets/delete_dialog.dart';
 import 'package:savvy/features/savings/domain/models/savings.dart';
 import 'package:savvy/features/transactions/presentation/providers/transaction_form_provider.dart';
@@ -12,9 +13,9 @@ import 'package:savvy/features/transactions/presentation/screens/edit_savings_sh
 import 'package:savvy/features/transactions/presentation/widgets/transaction_detail_sheet.dart';
 import 'package:savvy/features/transactions/presentation/widgets/category_icons.dart';
 import 'package:savvy/features/transactions/presentation/widgets/monthly_category_table.dart';
-import 'package:savvy/features/transactions/presentation/widgets/swipeable_transaction_tile.dart';
 import 'package:savvy/features/transactions/presentation/widgets/transaction_shared_widgets.dart';
 import 'package:savvy/shared/widgets/empty_state.dart';
+import 'package:savvy/shared/widgets/portfolio_table.dart';
 
 class SavingsTab extends ConsumerWidget {
   final List<Savings> savings;
@@ -33,8 +34,8 @@ class SavingsTab extends ConsumerWidget {
     if (savings.isEmpty) {
       return const EmptyState(
         icon: AppIcons.savings,
-        title: 'Hen\u00fcz birikim yok',
-        subtitle: '\u0130lk birikimini ekleyerek ba\u015flayabilirsin.',
+        title: 'Henüz birikim yok',
+        subtitle: 'İlk birikimini ekleyerek başlayabilirsin.',
       );
     }
 
@@ -57,6 +58,27 @@ class SavingsTab extends ConsumerWidget {
       (s) => s.amount,
     );
 
+    // Build portfolio rows — birikim portföy gibi gösterilir
+    final rows = savings.map((s) {
+      final dateStr =
+          '${s.date.day.toString().padLeft(2, '0')}.${s.date.month.toString().padLeft(2, '0')}.${s.date.year}';
+      // Yüzde hesapla (toplam içindeki payı)
+      final pct = total > 0 ? (s.amount / total * 100) : 0.0;
+
+      return PortfolioRow(
+        id: s.id,
+        title: s.category.label,
+        subtitle: s.note?.isNotEmpty == true ? '${s.note} · $dateStr' : dateStr,
+        amount: s.amount,
+        date: s.date,
+        icon: savingsIcon(s.category),
+        accentColor: AppColors.of(context).savings,
+        extraColumns: {
+          'PAY': '%${pct.toStringAsFixed(1)}',
+        },
+      );
+    }).toList();
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 100),
@@ -72,7 +94,7 @@ class SavingsTab extends ConsumerWidget {
         ),
         const SizedBox(height: AppSpacing.lg),
 
-        // Ayl\u0131k kategori tablosu
+        // Aylık kategori tablosu
         if (monthlyData.months.length > 1)
           MonthlyCategoryTable(
             data: monthlyData,
@@ -81,27 +103,47 @@ class SavingsTab extends ConsumerWidget {
         if (monthlyData.months.length > 1)
           const SizedBox(height: AppSpacing.xl),
 
-        SectionHeader(title: 'T\u00fcm Birikimler', count: savings.length),
-        const SizedBox(height: AppSpacing.sm),
-        ...savings.map((s) => SwipeableTransactionTile(
-              key: ValueKey(s.id),
-              id: s.id,
-              title: s.category.label,
-              subtitle: s.note,
-              amount: s.amount,
-              date: s.date,
-              color: AppColors.of(context).savings,
-              icon: savingsIcon(s.category),
-                isRecurring: false,
-              person: null,
-              onDelete: () => _confirmDelete(context, ref, s.id),
-              onTap: () => _showDetail(context, s),
-            )),
+        // Portföy-style birikim tablosu
+        PortfolioTable(
+          title: 'Birikim Portföyü',
+          titleIcon: AppIcons.savings,
+          color: AppColors.of(context).savings,
+          rows: rows,
+          columnHeaders: const ['TUTAR', 'PAY%'],
+          buildColumns: (row) {
+            final s = savings.firstWhere((s) => s.id == row.id);
+            final pct = total > 0 ? (s.amount / total * 100) : 0.0;
+            return [
+              CurrencyFormatter.formatNoDecimal(row.amount),
+              '%${pct.toStringAsFixed(1)}',
+            ];
+          },
+          buildActions: (row) => [
+            PortfolioAction(
+              icon: Icons.info_outline_rounded,
+              label: 'Detay',
+              onTap: () => _showDetail(
+                  context, savings.firstWhere((s) => s.id == row.id)),
+            ),
+            PortfolioAction(
+              icon: Icons.edit_rounded,
+              label: 'Düzenle',
+              onTap: () => _showEdit(
+                  context, savings.firstWhere((s) => s.id == row.id)),
+            ),
+            PortfolioAction(
+              icon: Icons.delete_outline_rounded,
+              label: 'Sil',
+              color: AppColors.of(context).expense,
+              onTap: () => _confirmDelete(context, ref, row.id),
+            ),
+          ],
+        ),
 
         const SizedBox(height: AppSpacing.lg),
 
         CategoryAccordion(
-          title: 'Kategorilere G\u00f6re',
+          title: 'Kategorilere Göre',
           count: sortedCats.length,
           color: AppColors.of(context).savings,
           children: sortedCats.map((entry) {
@@ -129,7 +171,7 @@ class SavingsTab extends ConsumerWidget {
   }
 
   void _showDetail(BuildContext context, Savings s) {
-    showModalBottomSheet(useRootNavigator: true, 
+    showModalBottomSheet(useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -154,7 +196,7 @@ class SavingsTab extends ConsumerWidget {
   }
 
   void _showEdit(BuildContext context, Savings s) {
-    showModalBottomSheet(useRootNavigator: true, 
+    showModalBottomSheet(useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,

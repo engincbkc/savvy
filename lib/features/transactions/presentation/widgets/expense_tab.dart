@@ -5,6 +5,7 @@ import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
+import 'package:savvy/core/utils/currency_formatter.dart';
 import 'package:savvy/features/transactions/presentation/widgets/delete_dialog.dart';
 import 'package:savvy/features/transactions/domain/models/expense.dart';
 import 'package:savvy/features/transactions/presentation/providers/transaction_form_provider.dart';
@@ -12,9 +13,9 @@ import 'package:savvy/features/transactions/presentation/screens/edit_expense_sh
 import 'package:savvy/features/transactions/presentation/widgets/transaction_detail_sheet.dart';
 import 'package:savvy/features/transactions/presentation/widgets/category_icons.dart';
 import 'package:savvy/features/transactions/presentation/widgets/monthly_category_table.dart';
-import 'package:savvy/features/transactions/presentation/widgets/swipeable_transaction_tile.dart';
 import 'package:savvy/features/transactions/presentation/widgets/transaction_shared_widgets.dart';
 import 'package:savvy/shared/widgets/empty_state.dart';
+import 'package:savvy/shared/widgets/portfolio_table.dart';
 
 class ExpenseTab extends ConsumerWidget {
   final List<Expense> expenses;
@@ -33,8 +34,8 @@ class ExpenseTab extends ConsumerWidget {
     if (expenses.isEmpty) {
       return const EmptyState(
         icon: AppIcons.expense,
-        title: 'Hen\u00fcz gider yok',
-        subtitle: '\u0130lk giderini ekleyerek ba\u015flayabilirsin.',
+        title: 'Henüz gider yok',
+        subtitle: 'İlk giderini ekleyerek başlayabilirsin.',
       );
     }
 
@@ -67,6 +68,27 @@ class ExpenseTab extends ConsumerWidget {
       getMonthlyOverrides: (e) => e.monthlyOverrides,
     );
 
+    // Build portfolio rows
+    final rows = expenses.map((e) {
+      final dateStr =
+          '${e.date.day.toString().padLeft(2, '0')}.${e.date.month.toString().padLeft(2, '0')}.${e.date.year}';
+      final sub = [
+        e.person ?? '',
+        e.expenseType.label,
+      ].where((s) => s.isNotEmpty).join(' · ');
+
+      return PortfolioRow(
+        id: e.id,
+        title: e.category.label,
+        subtitle: sub.isNotEmpty ? '$sub · $dateStr' : dateStr,
+        amount: e.amount,
+        date: e.date,
+        icon: expenseIcon(e.category),
+        accentColor: AppColors.of(context).expense,
+        isRecurring: e.isRecurring,
+      );
+    }).toList();
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(
           AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 100),
@@ -85,7 +107,7 @@ class ExpenseTab extends ConsumerWidget {
         ExpenseTypeRow(byType: byType, total: total),
         const SizedBox(height: AppSpacing.lg),
 
-        // Ayl\u0131k kategori tablosu
+        // Aylık kategori tablosu
         if (monthlyData.months.length > 1)
           MonthlyCategoryTable(
             data: monthlyData,
@@ -94,27 +116,46 @@ class ExpenseTab extends ConsumerWidget {
         if (monthlyData.months.length > 1)
           const SizedBox(height: AppSpacing.xl),
 
-        SectionHeader(title: 'T\u00fcm Giderler', count: expenses.length),
-        const SizedBox(height: AppSpacing.sm),
-        ...expenses.map((e) => SwipeableTransactionTile(
-              key: ValueKey(e.id),
-              id: e.id,
-              title: e.category.label,
-              subtitle: e.note,
-              amount: e.amount,
-              date: e.date,
+        // Portfolio-style table
+        PortfolioTable(
+          title: 'Tüm Giderler',
+          titleIcon: AppIcons.expense,
+          color: AppColors.of(context).expense,
+          rows: rows,
+          columnHeaders: const ['TUTAR', 'TİP'],
+          buildColumns: (row) {
+            final expense = expenses.firstWhere((e) => e.id == row.id);
+            return [
+              CurrencyFormatter.formatNoDecimal(row.amount),
+              expense.expenseType.label,
+            ];
+          },
+          buildActions: (row) => [
+            PortfolioAction(
+              icon: Icons.info_outline_rounded,
+              label: 'Detay',
+              onTap: () => _showDetail(
+                  context, expenses.firstWhere((e) => e.id == row.id)),
+            ),
+            PortfolioAction(
+              icon: Icons.edit_rounded,
+              label: 'Düzenle',
+              onTap: () => _showEdit(
+                  context, expenses.firstWhere((e) => e.id == row.id)),
+            ),
+            PortfolioAction(
+              icon: Icons.delete_outline_rounded,
+              label: 'Sil',
               color: AppColors.of(context).expense,
-              icon: expenseIcon(e.category),
-                isRecurring: e.isRecurring,
-              person: e.person,
-              onDelete: () => _confirmDelete(context, ref, e.id),
-              onTap: () => _showDetail(context, e),
-            )),
+              onTap: () => _confirmDelete(context, ref, row.id),
+            ),
+          ],
+        ),
 
         const SizedBox(height: AppSpacing.lg),
 
         CategoryAccordion(
-          title: 'Kategorilere G\u00f6re',
+          title: 'Kategorilere Göre',
           count: grouped.length,
           color: AppColors.of(context).expense,
           children: sortedCats.map((entry) {
@@ -142,7 +183,7 @@ class ExpenseTab extends ConsumerWidget {
   }
 
   void _showDetail(BuildContext context, Expense expense) {
-    showModalBottomSheet(useRootNavigator: true, 
+    showModalBottomSheet(useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -172,7 +213,7 @@ class ExpenseTab extends ConsumerWidget {
   }
 
   void _showEdit(BuildContext context, Expense expense) {
-    showModalBottomSheet(useRootNavigator: true, 
+    showModalBottomSheet(useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
