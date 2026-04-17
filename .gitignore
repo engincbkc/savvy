@@ -43,3 +43,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Swift/Xcode build artifacts
+SavvyApp/build/
+SavvyApp/.build/
+SavvyApp/Savvy.xcodeproj/xcuserdata/
+SavvyApp/Savvy.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcuserstate
+SavvyApp/generate_icon.py

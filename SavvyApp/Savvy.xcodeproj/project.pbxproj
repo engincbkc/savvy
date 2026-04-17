@@ -1,0 +1,702 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		13C1219B33C04C5BB56DE1CF /* TrendChartView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8A6F0473EFCA8226ADB2873 /* TrendChartView.swift */; };
+		16F90E6E1ABCD49C95192AA8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FEFF9234EA5E2D3D8AB7AF98 /* Assets.xcassets */; };
+		189D546B063F3CB18D61D9E5 /* SavvyWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F0A4B780561C00928B7F38 /* SavvyWidgetBundle.swift */; };
+		373CB77DC8B21F6A6DD545D7 /* AddIncomeSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B5D7D9897B5E877F7B7270D /* AddIncomeSheet.swift */; };
+		45971A39E3FEBD3D3A567221 /* SavvyFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = 0B07E28BD88CBEEA35935687 /* SavvyFoundation */; };
+		46EDC166726B9D27C4382C7A /* BudgetOverviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEE2D8C968EBAB0DC1D4B540 /* BudgetOverviewView.swift */; };
+		47291BEB7129E293946B5AE3 /* BalanceSummaryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B89FD6361689563F123DB9B /* BalanceSummaryWidget.swift */; };
+		4B2A626DA48CD58E4E9E00B1 /* SavvyNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 314151E122777636C567D5C6 /* SavvyNetworking */; };
+		4C96D1ABFE56BBA3A06703BB /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3BA7F9D5716A9CBC984C708 /* SettingsView.swift */; };
+		53DE25E33E8C59ADC9D2D624 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A33265157FE15BA2B1EA902C /* GoogleService-Info.plist */; };
+		55A41259CD7B04DD509DFD9F /* ShimmerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DF5D040DF52725CD4619475 /* ShimmerView.swift */; };
+		578FB9C75F89F63E0FC98DD8 /* SimulationListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F90EA37087776158BA1FD6FE /* SimulationListView.swift */; };
+		5C4D7C8F6CD5C000D7857882 /* SimulationDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19499DF8BAEC2B8AB272A012 /* SimulationDetailView.swift */; };
+		5CF33140E2A8428A920C9F33 /* AddSavingsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 316BF46BD2C1795F890CC80F /* AddSavingsSheet.swift */; };
+		646C9236C219BF186C0F1DF5 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B63768A5241307C7E11716A /* OnboardingView.swift */; };
+		6763E1632C3A8DA5872F1679 /* Dependencies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8625AFA6DFF7B15024FE055E /* Dependencies.swift */; };
+		68854B014E7C90E234920C28 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7FE93EE23CBCFC911BEF767 /* RegisterView.swift */; };
+		6F9A4CFFA147E3720AFE65AB /* SavvyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8DFB55DE46C81FB9C2FF925 /* SavvyApp.swift */; };
+		73D0EB96712EEF9088EC19DA /* SharedDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71334710C229B7DD8919AA6D /* SharedDataManager.swift */; };
+		74C2BA6ECBDA2D6B351D6389 /* AddExpenseIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8D664D7477A5B965F216B24 /* AddExpenseIntent.swift */; };
+		853E53560D385FF70FF1C149 /* MonthlyOverviewWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C78926BD9283EDA09B22A95A /* MonthlyOverviewWidget.swift */; };
+		86C7A7CF07425EB134354859 /* SavvyDesignSystem in Frameworks */ = {isa = PBXBuildFile; productRef = 03C2E2332A8AD93FF9AE0D1A /* SavvyDesignSystem */; };
+		8939A404AC03D06ACCFF28C8 /* ForgotPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63F367BBCEFAEAC10C2FCE4 /* ForgotPasswordView.swift */; };
+		987C95664B6E6A01EEABFE50 /* CheckBudgetIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AB40A01B8227E77958D9B26 /* CheckBudgetIntent.swift */; };
+		9AD6C708620057503675F27F /* AddExpenseSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A72CBC08E0CC6F93FEB63584 /* AddExpenseSheet.swift */; };
+		9F6D4F9C7728BB58ED2A8168 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8BDD82A80DA51E1ED3885945 /* DashboardView.swift */; };
+		B66E260F827D97CE3357DF9A /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F3004FAAC403F4303D229A4 /* LoginView.swift */; };
+		BF1C1B84FD82A72E4FC87652 /* TransactionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA5E83E44EB5CC6D39486A49 /* TransactionsView.swift */; };
+		C1FBCBD090F787CD88D89495 /* SharedDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55387BEBA22691FD78685CBF /* SharedDataManager.swift */; };
+		CC6B273712A6C80C2EC1B324 /* AccessibilityModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07E132B4B93E519E726DFE16 /* AccessibilityModifiers.swift */; };
+		CF1BC8350025AB1C57916846 /* SavvyShortcutsProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCC6A3239A9DE3A7E074F18B /* SavvyShortcutsProvider.swift */; };
+		DF5ADDB203D30621B2817CC2 /* SavvyHeroNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F9DA0376E1778C66AE141DA /* SavvyHeroNumber.swift */; };
+		E98D116C2D655FBC74771D4B /* GoalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C63922396E36C7FC9493FCF1 /* GoalsView.swift */; };
+		EB12F604CC5C8403C3FF0143 /* SimulationTemplatePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3747100871CD8B9E6851ED06 /* SimulationTemplatePickerView.swift */; };
+		F0BD283EFFDF33A93C6060F4 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21C5EC553E6607A760ADB361 /* NotificationManager.swift */; };
+		F569C6ECC8B6EE87F1CB10AD /* EmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F37D451DD7DC4A2D062680B /* EmptyStateView.swift */; };
+		F7E992BC635FE2B536544178 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23EE1C1584D904A0F38CB3B9 /* MainTabView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		07E132B4B93E519E726DFE16 /* AccessibilityModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityModifiers.swift; sourceTree = "<group>"; };
+		0DF5D040DF52725CD4619475 /* ShimmerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerView.swift; sourceTree = "<group>"; };
+		19499DF8BAEC2B8AB272A012 /* SimulationDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulationDetailView.swift; sourceTree = "<group>"; };
+		21C5EC553E6607A760ADB361 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		23EE1C1584D904A0F38CB3B9 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		2B63768A5241307C7E11716A /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		2F3004FAAC403F4303D229A4 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		316BF46BD2C1795F890CC80F /* AddSavingsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSavingsSheet.swift; sourceTree = "<group>"; };
+		3747100871CD8B9E6851ED06 /* SimulationTemplatePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulationTemplatePickerView.swift; sourceTree = "<group>"; };
+		3972696C1BCDCE1A67A6F81D /* SavvyDesignSystem */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SavvyDesignSystem; path = Packages/Core/SavvyDesignSystem; sourceTree = SOURCE_ROOT; };
+		3AEC3E47294C0D7FDA268EFF /* SavvyFoundation */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SavvyFoundation; path = Packages/Core/SavvyFoundation; sourceTree = SOURCE_ROOT; };
+		3B89FD6361689563F123DB9B /* BalanceSummaryWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalanceSummaryWidget.swift; sourceTree = "<group>"; };
+		3F9DA0376E1778C66AE141DA /* SavvyHeroNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavvyHeroNumber.swift; sourceTree = "<group>"; };
+		55387BEBA22691FD78685CBF /* SharedDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDataManager.swift; sourceTree = "<group>"; };
+		71334710C229B7DD8919AA6D /* SharedDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDataManager.swift; sourceTree = "<group>"; };
+		8625AFA6DFF7B15024FE055E /* Dependencies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dependencies.swift; sourceTree = "<group>"; };
+		8B5D7D9897B5E877F7B7270D /* AddIncomeSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddIncomeSheet.swift; sourceTree = "<group>"; };
+		8BDD82A80DA51E1ED3885945 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		9AB40A01B8227E77958D9B26 /* CheckBudgetIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckBudgetIntent.swift; sourceTree = "<group>"; };
+		9F37D451DD7DC4A2D062680B /* EmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyStateView.swift; sourceTree = "<group>"; };
+		A33265157FE15BA2B1EA902C /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		A72CBC08E0CC6F93FEB63584 /* AddExpenseSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddExpenseSheet.swift; sourceTree = "<group>"; };
+		B23A70775FF5CC0383E9A325 /* SavvyWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SavvyWidgets.entitlements; sourceTree = "<group>"; };
+		BA5E83E44EB5CC6D39486A49 /* TransactionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsView.swift; sourceTree = "<group>"; };
+		C16235E77448DEE8286DF73A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		C63922396E36C7FC9493FCF1 /* GoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsView.swift; sourceTree = "<group>"; };
+		C78926BD9283EDA09B22A95A /* MonthlyOverviewWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthlyOverviewWidget.swift; sourceTree = "<group>"; };
+		C86911EA45992C3A0107F2CF /* Savvy.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Savvy.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D529A65C364461B5347E3BCB /* SavvyNetworking */ = {isa = PBXFileReference; lastKnownFileType = folder; name = SavvyNetworking; path = Packages/Core/SavvyNetworking; sourceTree = SOURCE_ROOT; };
+		D7FE93EE23CBCFC911BEF767 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
+		D8A6F0473EFCA8226ADB2873 /* TrendChartView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendChartView.swift; sourceTree = "<group>"; };
+		D8D664D7477A5B965F216B24 /* AddExpenseIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddExpenseIntent.swift; sourceTree = "<group>"; };
+		DAFF4144241AD5FE652466E8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		DCC6A3239A9DE3A7E074F18B /* SavvyShortcutsProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavvyShortcutsProvider.swift; sourceTree = "<group>"; };
+		DEE2D8C968EBAB0DC1D4B540 /* BudgetOverviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetOverviewView.swift; sourceTree = "<group>"; };
+		E3BA7F9D5716A9CBC984C708 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		E44EE814A8FDAC14C2D6BC18 /* SavvyWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = SavvyWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		E5F0A4B780561C00928B7F38 /* SavvyWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavvyWidgetBundle.swift; sourceTree = "<group>"; };
+		F63F367BBCEFAEAC10C2FCE4 /* ForgotPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotPasswordView.swift; sourceTree = "<group>"; };
+		F8DFB55DE46C81FB9C2FF925 /* SavvyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavvyApp.swift; sourceTree = "<group>"; };
+		F90EA37087776158BA1FD6FE /* SimulationListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulationListView.swift; sourceTree = "<group>"; };
+		FEFF9234EA5E2D3D8AB7AF98 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		969B817D839BD565AABB79D9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45971A39E3FEBD3D3A567221 /* SavvyFoundation in Frameworks */,
+				86C7A7CF07425EB134354859 /* SavvyDesignSystem in Frameworks */,
+				4B2A626DA48CD58E4E9E00B1 /* SavvyNetworking in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0222C7DDC4923878ED0B7256 /* SavvyWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				3B89FD6361689563F123DB9B /* BalanceSummaryWidget.swift */,
+				C16235E77448DEE8286DF73A /* Info.plist */,
+				C78926BD9283EDA09B22A95A /* MonthlyOverviewWidget.swift */,
+				E5F0A4B780561C00928B7F38 /* SavvyWidgetBundle.swift */,
+				B23A70775FF5CC0383E9A325 /* SavvyWidgets.entitlements */,
+				71334710C229B7DD8919AA6D /* SharedDataManager.swift */,
+			);
+			path = SavvyWidgets;
+			sourceTree = "<group>";
+		};
+		0528AED08F4139A6C5AEBA89 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				8625AFA6DFF7B15024FE055E /* Dependencies.swift */,
+				F8DFB55DE46C81FB9C2FF925 /* SavvyApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		1B01F98A6D023280384BB94A /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				8BDD82A80DA51E1ED3885945 /* DashboardView.swift */,
+				D8A6F0473EFCA8226ADB2873 /* TrendChartView.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		21F557F7FFDEFCF6D7E9F5FA /* Transactions */ = {
+			isa = PBXGroup;
+			children = (
+				A72CBC08E0CC6F93FEB63584 /* AddExpenseSheet.swift */,
+				8B5D7D9897B5E877F7B7270D /* AddIncomeSheet.swift */,
+				316BF46BD2C1795F890CC80F /* AddSavingsSheet.swift */,
+				BA5E83E44EB5CC6D39486A49 /* TransactionsView.swift */,
+			);
+			path = Transactions;
+			sourceTree = "<group>";
+		};
+		28D3A16E2EB69AA5E174B7C3 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				D8D664D7477A5B965F216B24 /* AddExpenseIntent.swift */,
+				9AB40A01B8227E77958D9B26 /* CheckBudgetIntent.swift */,
+				DCC6A3239A9DE3A7E074F18B /* SavvyShortcutsProvider.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
+		3E01FBB1A167ED36270625AC /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				55387BEBA22691FD78685CBF /* SharedDataManager.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		4BB9B3DA4FE1FB9773668EA9 /* Budget */ = {
+			isa = PBXGroup;
+			children = (
+				DEE2D8C968EBAB0DC1D4B540 /* BudgetOverviewView.swift */,
+			);
+			path = Budget;
+			sourceTree = "<group>";
+		};
+		6140F802AFBC113762B997F1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C86911EA45992C3A0107F2CF /* Savvy.app */,
+				E44EE814A8FDAC14C2D6BC18 /* SavvyWidgets.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		666CAFD3B4DD466C7C078CE9 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				F63F367BBCEFAEAC10C2FCE4 /* ForgotPasswordView.swift */,
+				2F3004FAAC403F4303D229A4 /* LoginView.swift */,
+				D7FE93EE23CBCFC911BEF767 /* RegisterView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		6BB3A6DA318808349910EAE0 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				E3BA7F9D5716A9CBC984C708 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		6F3232BA74433E078D2F3B4E /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				2B63768A5241307C7E11716A /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		82B39B4AA608D203517F6104 /* Notifications */ = {
+			isa = PBXGroup;
+			children = (
+				21C5EC553E6607A760ADB361 /* NotificationManager.swift */,
+			);
+			path = Notifications;
+			sourceTree = "<group>";
+		};
+		8CB2307767E6A3FFCFABE834 = {
+			isa = PBXGroup;
+			children = (
+				8FC0EDEC7632F8A7DE75EF27 /* Packages */,
+				D2D105B551319BF44E31F522 /* Savvy */,
+				0222C7DDC4923878ED0B7256 /* SavvyWidgets */,
+				6140F802AFBC113762B997F1 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		8FC0EDEC7632F8A7DE75EF27 /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+				3972696C1BCDCE1A67A6F81D /* SavvyDesignSystem */,
+				3AEC3E47294C0D7FDA268EFF /* SavvyFoundation */,
+				D529A65C364461B5347E3BCB /* SavvyNetworking */,
+			);
+			path = Packages;
+			sourceTree = "<group>";
+		};
+		AFDD9F21DB4FE3961D6EB312 /* Screens */ = {
+			isa = PBXGroup;
+			children = (
+				666CAFD3B4DD466C7C078CE9 /* Auth */,
+				4BB9B3DA4FE1FB9773668EA9 /* Budget */,
+				1B01F98A6D023280384BB94A /* Dashboard */,
+				DA0B2962F9A0FC95B158D6F2 /* Goals */,
+				6F3232BA74433E078D2F3B4E /* Onboarding */,
+				6BB3A6DA318808349910EAE0 /* Settings */,
+				C93A57343F43AB754E77259B /* Simulation */,
+				21F557F7FFDEFCF6D7E9F5FA /* Transactions */,
+				23EE1C1584D904A0F38CB3B9 /* MainTabView.swift */,
+			);
+			path = Screens;
+			sourceTree = "<group>";
+		};
+		C93A57343F43AB754E77259B /* Simulation */ = {
+			isa = PBXGroup;
+			children = (
+				19499DF8BAEC2B8AB272A012 /* SimulationDetailView.swift */,
+				F90EA37087776158BA1FD6FE /* SimulationListView.swift */,
+				3747100871CD8B9E6851ED06 /* SimulationTemplatePickerView.swift */,
+			);
+			path = Simulation;
+			sourceTree = "<group>";
+		};
+		D2D105B551319BF44E31F522 /* Savvy */ = {
+			isa = PBXGroup;
+			children = (
+				0528AED08F4139A6C5AEBA89 /* App */,
+				DAF47810680DA4AD6B4CC4A3 /* Components */,
+				28D3A16E2EB69AA5E174B7C3 /* Intents */,
+				82B39B4AA608D203517F6104 /* Notifications */,
+				AFDD9F21DB4FE3961D6EB312 /* Screens */,
+				3E01FBB1A167ED36270625AC /* Shared */,
+				FEFF9234EA5E2D3D8AB7AF98 /* Assets.xcassets */,
+				A33265157FE15BA2B1EA902C /* GoogleService-Info.plist */,
+				DAFF4144241AD5FE652466E8 /* Info.plist */,
+			);
+			path = Savvy;
+			sourceTree = "<group>";
+		};
+		DA0B2962F9A0FC95B158D6F2 /* Goals */ = {
+			isa = PBXGroup;
+			children = (
+				C63922396E36C7FC9493FCF1 /* GoalsView.swift */,
+			);
+			path = Goals;
+			sourceTree = "<group>";
+		};
+		DAF47810680DA4AD6B4CC4A3 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				07E132B4B93E519E726DFE16 /* AccessibilityModifiers.swift */,
+				9F37D451DD7DC4A2D062680B /* EmptyStateView.swift */,
+				3F9DA0376E1778C66AE141DA /* SavvyHeroNumber.swift */,
+				0DF5D040DF52725CD4619475 /* ShimmerView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4EAFCE1F565B6AE41D40A143 /* Savvy */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7E089D9F385393A2A7C1A3C2 /* Build configuration list for PBXNativeTarget "Savvy" */;
+			buildPhases = (
+				59533979B1ACD602336E6548 /* Sources */,
+				744D378E3FDD80759879481F /* Resources */,
+				969B817D839BD565AABB79D9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Savvy;
+			packageProductDependencies = (
+				0B07E28BD88CBEEA35935687 /* SavvyFoundation */,
+				03C2E2332A8AD93FF9AE0D1A /* SavvyDesignSystem */,
+				314151E122777636C567D5C6 /* SavvyNetworking */,
+			);
+			productName = Savvy;
+			productReference = C86911EA45992C3A0107F2CF /* Savvy.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B95577E23A95A119A710F20D /* SavvyWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1A78CBA1136FA357859A3337 /* Build configuration list for PBXNativeTarget "SavvyWidgets" */;
+			buildPhases = (
+				BBB2A3BE5A5C8B6EC949D5AD /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SavvyWidgets;
+			packageProductDependencies = (
+			);
+			productName = SavvyWidgets;
+			productReference = E44EE814A8FDAC14C2D6BC18 /* SavvyWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		775E741FA43009B30022A3F7 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					4EAFCE1F565B6AE41D40A143 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					B95577E23A95A119A710F20D = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 921C6E690575BDB5B33540BC /* Build configuration list for PBXProject "Savvy" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 8CB2307767E6A3FFCFABE834;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				5F0F228B7B5D4A7BE8EF460B /* XCLocalSwiftPackageReference "Packages/Core/SavvyDesignSystem" */,
+				9428A2E8F40B9E6522FB8C94 /* XCLocalSwiftPackageReference "Packages/Core/SavvyFoundation" */,
+				C6C9C2B73E6CC5A8B832B136 /* XCLocalSwiftPackageReference "Packages/Core/SavvyNetworking" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 6140F802AFBC113762B997F1 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4EAFCE1F565B6AE41D40A143 /* Savvy */,
+				B95577E23A95A119A710F20D /* SavvyWidgets */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		744D378E3FDD80759879481F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				16F90E6E1ABCD49C95192AA8 /* Assets.xcassets in Resources */,
+				53DE25E33E8C59ADC9D2D624 /* GoogleService-Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		59533979B1ACD602336E6548 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC6B273712A6C80C2EC1B324 /* AccessibilityModifiers.swift in Sources */,
+				74C2BA6ECBDA2D6B351D6389 /* AddExpenseIntent.swift in Sources */,
+				9AD6C708620057503675F27F /* AddExpenseSheet.swift in Sources */,
+				373CB77DC8B21F6A6DD545D7 /* AddIncomeSheet.swift in Sources */,
+				5CF33140E2A8428A920C9F33 /* AddSavingsSheet.swift in Sources */,
+				46EDC166726B9D27C4382C7A /* BudgetOverviewView.swift in Sources */,
+				987C95664B6E6A01EEABFE50 /* CheckBudgetIntent.swift in Sources */,
+				9F6D4F9C7728BB58ED2A8168 /* DashboardView.swift in Sources */,
+				6763E1632C3A8DA5872F1679 /* Dependencies.swift in Sources */,
+				F569C6ECC8B6EE87F1CB10AD /* EmptyStateView.swift in Sources */,
+				8939A404AC03D06ACCFF28C8 /* ForgotPasswordView.swift in Sources */,
+				E98D116C2D655FBC74771D4B /* GoalsView.swift in Sources */,
+				B66E260F827D97CE3357DF9A /* LoginView.swift in Sources */,
+				F7E992BC635FE2B536544178 /* MainTabView.swift in Sources */,
+				F0BD283EFFDF33A93C6060F4 /* NotificationManager.swift in Sources */,
+				646C9236C219BF186C0F1DF5 /* OnboardingView.swift in Sources */,
+				68854B014E7C90E234920C28 /* RegisterView.swift in Sources */,
+				6F9A4CFFA147E3720AFE65AB /* SavvyApp.swift in Sources */,
+				DF5ADDB203D30621B2817CC2 /* SavvyHeroNumber.swift in Sources */,
+				CF1BC8350025AB1C57916846 /* SavvyShortcutsProvider.swift in Sources */,
+				4C96D1ABFE56BBA3A06703BB /* SettingsView.swift in Sources */,
+				C1FBCBD090F787CD88D89495 /* SharedDataManager.swift in Sources */,
+				55A41259CD7B04DD509DFD9F /* ShimmerView.swift in Sources */,
+				5C4D7C8F6CD5C000D7857882 /* SimulationDetailView.swift in Sources */,
+				578FB9C75F89F63E0FC98DD8 /* SimulationListView.swift in Sources */,
+				EB12F604CC5C8403C3FF0143 /* SimulationTemplatePickerView.swift in Sources */,
+				BF1C1B84FD82A72E4FC87652 /* TransactionsView.swift in Sources */,
+				13C1219B33C04C5BB56DE1CF /* TrendChartView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BBB2A3BE5A5C8B6EC949D5AD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				47291BEB7129E293946B5AE3 /* BalanceSummaryWidget.swift in Sources */,
+				853E53560D385FF70FF1C149 /* MonthlyOverviewWidget.swift in Sources */,
+				189D546B063F3CB18D61D9E5 /* SavvyWidgetBundle.swift in Sources */,
+				73D0EB96712EEF9088EC19DA /* SharedDataManager.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		26ED28FD427845DB15C4AEBC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGNING_REQUIRED = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.10;
+			};
+			name = Debug;
+		};
+		393C41601A8A7375B5FDE37A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SavvyWidgets/Info.plist;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.savvy.savvy.widgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5BC0DA6EC51C847B52987D29 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SavvyWidgets/Info.plist;
+				INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.savvy.savvy.widgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		91A9820BB8C81CBDEEDCD03D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Savvy/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.savvy.savvy;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		DD41625DF9B1F61ECA2CAE2A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Savvy/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.savvy.savvy;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		E7A7373C729268FA1BFE4841 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGNING_ALLOWED = YES;
+				CODE_SIGNING_REQUIRED = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.10;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1A78CBA1136FA357859A3337 /* Build configuration list for PBXNativeTarget "SavvyWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				393C41601A8A7375B5FDE37A /* Debug */,
+				5BC0DA6EC51C847B52987D29 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7E089D9F385393A2A7C1A3C2 /* Build configuration list for PBXNativeTarget "Savvy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DD41625DF9B1F61ECA2CAE2A /* Debug */,
+				91A9820BB8C81CBDEEDCD03D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		921C6E690575BDB5B33540BC /* Build configuration list for PBXProject "Savvy" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				26ED28FD427845DB15C4AEBC /* Debug */,
+				E7A7373C729268FA1BFE4841 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		5F0F228B7B5D4A7BE8EF460B /* XCLocalSwiftPackageReference "Packages/Core/SavvyDesignSystem" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Core/SavvyDesignSystem;
+		};
+		9428A2E8F40B9E6522FB8C94 /* XCLocalSwiftPackageReference "Packages/Core/SavvyFoundation" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Core/SavvyFoundation;
+		};
+		C6C9C2B73E6CC5A8B832B136 /* XCLocalSwiftPackageReference "Packages/Core/SavvyNetworking" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/Core/SavvyNetworking;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		03C2E2332A8AD93FF9AE0D1A /* SavvyDesignSystem */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SavvyDesignSystem;
+		};
+		0B07E28BD88CBEEA35935687 /* SavvyFoundation */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SavvyFoundation;
+		};
+		314151E122777636C567D5C6 /* SavvyNetworking */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SavvyNetworking;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 775E741FA43009B30022A3F7 /* Project object */;
+}
