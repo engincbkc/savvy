@@ -668,7 +668,7 @@ class _SimpleIncomeSummary extends StatelessWidget {
             _IncRow(
               icon: Icons.payments_outlined,
               iconColor: accent.withValues(alpha: 0.6),
-              label: 'Diğer gelirler',
+              label: 'Bu ayki gelirler',
               value: CurrencyFormatter.formatNoDecimal(otherTotal),
               detail: total > 0
                   ? '%${(otherTotal / total * 100).toStringAsFixed(0)}'

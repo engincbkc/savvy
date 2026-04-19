@@ -135,6 +135,7 @@ class _MonthlyDetailBreakdownScreenState
                     expenses: expenses,
                     savingsAsync: savingsAsync,
                     isLoading: isLoadingTx,
+                    yearMonth: _selectedYm,
                   ),
 
                   const SizedBox(height: AppSpacing.xl5),
@@ -346,12 +347,14 @@ class _TransactionList extends ConsumerWidget {
   final List<dynamic> expenses;
   final AsyncValue<List<dynamic>> savingsAsync;
   final bool isLoading;
+  final String yearMonth;
 
   const _TransactionList({
     required this.incomes,
     required this.expenses,
     required this.savingsAsync,
     required this.isLoading,
+    required this.yearMonth,
   });
 
   @override
@@ -387,6 +390,8 @@ class _TransactionList extends ConsumerWidget {
             type: _TxType.income,
             date: i.date,
             isSettled: i.isSettled,
+            isRecurring: i.isRecurring,
+            yearMonth: yearMonth,
           )),
       ...expenses.map((e) => _TxItem(
             id: e.id,
@@ -396,6 +401,8 @@ class _TransactionList extends ConsumerWidget {
             type: _TxType.expense,
             date: e.date,
             isSettled: e.isSettled,
+            isRecurring: e.isRecurring,
+            yearMonth: yearMonth,
           )),
       ...savings.map((s) => _TxItem(
             id: s.id,
@@ -405,6 +412,8 @@ class _TransactionList extends ConsumerWidget {
             type: _TxType.savings,
             date: s.date,
             isSettled: true,
+            isRecurring: false,
+            yearMonth: yearMonth,
           )),
     ]..sort((a, b) => b.date.compareTo(a.date));
 
@@ -494,13 +503,21 @@ class _TransactionList extends ConsumerWidget {
                         final newVal = !item.isSettled;
                         switch (item.type) {
                           case _TxType.income:
-                            ref
-                                .read(incomeRepositoryProvider)
-                                .setSettled(item.id, newVal);
+                            if (item.isRecurring) {
+                              ref.read(incomeRepositoryProvider)
+                                  .setMonthSettled(item.id, item.yearMonth, newVal);
+                            } else {
+                              ref.read(incomeRepositoryProvider)
+                                  .setSettled(item.id, newVal);
+                            }
                           case _TxType.expense:
-                            ref
-                                .read(expenseRepositoryProvider)
-                                .setSettled(item.id, newVal);
+                            if (item.isRecurring) {
+                              ref.read(expenseRepositoryProvider)
+                                  .setMonthSettled(item.id, item.yearMonth, newVal);
+                            } else {
+                              ref.read(expenseRepositoryProvider)
+                                  .setSettled(item.id, newVal);
+                            }
                           case _TxType.savings:
                             break;
                         }
@@ -613,6 +630,8 @@ class _TxItem {
   final _TxType type;
   final DateTime date;
   final bool isSettled;
+  final bool isRecurring;
+  final String yearMonth;
 
   _TxItem({
     required this.id,
@@ -622,5 +641,7 @@ class _TxItem {
     required this.type,
     required this.date,
     required this.isSettled,
+    required this.isRecurring,
+    required this.yearMonth,
   });
 }

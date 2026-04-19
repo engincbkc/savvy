@@ -101,17 +101,26 @@ List<Income> effectiveMonthIncomes(Ref ref, String yearMonth) {
   for (final i in allInc) {
     final startYm = i.date.toYearMonth();
 
+    // Resolve isSettled for this specific month
+    bool resolveSettled(Income inc, String ym) {
+      if (inc.isRecurring && inc.settledMonths.containsKey(ym)) {
+        return inc.settledMonths[ym]!;
+      }
+      return inc.isSettled;
+    }
+
     if (startYm == yearMonth) {
-      // Original month — use override amount if available
       final amt = i.monthlyOverrides[yearMonth] ?? i.amount;
       final net = FinancialCalculator.resolveNetForMonth(
         amount: amt,
         isGross: i.isGross,
         month: i.date.month,
       );
-      result.add(i.copyWith(amount: net));
+      result.add(i.copyWith(
+        amount: net,
+        isSettled: resolveSettled(i, yearMonth),
+      ));
     } else if (i.isRecurring && startYm.compareTo(yearMonth) < 0) {
-      // Recurring item projected into this month
       final endDate = i.recurringEndDate;
       final projLimit = endDate != null
           ? ((endDate.year - i.date.year) * 12 +
@@ -119,7 +128,6 @@ List<Income> effectiveMonthIncomes(Ref ref, String yearMonth) {
               .clamp(1, 240)
           : (i.isGross ? 60 : 12);
 
-      // Check if yearMonth falls within projection range
       final ymParts = yearMonth.split('-');
       final ymY = int.parse(ymParts[0]);
       final ymM = int.parse(ymParts[1]);
@@ -140,6 +148,7 @@ List<Income> effectiveMonthIncomes(Ref ref, String yearMonth) {
         result.add(i.copyWith(
           amount: net,
           date: DateTime(ymY, ymM, i.date.day),
+          isSettled: resolveSettled(i, yearMonth),
         ));
       }
     }
@@ -157,9 +166,19 @@ List<Expense> effectiveMonthExpenses(Ref ref, String yearMonth) {
   for (final e in allExp) {
     final startYm = e.date.toYearMonth();
 
+    bool resolveSettled(Expense exp, String ym) {
+      if (exp.isRecurring && exp.settledMonths.containsKey(ym)) {
+        return exp.settledMonths[ym]!;
+      }
+      return exp.isSettled;
+    }
+
     if (startYm == yearMonth) {
       final amt = e.monthlyOverrides[yearMonth] ?? e.amount;
-      result.add(e.copyWith(amount: amt));
+      result.add(e.copyWith(
+        amount: amt,
+        isSettled: resolveSettled(e, yearMonth),
+      ));
     } else if (e.isRecurring && startYm.compareTo(yearMonth) < 0) {
       final endDate = e.recurringEndDate;
       final projLimit = endDate != null
@@ -183,6 +202,7 @@ List<Expense> effectiveMonthExpenses(Ref ref, String yearMonth) {
         result.add(e.copyWith(
           amount: amt,
           date: DateTime(ymY, ymM, e.date.day),
+          isSettled: resolveSettled(e, yearMonth),
         ));
       }
     }

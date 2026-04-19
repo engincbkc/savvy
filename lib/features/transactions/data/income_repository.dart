@@ -95,6 +95,10 @@ class IncomeRepository implements BaseRepository<Income> {
     await _collection.doc(id).update({'isSettled': isSettled});
   }
 
+  Future<void> setMonthSettled(String id, String yearMonth, bool settled) async {
+    await _collection.doc(id).update({'settledMonths.$yearMonth': settled});
+  }
+
   /// Batch soft-delete multiple records at once.
   Future<void> softDeleteMany(List<String> ids) async {
     final batch = _firestore.batch();

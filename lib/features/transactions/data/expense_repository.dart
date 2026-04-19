@@ -85,6 +85,10 @@ class ExpenseRepository implements BaseRepository<Expense> {
     await _collection.doc(id).update({'isSettled': isSettled});
   }
 
+  Future<void> setMonthSettled(String id, String yearMonth, bool settled) async {
+    await _collection.doc(id).update({'settledMonths.$yearMonth': settled});
+  }
+
   @override
   Future<void> softDelete(String id) async {
     await _collection.doc(id).update({'isDeleted': true}); // BL-007
