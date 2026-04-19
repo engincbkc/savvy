@@ -23,6 +23,8 @@ abstract class Expense with _$Expense {
     /// Key: "YYYY-MM", Value: override amount for that month.
     /// Months not present use the default [amount].
     @Default({}) Map<String, double> monthlyOverrides,
+    /// true = ödendi (gider ödendi), false = beklemede
+    @Default(false) bool isSettled,
   }) = _Expense;
 
   factory Expense.fromJson(Map<String, dynamic> json) =>

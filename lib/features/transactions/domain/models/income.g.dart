@@ -26,6 +26,7 @@ _Income _$IncomeFromJson(Map<String, dynamic> json) => _Income(
         (k, e) => MapEntry(k, (e as num).toDouble()),
       ) ??
       const {},
+  isSettled: json['isSettled'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$IncomeToJson(_Income instance) => <String, dynamic>{
@@ -42,6 +43,7 @@ Map<String, dynamic> _$IncomeToJson(_Income instance) => <String, dynamic>{
   'isDeleted': instance.isDeleted,
   'createdAt': instance.createdAt.toIso8601String(),
   'monthlyOverrides': instance.monthlyOverrides,
+  'isSettled': instance.isSettled,
 };
 
 const _$IncomeCategoryEnumMap = {

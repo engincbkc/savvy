@@ -148,6 +148,7 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
       isRecurring: _isRecurring,
       recurringEndDate: _recurringEndDate,
       createdAt: DateTime.now(),
+      isSettled: !_date.isAfter(DateTime.now()),
     );
 
     final success =

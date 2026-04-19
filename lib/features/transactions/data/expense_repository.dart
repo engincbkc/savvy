@@ -81,6 +81,10 @@ class ExpenseRepository implements BaseRepository<Expense> {
     });
   }
 
+  Future<void> setSettled(String id, bool isSettled) async {
+    await _collection.doc(id).update({'isSettled': isSettled});
+  }
+
   @override
   Future<void> softDelete(String id) async {
     await _collection.doc(id).update({'isDeleted': true}); // BL-007

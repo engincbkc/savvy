@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:savvy/core/providers/repository_providers.dart';
 import 'package:savvy/core/utils/financial_calculator.dart';
@@ -151,6 +153,44 @@ int? simulationMaxTermMonths(SimulationEntry sim) {
   return maxTerm;
 }
 
+/// Calculates the monthly income impact of a simulation (salary change, income, investment).
+double simulationMonthlyIncome(SimulationEntry sim) {
+  double total = 0;
+  for (final change in sim.changes) {
+    switch (change) {
+      case SalaryChangeChange():
+        final currentNets = FinancialCalculator.resolveAllMonths(
+          amount: change.currentGross, isGross: true,
+        );
+        final newNets = FinancialCalculator.resolveAllMonths(
+          amount: change.newGross, isGross: true,
+        );
+        final currentAvg = currentNets.reduce((a, b) => a + b) / 12;
+        final newAvg = newNets.reduce((a, b) => a + b) / 12;
+        total += (newAvg - currentAvg);
+      case IncomeChange():
+        total += change.amount;
+      case InvestmentChange():
+        final rate = change.annualReturnRate / 100;
+        if (change.isCompound) {
+          final monthlyRate = rate / 12;
+          final totalReturn = change.principal *
+              (pow(1 + monthlyRate, change.termMonths) - 1);
+          total += totalReturn / change.termMonths;
+        } else {
+          total += change.principal * rate / 12;
+        }
+      case RentChangeChange():
+        // Kira değişimi: yeni kira > eski ise gider artışı (zaten expense'te),
+        // ama eski > yeni ise gider azalması = gelir etkisi gibi
+        break;
+      default:
+        break;
+    }
+  }
+  return total;
+}
+
 /// Future projections that include "included" simulations.
 @riverpod
 List<MonthSummary> simulationAwareProjections(Ref ref) {
@@ -161,13 +201,6 @@ List<MonthSummary> simulationAwareProjections(Ref ref) {
   final included = sims.where((s) => s.isIncluded).toList();
   if (included.isEmpty) return baseProjections;
 
-  double totalSimExpense = 0;
-  for (final sim in included) {
-    totalSimExpense += simulationMonthlyPayment(sim);
-  }
-
-  if (totalSimExpense <= 0) return baseProjections;
-
   double cumulativeAdjustment = 0;
   return baseProjections.map((proj) {
     final range = YearMonthRange.from(proj.yearMonth);
@@ -176,25 +209,30 @@ List<MonthSummary> simulationAwareProjections(Ref ref) {
     final monthsFromNow =
         (projDate.year - now.year) * 12 + projDate.month - now.month;
 
-    double monthExtra = 0;
+    double monthExtraExpense = 0;
+    double monthExtraIncome = 0;
     for (final sim in included) {
       final termMonths = simulationMaxTermMonths(sim);
       if (termMonths != null && monthsFromNow > termMonths) continue;
-      monthExtra += simulationMonthlyPayment(sim);
+      monthExtraExpense += simulationMonthlyPayment(sim);
+      monthExtraIncome += simulationMonthlyIncome(sim);
     }
 
-    final newExpense = proj.totalExpense + monthExtra;
-    final newNet = proj.totalIncome - newExpense;
-    cumulativeAdjustment += -monthExtra;
+    final newIncome = proj.totalIncome + monthExtraIncome;
+    final newExpense = proj.totalExpense + monthExtraExpense;
+    final newNet = newIncome - newExpense;
+    final netImpact = monthExtraIncome - monthExtraExpense;
+    cumulativeAdjustment += netImpact;
     final newCum = proj.netWithCarryOver + cumulativeAdjustment;
-    final savingsRate = proj.totalIncome > 0
-        ? ((proj.totalIncome - newExpense) / proj.totalIncome).clamp(0.0, 1.0)
+    final savingsRate = newIncome > 0
+        ? ((newIncome - newExpense) / newIncome).clamp(0.0, 1.0)
         : 0.0;
-    final expenseRate = proj.totalIncome > 0
-        ? (newExpense / proj.totalIncome).clamp(0.0, 2.0)
+    final expenseRate = newIncome > 0
+        ? (newExpense / newIncome).clamp(0.0, 2.0)
         : 0.0;
 
     return proj.copyWith(
+      totalIncome: newIncome,
       totalExpense: newExpense,
       netBalance: newNet,
       netWithCarryOver: newCum,

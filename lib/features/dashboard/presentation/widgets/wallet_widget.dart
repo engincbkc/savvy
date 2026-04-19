@@ -308,23 +308,9 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
                       : const SizedBox(width: double.infinity),
                 ),
 
-                // SAVVY branding (when closed)
+                // Boşluk (cüzdan kapalıyken alt padding)
                 if (!_isOpen)
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: AppSpacing.lg,
-                      top: AppSpacing.sm,
-                    ),
-                    child: Text(
-                      'SAVVY',
-                      style: AppTypography.headlineLarge.copyWith(
-                        color: walletColor.highlight.withValues(alpha: 0.3),
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 8,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: AppSpacing.xl),
 
                 // Ghost card previews (when open)
                 if (_isOpen) _buildGhostCardArea(walletColor),
@@ -839,99 +825,111 @@ class _WalletWidgetState extends ConsumerState<WalletWidget>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const SizedBox(height: AppSpacing.sm),
+
+        // Bakiye + Donut yan yana
         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Container(
-              width: 6,
-              height: 6,
-              decoration: BoxDecoration(
-                color: widget.cumulativeNet >= 0
-                    ? const Color(0xFF34D399)
-                    : const Color(0xFFFCA5A5),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: (widget.cumulativeNet >= 0
-                            ? const Color(0xFF34D399)
-                            : const Color(0xFFFCA5A5))
-                        .withValues(alpha: 0.6),
-                    blurRadius: 8,
+            // Sol: Bakiye bilgisi
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: widget.cumulativeNet >= 0
+                              ? const Color(0xFF34D399)
+                              : const Color(0xFFFCA5A5),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: (widget.cumulativeNet >= 0
+                                      ? const Color(0xFF34D399)
+                                      : const Color(0xFFFCA5A5))
+                                  .withValues(alpha: 0.6),
+                              blurRadius: 8,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Toplam Bakiye',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: const Color(0xFF94A3B8),
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: AppSpacing.sm),
+                  TweenAnimationBuilder<double>(
+                    tween: Tween(begin: 0, end: widget.cumulativeNet),
+                    duration: AppDuration.countUp,
+                    curve: AppCurve.decelerate,
+                    builder: (context, value, _) => Text(
+                      CurrencyFormatter.formatNoDecimal(value),
+                      style: AppTypography.numericHero.copyWith(
+                        color: Colors.white,
+                        fontSize: 30,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  if (monthNet != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.06),
+                        borderRadius: AppRadius.pill,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.04),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            monthNet >= 0
+                                ? Icons.trending_up_rounded
+                                : Icons.trending_down_rounded,
+                            size: 12,
+                            color: monthNet >= 0
+                                ? const Color(0xFF6EE7B7)
+                                : const Color(0xFFFCA5A5),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Bu ay ${monthNet >= 0 ? '+' : ''}${CurrencyFormatter.formatNoDecimal(monthNet)}',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: const Color(0xFFCBD5E1),
+                              fontWeight: FontWeight.w500,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
-            Text(
-              'Toplam Bakiye',
-              style: AppTypography.labelSmall.copyWith(
-                color: const Color(0xFF94A3B8),
-                letterSpacing: 0.6,
+
+            // Sağ: Donut chart (legend'siz, sadece chart + etiketler etrafında)
+            if (grandTotal > 0)
+              _WalletDonutChart(
+                income: income,
+                expense: expense,
+                savings: savings,
               ),
-            ),
           ],
         ),
-        const SizedBox(height: AppSpacing.md),
-
-        // Balance row
-        TweenAnimationBuilder<double>(
-          tween: Tween(begin: 0, end: widget.cumulativeNet),
-          duration: AppDuration.countUp,
-          curve: AppCurve.decelerate,
-          builder: (context, value, _) => Text(
-            CurrencyFormatter.formatNoDecimal(value),
-            style: AppTypography.numericHero.copyWith(
-              color: Colors.white,
-              fontSize: 32,
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        if (monthNet != null)
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: 5,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.06),
-              borderRadius: AppRadius.pill,
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.04),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  monthNet >= 0
-                      ? Icons.trending_up_rounded
-                      : Icons.trending_down_rounded,
-                  size: 13,
-                  color: monthNet >= 0
-                      ? const Color(0xFF6EE7B7)
-                      : const Color(0xFFFCA5A5),
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  'Bu ay ${monthNet >= 0 ? '+' : ''}${CurrencyFormatter.formatNoDecimal(monthNet)}',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: const Color(0xFFCBD5E1),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-        // Donut chart + legend
-        if (grandTotal > 0) ...[
-          const SizedBox(height: AppSpacing.lg),
-          _WalletDonutChart(
-            income: income,
-            expense: expense,
-            savings: savings,
-          ),
-        ],
       ],
     );
   }
@@ -1089,38 +1087,39 @@ class _WalletDonutChart extends StatelessWidget {
     final total = income + expense + savings;
     if (total <= 0) return const SizedBox.shrink();
 
-    final incomePct = (income / total * 100);
-    final expensePct = (expense / total * 100);
-    final savingsPct = (savings / total * 100);
+    final incomePct = (income / total * 100).round();
+    final expensePct = (expense / total * 100).round();
+    final savingsPct = (savings / total * 100).round();
 
     final sections = <PieChartSectionData>[
       PieChartSectionData(
         value: income,
         color: _incomeColor,
-        radius: 14,
+        radius: 12,
         showTitle: false,
       ),
       PieChartSectionData(
         value: expense,
         color: _expenseColor,
-        radius: 14,
+        radius: 12,
         showTitle: false,
       ),
       if (savings > 0)
         PieChartSectionData(
           value: savings,
           color: _savingsColor,
-          radius: 14,
+          radius: 12,
           showTitle: false,
         ),
     ];
 
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // Chart
+        // Donut chart — sol
         SizedBox(
-          width: 110,
-          height: 110,
+          width: 80,
+          height: 80,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -1128,12 +1127,11 @@ class _WalletDonutChart extends StatelessWidget {
                 PieChartData(
                   sections: sections,
                   sectionsSpace: 2,
-                  centerSpaceRadius: 36,
+                  centerSpaceRadius: 24,
                   startDegreeOffset: -90,
                   borderData: FlBorderData(show: false),
                 ),
               ),
-              // Center: net balance indicator
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1141,17 +1139,17 @@ class _WalletDonutChart extends StatelessWidget {
                     'Net',
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 9,
+                      fontSize: 8,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   Text(
-                    '%${incomePct > expensePct ? '+' : ''}${(incomePct - expensePct).toStringAsFixed(0)}',
+                    '%${incomePct > expensePct ? '+' : ''}${incomePct - expensePct}',
                     style: TextStyle(
                       color: incomePct >= expensePct
                           ? _incomeColor
                           : _expenseColor,
-                      fontSize: 14,
+                      fontSize: 12,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -1160,102 +1158,66 @@ class _WalletDonutChart extends StatelessWidget {
             ],
           ),
         ),
-
-        const SizedBox(width: 12),
-
-        // Legend with amounts and percentages
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _LegendRow(
-                color: _incomeColor,
-                label: 'Gelir',
-                amount: income,
-                percentage: incomePct,
-              ),
-              const SizedBox(height: 8),
-              _LegendRow(
-                color: _expenseColor,
-                label: 'Gider',
-                amount: expense,
-                percentage: expensePct,
-              ),
-              if (savings > 0) ...[
-                const SizedBox(height: 8),
-                _LegendRow(
-                  color: _savingsColor,
-                  label: 'Birikim',
-                  amount: savings,
-                  percentage: savingsPct,
-                ),
-              ],
+        const SizedBox(width: 10),
+        // Legend — sağ
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _DonutLabel(label: 'Gelir', pct: incomePct, color: _incomeColor),
+            const SizedBox(height: 6),
+            _DonutLabel(label: 'Gider', pct: expensePct, color: _expenseColor),
+            if (savings > 0) ...[
+              const SizedBox(height: 6),
+              _DonutLabel(label: 'Birikim', pct: savingsPct, color: _savingsColor),
             ],
-          ),
+          ],
         ),
       ],
     );
   }
 }
 
-class _LegendRow extends StatelessWidget {
-  final Color color;
+class _DonutLabel extends StatelessWidget {
   final String label;
-  final double amount;
-  final double percentage;
+  final int pct;
+  final Color color;
 
-  const _LegendRow({
-    required this.color,
+  const _DonutLabel({
     required this.label,
-    required this.amount,
-    required this.percentage,
+    required this.pct,
+    required this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 8,
-          height: 8,
+          width: 6,
+          height: 6,
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(2),
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 5),
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.6),
-            fontSize: 11,
+            color: Colors.white.withValues(alpha: 0.7),
+            fontSize: 10,
             fontWeight: FontWeight.w500,
           ),
         ),
-        const Spacer(),
+        const SizedBox(width: 4),
         Text(
-          CurrencyFormatter.compact(amount),
+          '%$pct',
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.9),
-            fontSize: 12,
+            color: color,
+            fontSize: 10,
             fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(width: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.15),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            '%${percentage.toStringAsFixed(0)}',
-            style: TextStyle(
-              color: color,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-            ),
           ),
         ),
       ],

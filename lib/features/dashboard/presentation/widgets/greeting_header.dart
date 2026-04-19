@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
@@ -81,30 +78,9 @@ class GreetingHeader extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(width: AppSpacing.sm),
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              context.push('/ai-advisor');
-            },
-            child: Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF1A56DB), Color(0xFF7E3AF2)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: AppRadius.chip,
-              ),
-              child: const Icon(
-                LucideIcons.sparkles,
-                size: 16,
-                color: Colors.white,
-              ),
-            ),
-          ),
+          // AI Advisor butonu — şimdilik gizli
+          // const SizedBox(width: AppSpacing.sm),
+          // GestureDetector(...)
         ],
       ),
     );

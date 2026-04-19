@@ -90,6 +90,107 @@ double totalSavingsAmount(Ref ref) {
   return allSav.fold(0.0, (sum, s) => sum + s.amount);
 }
 
+/// Effective incomes for a given month — includes recurring projections.
+/// Returns the actual Income objects that contribute to this month,
+/// with amount adjusted for overrides and gross calculation.
+@riverpod
+List<Income> effectiveMonthIncomes(Ref ref, String yearMonth) {
+  final allInc = ref.watch(allIncomesProvider).value ?? [];
+  final result = <Income>[];
+
+  for (final i in allInc) {
+    final startYm = i.date.toYearMonth();
+
+    if (startYm == yearMonth) {
+      // Original month — use override amount if available
+      final amt = i.monthlyOverrides[yearMonth] ?? i.amount;
+      final net = FinancialCalculator.resolveNetForMonth(
+        amount: amt,
+        isGross: i.isGross,
+        month: i.date.month,
+      );
+      result.add(i.copyWith(amount: net));
+    } else if (i.isRecurring && startYm.compareTo(yearMonth) < 0) {
+      // Recurring item projected into this month
+      final endDate = i.recurringEndDate;
+      final projLimit = endDate != null
+          ? ((endDate.year - i.date.year) * 12 +
+                  endDate.month - i.date.month)
+              .clamp(1, 240)
+          : (i.isGross ? 60 : 12);
+
+      // Check if yearMonth falls within projection range
+      final ymParts = yearMonth.split('-');
+      final ymY = int.parse(ymParts[0]);
+      final ymM = int.parse(ymParts[1]);
+      final monthsDiff =
+          (ymY - i.date.year) * 12 + ymM - i.date.month;
+
+      if (monthsDiff > 0 && monthsDiff <= projLimit) {
+        if (endDate != null) {
+          final futureDate = DateTime(ymY, ymM, 1);
+          if (futureDate.isAfter(endDate)) continue;
+        }
+        final amt = i.monthlyOverrides[yearMonth] ?? i.amount;
+        final net = FinancialCalculator.resolveNetForMonth(
+          amount: amt,
+          isGross: i.isGross,
+          month: ymM,
+        );
+        result.add(i.copyWith(
+          amount: net,
+          date: DateTime(ymY, ymM, i.date.day),
+        ));
+      }
+    }
+  }
+
+  return result;
+}
+
+/// Effective expenses for a given month — includes recurring projections.
+@riverpod
+List<Expense> effectiveMonthExpenses(Ref ref, String yearMonth) {
+  final allExp = ref.watch(allExpensesProvider).value ?? [];
+  final result = <Expense>[];
+
+  for (final e in allExp) {
+    final startYm = e.date.toYearMonth();
+
+    if (startYm == yearMonth) {
+      final amt = e.monthlyOverrides[yearMonth] ?? e.amount;
+      result.add(e.copyWith(amount: amt));
+    } else if (e.isRecurring && startYm.compareTo(yearMonth) < 0) {
+      final endDate = e.recurringEndDate;
+      final projLimit = endDate != null
+          ? ((endDate.year - e.date.year) * 12 +
+                  endDate.month - e.date.month)
+              .clamp(1, 240)
+          : 12;
+
+      final ymParts = yearMonth.split('-');
+      final ymY = int.parse(ymParts[0]);
+      final ymM = int.parse(ymParts[1]);
+      final monthsDiff =
+          (ymY - e.date.year) * 12 + ymM - e.date.month;
+
+      if (monthsDiff > 0 && monthsDiff <= projLimit) {
+        if (endDate != null) {
+          final futureDate = DateTime(ymY, ymM, 1);
+          if (futureDate.isAfter(endDate)) continue;
+        }
+        final amt = e.monthlyOverrides[yearMonth] ?? e.amount;
+        result.add(e.copyWith(
+          amount: amt,
+          date: DateTime(ymY, ymM, e.date.day),
+        ));
+      }
+    }
+  }
+
+  return result;
+}
+
 /// Future month projections based on recurring incomes/expenses.
 /// Uses MonthSummaryAggregator (same engine as buildMonthlyCategoryData)
 /// so dashboard and transactions screens always show consistent numbers.

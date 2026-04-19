@@ -24,6 +24,8 @@ abstract class Income with _$Income {
     /// Key: "YYYY-MM", Value: override amount for that month.
     /// Months not present use the default [amount].
     @Default({}) Map<String, double> monthlyOverrides,
+    /// true = alındı (gelir tahsil edildi), false = beklemede
+    @Default(false) bool isSettled,
   }) = _Income;
 
   factory Income.fromJson(Map<String, dynamic> json) => _$IncomeFromJson(json);

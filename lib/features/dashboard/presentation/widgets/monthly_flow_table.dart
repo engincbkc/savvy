@@ -11,6 +11,23 @@ import 'package:savvy/features/dashboard/domain/models/month_summary.dart';
 import 'package:savvy/core/utils/year_month_helper.dart';
 import 'package:savvy/shared/widgets/data_table_cells.dart';
 import 'package:savvy/shared/widgets/info_tooltip.dart';
+import 'package:savvy/features/simulation/domain/models/simulation_entry.dart';
+import 'package:savvy/features/simulation/presentation/providers/simulation_provider.dart' show simulationMonthlyPayment, simulationMonthlyIncome, simulationMaxTermMonths;
+
+/// Dahil edilen simülasyonların satır bilgisi
+class SimFlowRow {
+  final String label;
+  final double monthlyExpense;
+  final double monthlyIncome;
+  final int? termMonths;
+
+  const SimFlowRow({
+    required this.label,
+    required this.monthlyExpense,
+    required this.monthlyIncome,
+    this.termMonths,
+  });
+}
 
 class MonthlyFlowTable extends StatefulWidget {
   final List<MonthSummary> summaries;
@@ -19,6 +36,7 @@ class MonthlyFlowTable extends StatefulWidget {
   final void Function(String yearMonth) onMonthTap;
   final double? nearestGoalTarget;
   final bool showDetailHint;
+  final List<SimulationEntry> includedSimulations;
 
   const MonthlyFlowTable({
     super.key,
@@ -28,6 +46,7 @@ class MonthlyFlowTable extends StatefulWidget {
     required this.onMonthTap,
     this.nearestGoalTarget,
     this.showDetailHint = true,
+    this.includedSimulations = const [],
   });
 
   @override
@@ -64,10 +83,11 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
     final pastSorted = widget.summaries.reversed.toList();
     final isCurrent = isPast && index == pastSorted.length - 1;
 
-    Navigator.of(context).push(
+    Navigator.of(context, rootNavigator: true).push(
       PageRouteBuilder(
         opaque: false,
         barrierDismissible: true,
+        barrierColor: Colors.transparent,
         pageBuilder: (context, anim, _) {
           return _FullScreenColumnZoom(
             month: month,
@@ -114,11 +134,35 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
     );
   }
 
+  String _simEmoji(SimulationEntry sim) {
+    final name = sim.template?.name ?? sim.type?.name ?? '';
+    return switch (name) {
+      'housing' => '🏠',
+      'car' => '🚗',
+      'credit' => '💳',
+      'rentChange' => '🏠',
+      'salaryChange' => '💼',
+      'investment' => '📈',
+      _ => '⚡',
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final pastSorted = widget.summaries.reversed.toList();
     final allMonths = [...pastSorted, ...widget.projections];
     if (allMonths.isEmpty) return const SizedBox.shrink();
+
+    // Dahil edilen simülasyonların satır bilgilerini hazırla
+    final simRows = <SimFlowRow>[];
+    for (final sim in widget.includedSimulations) {
+      simRows.add(SimFlowRow(
+        label: sim.title,
+        monthlyExpense: simulationMonthlyPayment(sim),
+        monthlyIncome: simulationMonthlyIncome(sim),
+        termMonths: simulationMaxTermMonths(sim),
+      ));
+    }
 
     final rows = <FlowRowConfig>[
       FlowRowConfig('Gelir', AppIcons.income, AppColors.of(context).income),
@@ -126,6 +170,13 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
       if (widget.includeSavings)
         FlowRowConfig(
             'Birikim', AppIcons.savings, AppColors.of(context).savings),
+      // Simülasyon satırları
+      for (final sim in widget.includedSimulations)
+        FlowRowConfig(
+          '${_simEmoji(sim)} ${sim.title}',
+          sim.template?.icon ?? sim.type?.icon ?? Icons.auto_awesome,
+          sim.template?.color ?? sim.type?.color ?? AppColors.of(context).brandPrimary,
+        ),
     ];
 
     final totalH = _headerH +
@@ -355,6 +406,47 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                                           .savings,
                                       height: _rowH,
                                     ),
+                                  // Simülasyon satırları
+                                  ...simRows.map((sr) {
+                                    // Geçmiş aylarda simülasyon etkisi gösterme
+                                    if (isPast) {
+                                      return DataTableCellValue(
+                                        value: 0,
+                                        color: AppColors.of(context).brandPrimary,
+                                        height: _rowH,
+                                      );
+                                    }
+                                    // Tahmini aylarda: term süresi kontrolü
+                                    final now = DateTime.now();
+                                    final monthsFromNow = (s.yearMonth != '')
+                                        ? (() {
+                                            final parts = s.yearMonth.split('-');
+                                            if (parts.length != 2) return 0;
+                                            final y = int.tryParse(parts[0]) ?? now.year;
+                                            final m = int.tryParse(parts[1]) ?? now.month;
+                                            return (y - now.year) * 12 + m - now.month;
+                                          })()
+                                        : 0;
+                                    if (sr.termMonths != null && monthsFromNow > sr.termMonths!) {
+                                      return DataTableCellValue(
+                                        value: 0,
+                                        color: AppColors.of(context).brandPrimary,
+                                        height: _rowH,
+                                      );
+                                    }
+                                    // Net etki = gelir - gider (negatifse gider ağırlıklı)
+                                    final netImpact = sr.monthlyIncome - sr.monthlyExpense;
+                                    return Container(
+                                      color: AppColors.of(context).brandPrimary.withValues(alpha: 0.04),
+                                      child: DataTableCellValue(
+                                        value: netImpact,
+                                        color: netImpact >= 0
+                                            ? AppColors.of(context).income
+                                            : AppColors.of(context).expense,
+                                        height: _rowH,
+                                      ),
+                                    );
+                                  }),
                                   const Divider(height: _dividerH),
                                   Container(
                                     decoration: BoxDecoration(
@@ -538,6 +630,7 @@ class _FullScreenColumnZoom extends StatelessWidget {
         final t = Curves.easeOutCubic.transform(animation.value);
 
         return GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () => Navigator.pop(context),
           child: Stack(
             children: [

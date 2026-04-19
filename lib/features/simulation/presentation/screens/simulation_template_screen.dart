@@ -12,7 +12,6 @@ import 'package:savvy/core/design/tokens/app_animation.dart';
 import 'package:savvy/features/simulation/domain/models/simulation_change.dart';
 import 'package:savvy/features/simulation/domain/models/simulation_entry.dart';
 import 'package:savvy/features/simulation/presentation/providers/simulation_provider.dart';
-import 'package:savvy/features/simulation/presentation/screens/change_sheets.dart';
 import 'package:uuid/uuid.dart';
 
 class SimulationTemplateScreen extends ConsumerStatefulWidget {
@@ -79,91 +78,6 @@ class _SimulationTemplateScreenState
         ],
       SimulationTemplate.custom => [],
     };
-  }
-
-  // ─── Quick Scenario chips ────────────────────────────────────────
-
-  final _quickScenarios = [
-    (
-      icon: LucideIcons.trendingUp,
-      label: 'Maaş %20 artsaydı?',
-      color: const Color(0xFF10B981),
-      changeType: ChangeType.salary,
-    ),
-    (
-      icon: LucideIcons.creditCard,
-      label: '50K kredi çeksem?',
-      color: const Color(0xFFF59E0B),
-      changeType: ChangeType.credit,
-    ),
-    (
-      icon: LucideIcons.building2,
-      label: 'Kiram 5K artarsa?',
-      color: const Color(0xFFEF4444),
-      changeType: ChangeType.rent,
-    ),
-    (
-      icon: LucideIcons.userMinus,
-      label: 'İşten çıksam?',
-      color: const Color(0xFF6B7280),
-      changeType: ChangeType.income,
-    ),
-    (
-      icon: LucideIcons.car,
-      label: 'Araç alsam?',
-      color: const Color(0xFF8B5CF6),
-      changeType: ChangeType.car,
-    ),
-  ];
-
-  SimulationChange _quickDefaultChange(ChangeType type) {
-    return switch (type) {
-      ChangeType.salary => const SimulationChange.salaryChange(
-          currentGross: 0,
-          newGross: 0,
-        ),
-      ChangeType.credit => const SimulationChange.credit(
-          principal: 50000,
-          annualRate: 0,
-          termMonths: 12,
-        ),
-      ChangeType.rent => const SimulationChange.rentChange(
-          currentRent: 0,
-          newRent: 5000,
-        ),
-      ChangeType.income => const SimulationChange.income(
-          amount: 0,
-          description: 'İşten çıkma senaryosu',
-        ),
-      ChangeType.car => const SimulationChange.car(
-          price: 0,
-          annualRate: 0,
-          termMonths: 48,
-        ),
-      _ => const SimulationChange.credit(
-          principal: 0,
-          annualRate: 0,
-          termMonths: 12,
-        ),
-    };
-  }
-
-  Future<void> _openQuickScenario(ChangeType changeType) async {
-    HapticFeedback.selectionClick();
-    final prefilledChange = _quickDefaultChange(changeType);
-    await showModalBottomSheet<SimulationChange>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => Padding(
-        padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: ChangeEditorSheet(
-          change: prefilledChange,
-          changeType: changeType,
-        ),
-      ),
-    );
   }
 
   String _templatePreview(SimulationTemplate t) => switch (t) {
@@ -265,75 +179,7 @@ class _SimulationTemplateScreenState
 
                   const SizedBox(height: AppSpacing.xl),
 
-                  Text('Şablon Seçin',
-                      style: AppTypography.titleMedium
-                          .copyWith(color: c.textPrimary)),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    'Başlangıç şablonu seçin, sonra değişiklikleri düzenleyin',
-                    style: AppTypography.bodySmall
-                        .copyWith(color: c.textTertiary),
-                  ),
-
-                  // ── Hızlı Senaryolar ──────────────────────────
-                  Text('Hızlı Senaryolar',
-                      style: AppTypography.titleMedium
-                          .copyWith(color: c.textPrimary)),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'Tek dokunuşla hazır değişken ile başla',
-                    style: AppTypography.bodySmall
-                        .copyWith(color: c.textTertiary),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  SizedBox(
-                    height: 48,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _quickScenarios.length,
-                      separatorBuilder: (_, _) =>
-                          const SizedBox(width: AppSpacing.sm),
-                      itemBuilder: (context, i) {
-                        final s = _quickScenarios[i];
-                        return GestureDetector(
-                          onTap: () => _openQuickScenario(s.changeType),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md,
-                              vertical: AppSpacing.sm,
-                            ),
-                            decoration: BoxDecoration(
-                              color: s.color.withValues(alpha: 0.1),
-                              borderRadius: AppRadius.chip,
-                              border: Border.all(
-                                color: s.color.withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(s.icon,
-                                    size: 16, color: s.color),
-                                const SizedBox(width: AppSpacing.xs),
-                                Text(
-                                  s.label,
-                                  style: AppTypography.labelMedium
-                                      .copyWith(
-                                    color: s.color,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // ── Template grid ─────────────────────────────
+                  // ── Simülasyon Örnekleri ─────────────────────
                   ...SimulationTemplate.values.map((t) {
                     final isSelected = t == _selected;
                     return Padding(

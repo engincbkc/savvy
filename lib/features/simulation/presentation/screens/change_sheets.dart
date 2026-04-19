@@ -269,8 +269,8 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
     super.dispose();
   }
 
-  double _parseAmount(String s) => double.tryParse(s) ?? 0;
-  int _parseInt(String s) => int.tryParse(s) ?? 0;
+  double _parseAmount(String s) => double.tryParse(s.replaceAll('.', '').replaceAll(',', '.')) ?? 0;
+  int _parseInt(String s) => int.tryParse(s.replaceAll('.', '')) ?? 0;
 
   SimulationChange? _buildChange() {
     final label = _labelCtrl.text.trim();
@@ -811,6 +811,38 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
   }
 }
 
+// ─── Currency Input Formatter ───────────────────────────────────
+
+/// Formats numeric input with Turkish thousand separators (1.000.000)
+class _CurrencyInputFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // Sadece rakam ve virgül/nokta bırak
+    String digits = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
+    if (digits.isEmpty) {
+      return const TextEditingValue(text: '', selection: TextSelection.collapsed(offset: 0));
+    }
+
+    // Binlik ayracı ekle
+    final buffer = StringBuffer();
+    for (int i = 0; i < digits.length; i++) {
+      if (i > 0 && (digits.length - i) % 3 == 0) {
+        buffer.write('.');
+      }
+      buffer.write(digits[i]);
+    }
+
+    final formatted = buffer.toString();
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
+
 // ─── Reusable Field ──────────────────────────────────────────────
 
 class _Field extends StatelessWidget {
@@ -835,6 +867,10 @@ class _Field extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
+    // Yüzde ve ay alanları maskeleme yapmasın
+    final isPercentOrMonth = suffix == '%' || suffix == 'ay';
+    final useMask = numeric && !isPercentOrMonth;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -847,12 +883,18 @@ class _Field extends StatelessWidget {
           keyboardType: numeric
               ? const TextInputType.numberWithOptions(decimal: true)
               : TextInputType.text,
+          inputFormatters: useMask ? [_CurrencyInputFormatter()] : null,
           style: AppTypography.bodyMedium.copyWith(
             color: c.textPrimary,
             fontWeight: FontWeight.w600,
           ),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, size: 18, color: color),
+            prefixText: useMask ? '₺ ' : null,
+            prefixStyle: AppTypography.bodyMedium.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
             suffixText: suffix,
             suffixStyle:
                 AppTypography.bodyMedium.copyWith(color: c.textTertiary),

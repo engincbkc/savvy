@@ -19,7 +19,8 @@ mixin _$Income {
  bool get isGross; bool get isDeleted; DateTime get createdAt;/// Per-month amount overrides for recurring items.
 /// Key: "YYYY-MM", Value: override amount for that month.
 /// Months not present use the default [amount].
- Map<String, double> get monthlyOverrides;
+ Map<String, double> get monthlyOverrides;/// true = alındı (gelir tahsil edildi), false = beklemede
+ bool get isSettled;
 /// Create a copy of Income
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -32,16 +33,16 @@ $IncomeCopyWith<Income> get copyWith => _$IncomeCopyWithImpl<Income>(this as Inc
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Income&&(identical(other.id, id) || other.id == id)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.category, category) || other.category == category)&&(identical(other.person, person) || other.person == person)&&(identical(other.source, source) || other.source == source)&&(identical(other.date, date) || other.date == date)&&(identical(other.note, note) || other.note == note)&&(identical(other.isRecurring, isRecurring) || other.isRecurring == isRecurring)&&(identical(other.recurringEndDate, recurringEndDate) || other.recurringEndDate == recurringEndDate)&&(identical(other.isGross, isGross) || other.isGross == isGross)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&const DeepCollectionEquality().equals(other.monthlyOverrides, monthlyOverrides));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Income&&(identical(other.id, id) || other.id == id)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.category, category) || other.category == category)&&(identical(other.person, person) || other.person == person)&&(identical(other.source, source) || other.source == source)&&(identical(other.date, date) || other.date == date)&&(identical(other.note, note) || other.note == note)&&(identical(other.isRecurring, isRecurring) || other.isRecurring == isRecurring)&&(identical(other.recurringEndDate, recurringEndDate) || other.recurringEndDate == recurringEndDate)&&(identical(other.isGross, isGross) || other.isGross == isGross)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&const DeepCollectionEquality().equals(other.monthlyOverrides, monthlyOverrides)&&(identical(other.isSettled, isSettled) || other.isSettled == isSettled));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,amount,category,person,source,date,note,isRecurring,recurringEndDate,isGross,isDeleted,createdAt,const DeepCollectionEquality().hash(monthlyOverrides));
+int get hashCode => Object.hash(runtimeType,id,amount,category,person,source,date,note,isRecurring,recurringEndDate,isGross,isDeleted,createdAt,const DeepCollectionEquality().hash(monthlyOverrides),isSettled);
 
 @override
 String toString() {
-  return 'Income(id: $id, amount: $amount, category: $category, person: $person, source: $source, date: $date, note: $note, isRecurring: $isRecurring, recurringEndDate: $recurringEndDate, isGross: $isGross, isDeleted: $isDeleted, createdAt: $createdAt, monthlyOverrides: $monthlyOverrides)';
+  return 'Income(id: $id, amount: $amount, category: $category, person: $person, source: $source, date: $date, note: $note, isRecurring: $isRecurring, recurringEndDate: $recurringEndDate, isGross: $isGross, isDeleted: $isDeleted, createdAt: $createdAt, monthlyOverrides: $monthlyOverrides, isSettled: $isSettled)';
 }
 
 
@@ -52,7 +53,7 @@ abstract mixin class $IncomeCopyWith<$Res>  {
   factory $IncomeCopyWith(Income value, $Res Function(Income) _then) = _$IncomeCopyWithImpl;
 @useResult
 $Res call({
- String id, double amount, IncomeCategory category, String? person, String? source, DateTime date, String? note, bool isRecurring, DateTime? recurringEndDate, bool isGross, bool isDeleted, DateTime createdAt, Map<String, double> monthlyOverrides
+ String id, double amount, IncomeCategory category, String? person, String? source, DateTime date, String? note, bool isRecurring, DateTime? recurringEndDate, bool isGross, bool isDeleted, DateTime createdAt, Map<String, double> monthlyOverrides, bool isSettled
 });
 
 
@@ -69,7 +70,7 @@ class _$IncomeCopyWithImpl<$Res>
 
 /// Create a copy of Income
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? amount = null,Object? category = null,Object? person = freezed,Object? source = freezed,Object? date = null,Object? note = freezed,Object? isRecurring = null,Object? recurringEndDate = freezed,Object? isGross = null,Object? isDeleted = null,Object? createdAt = null,Object? monthlyOverrides = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? amount = null,Object? category = null,Object? person = freezed,Object? source = freezed,Object? date = null,Object? note = freezed,Object? isRecurring = null,Object? recurringEndDate = freezed,Object? isGross = null,Object? isDeleted = null,Object? createdAt = null,Object? monthlyOverrides = null,Object? isSettled = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
@@ -84,7 +85,8 @@ as DateTime?,isGross: null == isGross ? _self.isGross : isGross // ignore: cast_
 as bool,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
 as bool,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,monthlyOverrides: null == monthlyOverrides ? _self.monthlyOverrides : monthlyOverrides // ignore: cast_nullable_to_non_nullable
-as Map<String, double>,
+as Map<String, double>,isSettled: null == isSettled ? _self.isSettled : isSettled // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 
@@ -169,10 +171,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  double amount,  IncomeCategory category,  String? person,  String? source,  DateTime date,  String? note,  bool isRecurring,  DateTime? recurringEndDate,  bool isGross,  bool isDeleted,  DateTime createdAt,  Map<String, double> monthlyOverrides)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  double amount,  IncomeCategory category,  String? person,  String? source,  DateTime date,  String? note,  bool isRecurring,  DateTime? recurringEndDate,  bool isGross,  bool isDeleted,  DateTime createdAt,  Map<String, double> monthlyOverrides,  bool isSettled)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Income() when $default != null:
-return $default(_that.id,_that.amount,_that.category,_that.person,_that.source,_that.date,_that.note,_that.isRecurring,_that.recurringEndDate,_that.isGross,_that.isDeleted,_that.createdAt,_that.monthlyOverrides);case _:
+return $default(_that.id,_that.amount,_that.category,_that.person,_that.source,_that.date,_that.note,_that.isRecurring,_that.recurringEndDate,_that.isGross,_that.isDeleted,_that.createdAt,_that.monthlyOverrides,_that.isSettled);case _:
   return orElse();
 
 }
@@ -190,10 +192,10 @@ return $default(_that.id,_that.amount,_that.category,_that.person,_that.source,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  double amount,  IncomeCategory category,  String? person,  String? source,  DateTime date,  String? note,  bool isRecurring,  DateTime? recurringEndDate,  bool isGross,  bool isDeleted,  DateTime createdAt,  Map<String, double> monthlyOverrides)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  double amount,  IncomeCategory category,  String? person,  String? source,  DateTime date,  String? note,  bool isRecurring,  DateTime? recurringEndDate,  bool isGross,  bool isDeleted,  DateTime createdAt,  Map<String, double> monthlyOverrides,  bool isSettled)  $default,) {final _that = this;
 switch (_that) {
 case _Income():
-return $default(_that.id,_that.amount,_that.category,_that.person,_that.source,_that.date,_that.note,_that.isRecurring,_that.recurringEndDate,_that.isGross,_that.isDeleted,_that.createdAt,_that.monthlyOverrides);case _:
+return $default(_that.id,_that.amount,_that.category,_that.person,_that.source,_that.date,_that.note,_that.isRecurring,_that.recurringEndDate,_that.isGross,_that.isDeleted,_that.createdAt,_that.monthlyOverrides,_that.isSettled);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -210,10 +212,10 @@ return $default(_that.id,_that.amount,_that.category,_that.person,_that.source,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  double amount,  IncomeCategory category,  String? person,  String? source,  DateTime date,  String? note,  bool isRecurring,  DateTime? recurringEndDate,  bool isGross,  bool isDeleted,  DateTime createdAt,  Map<String, double> monthlyOverrides)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  double amount,  IncomeCategory category,  String? person,  String? source,  DateTime date,  String? note,  bool isRecurring,  DateTime? recurringEndDate,  bool isGross,  bool isDeleted,  DateTime createdAt,  Map<String, double> monthlyOverrides,  bool isSettled)?  $default,) {final _that = this;
 switch (_that) {
 case _Income() when $default != null:
-return $default(_that.id,_that.amount,_that.category,_that.person,_that.source,_that.date,_that.note,_that.isRecurring,_that.recurringEndDate,_that.isGross,_that.isDeleted,_that.createdAt,_that.monthlyOverrides);case _:
+return $default(_that.id,_that.amount,_that.category,_that.person,_that.source,_that.date,_that.note,_that.isRecurring,_that.recurringEndDate,_that.isGross,_that.isDeleted,_that.createdAt,_that.monthlyOverrides,_that.isSettled);case _:
   return null;
 
 }
@@ -225,7 +227,7 @@ return $default(_that.id,_that.amount,_that.category,_that.person,_that.source,_
 @JsonSerializable()
 
 class _Income implements Income {
-  const _Income({required this.id, required this.amount, required this.category, this.person, this.source, required this.date, this.note, this.isRecurring = false, this.recurringEndDate, this.isGross = false, this.isDeleted = false, required this.createdAt, final  Map<String, double> monthlyOverrides = const {}}): _monthlyOverrides = monthlyOverrides;
+  const _Income({required this.id, required this.amount, required this.category, this.person, this.source, required this.date, this.note, this.isRecurring = false, this.recurringEndDate, this.isGross = false, this.isDeleted = false, required this.createdAt, final  Map<String, double> monthlyOverrides = const {}, this.isSettled = false}): _monthlyOverrides = monthlyOverrides;
   factory _Income.fromJson(Map<String, dynamic> json) => _$IncomeFromJson(json);
 
 @override final  String id;
@@ -254,6 +256,8 @@ class _Income implements Income {
   return EqualUnmodifiableMapView(_monthlyOverrides);
 }
 
+/// true = alındı (gelir tahsil edildi), false = beklemede
+@override@JsonKey() final  bool isSettled;
 
 /// Create a copy of Income
 /// with the given fields replaced by the non-null parameter values.
@@ -268,16 +272,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Income&&(identical(other.id, id) || other.id == id)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.category, category) || other.category == category)&&(identical(other.person, person) || other.person == person)&&(identical(other.source, source) || other.source == source)&&(identical(other.date, date) || other.date == date)&&(identical(other.note, note) || other.note == note)&&(identical(other.isRecurring, isRecurring) || other.isRecurring == isRecurring)&&(identical(other.recurringEndDate, recurringEndDate) || other.recurringEndDate == recurringEndDate)&&(identical(other.isGross, isGross) || other.isGross == isGross)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&const DeepCollectionEquality().equals(other._monthlyOverrides, _monthlyOverrides));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Income&&(identical(other.id, id) || other.id == id)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.category, category) || other.category == category)&&(identical(other.person, person) || other.person == person)&&(identical(other.source, source) || other.source == source)&&(identical(other.date, date) || other.date == date)&&(identical(other.note, note) || other.note == note)&&(identical(other.isRecurring, isRecurring) || other.isRecurring == isRecurring)&&(identical(other.recurringEndDate, recurringEndDate) || other.recurringEndDate == recurringEndDate)&&(identical(other.isGross, isGross) || other.isGross == isGross)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&const DeepCollectionEquality().equals(other._monthlyOverrides, _monthlyOverrides)&&(identical(other.isSettled, isSettled) || other.isSettled == isSettled));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,amount,category,person,source,date,note,isRecurring,recurringEndDate,isGross,isDeleted,createdAt,const DeepCollectionEquality().hash(_monthlyOverrides));
+int get hashCode => Object.hash(runtimeType,id,amount,category,person,source,date,note,isRecurring,recurringEndDate,isGross,isDeleted,createdAt,const DeepCollectionEquality().hash(_monthlyOverrides),isSettled);
 
 @override
 String toString() {
-  return 'Income(id: $id, amount: $amount, category: $category, person: $person, source: $source, date: $date, note: $note, isRecurring: $isRecurring, recurringEndDate: $recurringEndDate, isGross: $isGross, isDeleted: $isDeleted, createdAt: $createdAt, monthlyOverrides: $monthlyOverrides)';
+  return 'Income(id: $id, amount: $amount, category: $category, person: $person, source: $source, date: $date, note: $note, isRecurring: $isRecurring, recurringEndDate: $recurringEndDate, isGross: $isGross, isDeleted: $isDeleted, createdAt: $createdAt, monthlyOverrides: $monthlyOverrides, isSettled: $isSettled)';
 }
 
 
@@ -288,7 +292,7 @@ abstract mixin class _$IncomeCopyWith<$Res> implements $IncomeCopyWith<$Res> {
   factory _$IncomeCopyWith(_Income value, $Res Function(_Income) _then) = __$IncomeCopyWithImpl;
 @override @useResult
 $Res call({
- String id, double amount, IncomeCategory category, String? person, String? source, DateTime date, String? note, bool isRecurring, DateTime? recurringEndDate, bool isGross, bool isDeleted, DateTime createdAt, Map<String, double> monthlyOverrides
+ String id, double amount, IncomeCategory category, String? person, String? source, DateTime date, String? note, bool isRecurring, DateTime? recurringEndDate, bool isGross, bool isDeleted, DateTime createdAt, Map<String, double> monthlyOverrides, bool isSettled
 });
 
 
@@ -305,7 +309,7 @@ class __$IncomeCopyWithImpl<$Res>
 
 /// Create a copy of Income
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? amount = null,Object? category = null,Object? person = freezed,Object? source = freezed,Object? date = null,Object? note = freezed,Object? isRecurring = null,Object? recurringEndDate = freezed,Object? isGross = null,Object? isDeleted = null,Object? createdAt = null,Object? monthlyOverrides = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? amount = null,Object? category = null,Object? person = freezed,Object? source = freezed,Object? date = null,Object? note = freezed,Object? isRecurring = null,Object? recurringEndDate = freezed,Object? isGross = null,Object? isDeleted = null,Object? createdAt = null,Object? monthlyOverrides = null,Object? isSettled = null,}) {
   return _then(_Income(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
@@ -320,7 +324,8 @@ as DateTime?,isGross: null == isGross ? _self.isGross : isGross // ignore: cast_
 as bool,isDeleted: null == isDeleted ? _self.isDeleted : isDeleted // ignore: cast_nullable_to_non_nullable
 as bool,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,monthlyOverrides: null == monthlyOverrides ? _self._monthlyOverrides : monthlyOverrides // ignore: cast_nullable_to_non_nullable
-as Map<String, double>,
+as Map<String, double>,isSettled: null == isSettled ? _self.isSettled : isSettled // ignore: cast_nullable_to_non_nullable
+as bool,
   ));
 }
 

@@ -162,14 +162,17 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
   static const _defaultColW = 72.0;
   static const _minColW = 52.0;
   static const _maxColW = 140.0;
-  static const _labelW = 80.0;
+  static const _defaultLabelW = 120.0;
+  static const _minLabelW = 36.0;
+  static const _maxLabelW = 200.0;
   static const _labelCollapsedW = 36.0;
   static const _headerH = 36.0;
-  static const _rowH = 32.0;
+  static const _rowH = 38.0;
   static const _totalH = 36.0;
   static const _dividerH = 1.0;
 
   double _colW = _defaultColW;
+  double _labelW = _defaultLabelW;
   // Tracks currently tapped cell for highlight
   String? _tappedCellKey; // "category|yearMonth"
 
@@ -235,7 +238,7 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
         (filteredCategories.length * _rowH) +
         _dividerH +
         _totalH;
-    final labelW = _collapsed ? _labelCollapsedW : _labelW;
+    final labelW = _collapsed ? _labelCollapsedW : _labelW.clamp(_minLabelW, _maxLabelW);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -342,7 +345,8 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
                                           fontSize: 10,
                                         ),
                                         overflow: TextOverflow.ellipsis,
-                                        maxLines: 1,
+                                        maxLines: 2,
+                                        softWrap: true,
                                       ),
                                     ),
                             ),
@@ -387,6 +391,7 @@ class _MonthlyCategoryTableState extends State<MonthlyCategoryTable> {
                       if (details.pointerCount >= 2) {
                         setState(() {
                           _colW = (_colW * details.scale).clamp(_minColW, _maxColW);
+                          _labelW = (_labelW * details.scale).clamp(_minLabelW, _maxLabelW);
                         });
                       }
                     },

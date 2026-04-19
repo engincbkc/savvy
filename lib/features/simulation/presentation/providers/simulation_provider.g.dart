@@ -206,4 +206,4 @@ final class SimulationAwareProjectionsProvider
 }
 
 String _$simulationAwareProjectionsHash() =>
-    r'7c07a560ca639771dd6c3cea7fa6eb32b9c2bb3d';
+    r'9774253964af02f2fbe742154151aa218dd306dc';

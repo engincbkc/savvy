@@ -166,6 +166,7 @@ class _AddIncomeSheetState extends ConsumerState<AddIncomeSheet> {
       recurringEndDate: _recurringEndDate,
       isGross: isGross,
       createdAt: DateTime.now(),
+      isSettled: !_date.isAfter(DateTime.now()),
     );
 
     final success =

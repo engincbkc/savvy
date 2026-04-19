@@ -13,8 +13,8 @@ import 'package:savvy/features/simulation/presentation/screens/simulation_templa
 import 'package:savvy/features/simulation/presentation/screens/simulation_editor_screen.dart';
 import 'package:savvy/features/simulation/presentation/screens/simulation_cashflow_screen.dart';
 import 'package:savvy/features/simulation/presentation/screens/simulation_compare_screen.dart';
-import 'package:savvy/features/dashboard/presentation/screens/month_detail_screen.dart';
 import 'package:savvy/features/dashboard/presentation/screens/cash_flow_forecast_screen.dart';
+import 'package:savvy/features/dashboard/presentation/screens/monthly_detail_breakdown_screen.dart';
 import 'package:savvy/features/dashboard/presentation/screens/month_compare_screen.dart';
 import 'package:savvy/features/debt/presentation/screens/debt_dashboard_screen.dart';
 import 'package:savvy/features/budget/presentation/screens/budget_overview_screen.dart';
@@ -79,10 +79,9 @@ final appRouter = GoRouter(
           ),
           routes: [
             GoRoute(
-              path: 'month/:yearMonth',
-              builder: (context, state) => MonthDetailScreen(
-                yearMonth: state.pathParameters['yearMonth']!,
-              ),
+              path: 'monthly-detail',
+              builder: (context, state) =>
+                  const MonthlyDetailBreakdownScreen(),
             ),
             GoRoute(
               path: 'forecast',

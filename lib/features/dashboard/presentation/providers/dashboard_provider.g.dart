@@ -651,6 +651,191 @@ final class TotalSavingsAmountProvider
 String _$totalSavingsAmountHash() =>
     r'389a9eed80faafc81de85fdfac8b554ed6dc59d2';
 
+/// Effective incomes for a given month — includes recurring projections.
+/// Returns the actual Income objects that contribute to this month,
+/// with amount adjusted for overrides and gross calculation.
+
+@ProviderFor(effectiveMonthIncomes)
+final effectiveMonthIncomesProvider = EffectiveMonthIncomesFamily._();
+
+/// Effective incomes for a given month — includes recurring projections.
+/// Returns the actual Income objects that contribute to this month,
+/// with amount adjusted for overrides and gross calculation.
+
+final class EffectiveMonthIncomesProvider
+    extends $FunctionalProvider<List<Income>, List<Income>, List<Income>>
+    with $Provider<List<Income>> {
+  /// Effective incomes for a given month — includes recurring projections.
+  /// Returns the actual Income objects that contribute to this month,
+  /// with amount adjusted for overrides and gross calculation.
+  EffectiveMonthIncomesProvider._({
+    required EffectiveMonthIncomesFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'effectiveMonthIncomesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$effectiveMonthIncomesHash();
+
+  @override
+  String toString() {
+    return r'effectiveMonthIncomesProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<List<Income>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<Income> create(Ref ref) {
+    final argument = this.argument as String;
+    return effectiveMonthIncomes(ref, argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<Income> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<Income>>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is EffectiveMonthIncomesProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$effectiveMonthIncomesHash() =>
+    r'26ebdf5bf8840d52aad4ce6efcac847b25a7a992';
+
+/// Effective incomes for a given month — includes recurring projections.
+/// Returns the actual Income objects that contribute to this month,
+/// with amount adjusted for overrides and gross calculation.
+
+final class EffectiveMonthIncomesFamily extends $Family
+    with $FunctionalFamilyOverride<List<Income>, String> {
+  EffectiveMonthIncomesFamily._()
+    : super(
+        retry: null,
+        name: r'effectiveMonthIncomesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Effective incomes for a given month — includes recurring projections.
+  /// Returns the actual Income objects that contribute to this month,
+  /// with amount adjusted for overrides and gross calculation.
+
+  EffectiveMonthIncomesProvider call(String yearMonth) =>
+      EffectiveMonthIncomesProvider._(argument: yearMonth, from: this);
+
+  @override
+  String toString() => r'effectiveMonthIncomesProvider';
+}
+
+/// Effective expenses for a given month — includes recurring projections.
+
+@ProviderFor(effectiveMonthExpenses)
+final effectiveMonthExpensesProvider = EffectiveMonthExpensesFamily._();
+
+/// Effective expenses for a given month — includes recurring projections.
+
+final class EffectiveMonthExpensesProvider
+    extends $FunctionalProvider<List<Expense>, List<Expense>, List<Expense>>
+    with $Provider<List<Expense>> {
+  /// Effective expenses for a given month — includes recurring projections.
+  EffectiveMonthExpensesProvider._({
+    required EffectiveMonthExpensesFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'effectiveMonthExpensesProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$effectiveMonthExpensesHash();
+
+  @override
+  String toString() {
+    return r'effectiveMonthExpensesProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $ProviderElement<List<Expense>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  List<Expense> create(Ref ref) {
+    final argument = this.argument as String;
+    return effectiveMonthExpenses(ref, argument);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(List<Expense> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<List<Expense>>(value),
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is EffectiveMonthExpensesProvider &&
+        other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$effectiveMonthExpensesHash() =>
+    r'b6900bbc4adcc3e35fdc7ff4a50addd37cd959a0';
+
+/// Effective expenses for a given month — includes recurring projections.
+
+final class EffectiveMonthExpensesFamily extends $Family
+    with $FunctionalFamilyOverride<List<Expense>, String> {
+  EffectiveMonthExpensesFamily._()
+    : super(
+        retry: null,
+        name: r'effectiveMonthExpensesProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  /// Effective expenses for a given month — includes recurring projections.
+
+  EffectiveMonthExpensesProvider call(String yearMonth) =>
+      EffectiveMonthExpensesProvider._(argument: yearMonth, from: this);
+
+  @override
+  String toString() => r'effectiveMonthExpensesProvider';
+}
+
 /// Future month projections based on recurring incomes/expenses.
 /// Uses MonthSummaryAggregator (same engine as buildMonthlyCategoryData)
 /// so dashboard and transactions screens always show consistent numbers.

@@ -194,7 +194,7 @@ class DefaultSilhouetteClipper extends CustomClipper<Path> {
   bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }
 
-/// Returns the appropriate clipper for a SimulationType name.
+/// Returns the appropriate clipper for a SimulationType/Template name.
 CustomClipper<Path> getSimulationClipper(String typeName) {
   return switch (typeName) {
     'car' => CarSilhouetteClipper(),
@@ -202,6 +202,9 @@ CustomClipper<Path> getSimulationClipper(String typeName) {
     'credit' => CreditSilhouetteClipper(),
     'vacation' => PlaneSilhouetteClipper(),
     'tech' => TechSilhouetteClipper(),
+    'rentChange' => HouseSilhouetteClipper(),
+    'salaryChange' => CreditSilhouetteClipper(),
+    'investment' => TechSilhouetteClipper(),
     _ => DefaultSilhouetteClipper(),
   };
 }

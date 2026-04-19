@@ -15,7 +15,6 @@ import 'package:savvy/features/simulation/presentation/providers/simulation_prov
 import 'package:savvy/features/simulation/presentation/widgets/sim_stacked_cards.dart';
 import 'package:go_router/go_router.dart';
 import 'package:savvy/shared/widgets/loading_shimmer.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class SimulationListScreen extends ConsumerStatefulWidget {
   const SimulationListScreen({super.key});
@@ -60,130 +59,47 @@ class _SimulationListScreenState extends ConsumerState<SimulationListScreen>
     context.go('/simulate/new');
   }
 
-  static const _dahilEtKey = 'simulation_dahil_et_info_shown';
-
   Future<void> _handleToggleInclude(SimulationEntry sim) async {
-    // Toggle off → no confirmation needed
+    // Toggle off → onay ile çıkar
     if (sim.isIncluded) {
-      HapticFeedback.mediumImpact();
-      ref.read(simulationProvider.notifier).toggleInclude(sim);
-      return;
-    }
-
-    // Toggle on → check if first time
-    final prefs = await SharedPreferences.getInstance();
-    final shown = prefs.getBool(_dahilEtKey) ?? false;
-
-    if (shown) {
-      HapticFeedback.mediumImpact();
-      ref.read(simulationProvider.notifier).toggleInclude(sim);
-      return;
-    }
-
-    // First time → show info bottom sheet
-    if (!mounted) return;
-    final confirmed = await _showDahilEtInfo();
-    if (confirmed == true) {
-      await prefs.setBool(_dahilEtKey, true);
-      HapticFeedback.mediumImpact();
-      ref.read(simulationProvider.notifier).toggleInclude(sim);
-    }
-  }
-
-  Future<bool?> _showDahilEtInfo() {
-    final c = AppColors.of(context);
-    return showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: c.surfaceCard,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          AppSpacing.xl,
-          AppSpacing.xl,
-          AppSpacing.xl,
-          MediaQuery.of(ctx).padding.bottom + AppSpacing.xl,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: c.brandPrimary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.info_outline_rounded,
-                color: c.brandPrimary,
-                size: 24,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.base),
-            Text(
-              'Simülasyonu Dahil Et',
-              style: AppTypography.headlineSmall.copyWith(
-                color: c.textPrimary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Bu simülasyonu dahil ettiğinizde aylık taksit tutarı '
-              'giderlerinize eklenerek Aylık Akış tablonuza yansıyacaktır.',
-              style: AppTypography.bodyMedium.copyWith(
-                color: c.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(ctx, false),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: c.textSecondary,
-                      side: BorderSide(
-                        color: c.borderDefault.withValues(alpha: 0.5),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.md,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: AppRadius.pill,
-                      ),
-                    ),
-                    child: const Text('Vazgeç'),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(ctx, true),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF22C55E),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.md,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: AppRadius.pill,
-                      ),
-                    ),
-                    child: const Text('Dahil Et'),
-                  ),
-                ),
-              ],
-            ),
+      if (!mounted) return;
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Tablodan Çıkar'),
+          content: Text('"${sim.title}" simülasyonu aylık akış tablonuzdan çıkarılsın mı?'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('İptal')),
+            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Çıkar')),
           ],
         ),
+      );
+      if (confirmed == true) {
+        HapticFeedback.mediumImpact();
+        ref.read(simulationProvider.notifier).toggleInclude(sim);
+      }
+      return;
+    }
+
+    // Toggle on → her seferinde onay popup'ı göster
+    if (!mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Aylık Akışa Dahil Et'),
+        content: Text('"${sim.title}" simülasyonu aylık akış tablonuza dahil edilsin mi?\n\nGelir ve gider etkileri tahmini aylara yansıtılacak.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('İptal')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Dahil Et')),
+        ],
       ),
     );
+    if (confirmed == true) {
+      HapticFeedback.mediumImpact();
+      ref.read(simulationProvider.notifier).toggleInclude(sim);
+    }
   }
+
 
   void _confirmDelete(String id) {
     final c = AppColors.of(context);
@@ -341,9 +257,6 @@ class _SimulationListScreenState extends ConsumerState<SimulationListScreen>
 
               const SizedBox(height: AppSpacing.lg),
 
-              // ── Included simulations compound effect banner ─
-              _IncludedSimsBanner(sims: sims),
-
               // ── Monthly Flow Table ─────────────────────────
               if (summaries.isNotEmpty || projections.isNotEmpty)
                 Padding(
@@ -352,9 +265,19 @@ class _SimulationListScreenState extends ConsumerState<SimulationListScreen>
                     summaries: summaries,
                     projections: projections,
                     includeSavings: includeSavings,
+                    includedSimulations: sims.where((s) => s.isIncluded).toList(),
                     onMonthTap: (_) {},
                     showDetailHint: false,
                   ),
+                ),
+
+              // Dahil edilen simülasyon bilgisi — tablonun hemen altında, minimal
+              if (sims.any((s) => s.isIncluded))
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: AppSpacing.lg, right: AppSpacing.lg, top: AppSpacing.sm,
+                  ),
+                  child: _IncludedSimsChip(sims: sims),
                 ),
 
               const SizedBox(height: AppSpacing.xl),
@@ -555,79 +478,49 @@ class _SimulationListScreenState extends ConsumerState<SimulationListScreen>
 
 /// Banner shown at the top of the list when one or more simulations are included.
 /// Displays the count and net monthly impact of all included simulations.
-class _IncludedSimsBanner extends StatelessWidget {
+class _IncludedSimsChip extends StatelessWidget {
   final List<SimulationEntry> sims;
 
-  const _IncludedSimsBanner({required this.sims});
+  const _IncludedSimsChip({required this.sims});
 
   @override
   Widget build(BuildContext context) {
     final included = sims.where((s) => s.isIncluded).toList();
     if (included.isEmpty) return const SizedBox.shrink();
 
-    double totalImpact = 0;
+    double totalExpense = 0;
+    double totalIncome = 0;
     for (final sim in included) {
-      totalImpact += simulationMonthlyPayment(sim);
+      totalExpense += simulationMonthlyPayment(sim);
+      totalIncome += simulationMonthlyIncome(sim);
     }
 
     final c = AppColors.of(context);
-    final isPositive = totalImpact <= 0;
-    final impactColor = isPositive ? c.income : c.expense;
-    final bgColor = impactColor.withValues(alpha: 0.08);
-    final borderColor = impactColor.withValues(alpha: 0.2);
+    final netImpact = totalIncome - totalExpense;
+    final simNames = included.map((s) => s.title).join(', ');
+    final impactColor = netImpact > 0 ? c.income : netImpact < 0 ? c.expense : c.savings;
 
-    // Net impact: positive monthly payment = extra expense = negative net
-    final netImpact = -totalImpact;
-    final netText = CurrencyFormatter.withSign(netImpact);
-
-    return Padding(
-      padding: AppSpacing.screenH,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+    return RichText(
+      text: TextSpan(
+        style: AppTypography.bodySmall.copyWith(
+          color: c.textSecondary,
+          fontSize: 13,
         ),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: AppRadius.card,
-          border: Border.all(color: borderColor),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              LucideIcons.info,
-              size: 16,
+        children: [
+          TextSpan(
+            text: simNames,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          const TextSpan(text: ' dahil · aylık net etki: '),
+          TextSpan(
+            text: CurrencyFormatter.withSign(netImpact),
+            style: TextStyle(
               color: impactColor,
+              fontWeight: FontWeight.w800,
+              fontSize: 14,
             ),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: RichText(
-                text: TextSpan(
-                  style: AppTypography.bodySmall.copyWith(
-                    color: c.textSecondary,
-                  ),
-                  children: [
-                    TextSpan(
-                      text: '${included.length} simülasyon dahil',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: c.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const TextSpan(text: ' — aylık net etki: '),
-                    TextSpan(
-                      text: netText,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: impactColor,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

@@ -42,7 +42,7 @@ class SimCardFront extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
-    final typeColor = sim.template?.color ?? const Color(0xFF6B7280);
+    final typeColor = sim.template?.color ?? sim.type?.color ?? const Color(0xFF6B7280);
     final summary = _changeSummary();
     final changeCount = sim.changes.length;
 
@@ -83,7 +83,7 @@ class SimCardFront extends StatelessWidget {
           children: [
             // ── Hat Section (~35%) — category silhouette ──
             ClipPath(
-              clipper: getSimulationClipper(sim.type?.name ?? 'custom'),
+              clipper: getSimulationClipper(sim.template?.name ?? sim.type?.name ?? 'custom'),
               child: Container(
                 height: _hatHeight,
                 width: double.infinity,
@@ -101,7 +101,7 @@ class SimCardFront extends StatelessWidget {
                       right: 16,
                       top: 8,
                       child: Icon(
-                        sim.type?.icon ?? LucideIcons.sparkles,
+                        sim.template?.icon ?? sim.type?.icon ?? LucideIcons.sparkles,
                         size: 52,
                         color: Colors.white.withValues(alpha: 0.18),
                       ),
@@ -122,11 +122,11 @@ class SimCardFront extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(sim.type?.icon ?? LucideIcons.sparkles,
+                            Icon(sim.template?.icon ?? sim.type?.icon ?? LucideIcons.sparkles,
                                 size: 12, color: Colors.white),
                             const SizedBox(width: 5),
                             Text(
-                              sim.type?.label ?? 'Özel',
+                              sim.template?.label ?? sim.type?.label ?? sim.title,
                               style: AppTypography.caption.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,
@@ -224,11 +224,11 @@ class SimCardFront extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(sim.template?.icon ?? LucideIcons.sparkles,
+                            Icon(sim.template?.icon ?? sim.type?.icon ?? LucideIcons.sparkles,
                                 size: 11, color: typeColor),
                             const SizedBox(width: 4),
                             Text(
-                              sim.template?.label ?? 'Özel',
+                              sim.template?.label ?? sim.type?.label ?? sim.title,
                               style: AppTypography.caption.copyWith(
                                 color: typeColor,
                                 fontWeight: FontWeight.w600,
