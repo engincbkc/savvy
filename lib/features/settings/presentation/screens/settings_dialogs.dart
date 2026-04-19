@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
@@ -180,7 +181,51 @@ void showAbout(BuildContext context) {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: AppSpacing.lg),
+              // Privacy Policy & Terms links
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: () => launchUrl(
+                      Uri.parse('https://savvy.com.tr/privacy'),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                    child: Text(
+                      'Gizlilik Politikası',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: c.brandPrimary,
+                        decoration: TextDecoration.underline,
+                        decorationColor: c.brandPrimary,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      '·',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: c.textTertiary,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => launchUrl(
+                      Uri.parse('https://savvy.com.tr/terms'),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                    child: Text(
+                      'Kullanım Şartları',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: c.brandPrimary,
+                        decoration: TextDecoration.underline,
+                        decorationColor: c.brandPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
               Text(
                 '© 2026 Savvy',
                 style: AppTypography.caption.copyWith(
@@ -264,7 +309,8 @@ void confirmLogout(BuildContext context, WidgetRef ref) {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(),
+                      onPressed: () =>
+                          Navigator.of(ctx, rootNavigator: true).pop(),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           vertical: AppSpacing.base,

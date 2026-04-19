@@ -720,7 +720,7 @@ final class EffectiveMonthIncomesProvider
 }
 
 String _$effectiveMonthIncomesHash() =>
-    r'26ebdf5bf8840d52aad4ce6efcac847b25a7a992';
+    r'a776a1840f9590930059709b02884a0444f19179';
 
 /// Effective incomes for a given month — includes recurring projections.
 /// Returns the actual Income objects that contribute to this month,
@@ -812,7 +812,7 @@ final class EffectiveMonthExpensesProvider
 }
 
 String _$effectiveMonthExpensesHash() =>
-    r'b6900bbc4adcc3e35fdc7ff4a50addd37cd959a0';
+    r'a06b134e1f214a1a22c552fd413eecfff7a816f9';
 
 /// Effective expenses for a given month — includes recurring projections.
 

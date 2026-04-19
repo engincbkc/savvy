@@ -63,6 +63,12 @@ dependencies:
   crypto: ^3.0.7
   shared_preferences: ^2.5.5
   file_picker: ^10.3.10
+  local_auth: ^2.3.0
+  flutter_windowmanager: ^0.2.0
+  in_app_review: ^2.0.10
+  url_launcher: ^6.3.1
+  package_info_plus: ^8.2.1
+  device_info_plus: ^11.3.3
 
 dev_dependencies:
   flutter_test:

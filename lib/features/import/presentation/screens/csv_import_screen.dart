@@ -938,7 +938,7 @@ class _FormatInfoCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           _InfoRow(label: 'Sütunlar', value: 'Tarih, Tür, Tutar, Kategori, Not'),
-          _InfoRow(label: 'Tarih', value: 'YYYY-AA-GG (örn: 2025-01-15)'),
+          _InfoRow(label: 'Tarih', value: 'YYYY-AA-GG veya GG.AA.YYYY (örn: 2026-01-15)'),
           _InfoRow(label: 'Tür', value: 'Gelir · Gider · Birikim'),
           _InfoRow(label: 'Tutar', value: 'Sayı (örn: 5000 veya 1250.50)'),
         ],

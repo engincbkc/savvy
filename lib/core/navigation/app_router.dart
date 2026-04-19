@@ -17,13 +17,9 @@ import 'package:savvy/features/dashboard/presentation/screens/cash_flow_forecast
 import 'package:savvy/features/dashboard/presentation/screens/monthly_detail_breakdown_screen.dart';
 import 'package:savvy/features/dashboard/presentation/screens/month_compare_screen.dart';
 import 'package:savvy/features/debt/presentation/screens/debt_dashboard_screen.dart';
-import 'package:savvy/features/budget/presentation/screens/budget_overview_screen.dart';
 import 'package:savvy/features/settings/presentation/settings_screen.dart';
 import 'package:savvy/features/settings/presentation/screens/tax_report_screen.dart';
-import 'package:savvy/features/notifications/presentation/screens/notification_settings_screen.dart';
-import 'package:savvy/features/ai_advisor/presentation/screens/ai_advisor_screen.dart';
 import 'package:savvy/features/import/presentation/screens/csv_import_screen.dart';
-import 'package:savvy/features/family/presentation/screens/family_overview_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -147,12 +143,6 @@ final appRouter = GoRouter(
           ),
         ),
         GoRoute(
-          path: '/budget',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: BudgetOverviewScreen(),
-          ),
-        ),
-        GoRoute(
           path: '/settings',
           pageBuilder: (context, state) => const NoTransitionPage(
             child: SettingsScreen(),
@@ -163,27 +153,10 @@ final appRouter = GoRouter(
               builder: (context, state) => const TaxReportScreen(),
             ),
             GoRoute(
-              path: 'notifications',
-              builder: (context, state) =>
-                  const NotificationSettingsScreen(),
-            ),
-            GoRoute(
               path: 'import',
               builder: (context, state) => const CsvImportScreen(),
             ),
           ],
-        ),
-        GoRoute(
-          path: '/ai-advisor',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: AiAdvisorScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/family',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: FamilyOverviewScreen(),
-          ),
         ),
       ],
     ),

@@ -17,9 +17,9 @@ class CsvImportService {
 
   static const String templateCsv =
       'Tarih,Tür,Tutar,Kategori,Not\n'
-      '2025-01-15,Gelir,5000,Maaş,Ocak maaşı\n'
-      '2025-01-20,Gider,250,Market,Haftalık alışveriş\n'
-      '2025-01-25,Birikim,1000,Acil Durum Fonu,\n';
+      '2026-01-15,Gelir,5000,Maaş,Ocak maaşı\n'
+      '2026-01-20,Gider,250,Market,Haftalık alışveriş\n'
+      '2026-01-25,Birikim,1000,Acil Durum Fonu,\n';
 
   /// Parse CSV string into a list of [ImportRow] objects.
   /// Throws [CsvParseException] if headers are missing or invalid.
@@ -57,14 +57,30 @@ class CsvImportService {
       final category = _cell(row, kategoriIdx);
       final note = notIdx >= 0 ? _cell(row, notIdx) : null;
 
-      // Parse date
+      // Parse date (supports YYYY-MM-DD and DD.MM.YYYY)
       DateTime? date;
+      final trimmedDate = dateStr.trim();
       try {
-        date = DateTime.parse(dateStr.trim());
+        if (trimmedDate.contains('.')) {
+          // DD.MM.YYYY format (Turkish)
+          final parts = trimmedDate.split('.');
+          if (parts.length == 3) {
+            date = DateTime(
+              int.parse(parts[2]),
+              int.parse(parts[1]),
+              int.parse(parts[0]),
+            );
+          } else {
+            throw const FormatException();
+          }
+        } else {
+          date = DateTime.parse(trimmedDate);
+        }
       } catch (_) {
         result.add(ImportRow.invalid(
           rawLine: i + 1,
-          error: 'Geçersiz tarih formatı: "$dateStr" (YYYY-AA-GG bekleniyor)',
+          error:
+              'Geçersiz tarih formatı: "$dateStr" (YYYY-AA-GG veya GG.AA.YYYY bekleniyor)',
         ));
         continue;
       }
