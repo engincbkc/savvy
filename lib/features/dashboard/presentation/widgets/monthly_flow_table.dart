@@ -541,15 +541,6 @@ class _MonthlyFlowTableState extends State<MonthlyFlowTable> {
                 fontSize: 8,
               ),
             ),
-          if (isCurrent && widget.showDetailHint)
-            Text(
-              'detay ›',
-              style: AppTypography.caption.copyWith(
-                color: AppColors.of(context).brandPrimary,
-                fontSize: 8,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
         ],
       ),
     );
@@ -719,24 +710,6 @@ class _FullScreenColumnZoom extends StatelessWidget {
                                   ),
                                 ),
                               ),
-                            if (isCurrent)
-                              Padding(
-                                padding:
-                                    const EdgeInsets.only(top: 2),
-                                child: GestureDetector(
-                                  onTap: onDetailTap,
-                                  child: Text(
-                                    'detay ›',
-                                    style: AppTypography.caption
-                                        .copyWith(
-                                      color: c.brandPrimary,
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-
                             const SizedBox(height: AppSpacing.xl),
 
                             // Gelir

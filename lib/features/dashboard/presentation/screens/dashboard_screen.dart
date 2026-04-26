@@ -11,7 +11,6 @@ import 'package:savvy/core/design/tokens/app_shadow.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:savvy/features/simulation/presentation/providers/simulation_provider.dart';
 import 'package:savvy/shared/widgets/loading_shimmer.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/greeting_header.dart';
 import 'package:savvy/features/dashboard/presentation/widgets/wallet_widget.dart';
@@ -43,13 +42,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final hasData = allIncomes.isNotEmpty || allExpenses.isNotEmpty;
 
     final summaries = ref.watch(allMonthSummariesProvider);
-    final projections = ref.watch(simulationAwareProjectionsProvider);
+    final projections = ref.watch(futureProjectionsProvider);
     final includeSavings = ref.watch(includeSavingsInProjectionProvider);
     final totalSavings = ref.watch(totalSavingsAmountProvider);
 
     final goals = ref.watch(allGoalsProvider).value ?? [];
-    final allSims = ref.watch(allSimulationsProvider).value ?? [];
-    final includedSims = allSims.where((s) => s.isIncluded).toList();
 
     final cumulativeNet =
         summaries.isNotEmpty ? summaries.first.netWithCarryOver : 0.0;
@@ -134,7 +131,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                           summaries: summaries,
                           projections: projections,
                           includeSavings: includeSavings,
-                          includedSimulations: includedSims,
+                          includedSimulations: const [],
                           nearestGoalTarget: goals.isNotEmpty
                               ? goals
                                   .where((g) => g.status.name == 'active')

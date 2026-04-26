@@ -5,6 +5,8 @@ import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
+import 'package:savvy/core/utils/currency_formatter.dart';
+import 'package:savvy/core/utils/financial_calculator.dart';
 import 'package:savvy/features/simulation/domain/models/simulation_change.dart';
 import 'package:savvy/features/simulation/presentation/widgets/sim_slider.dart';
 
@@ -156,11 +158,36 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
   final _annualIncreaseCtrl = TextEditingController();
   bool _isRecurring = true;
   bool _isCompound = true;
-  bool _includeTaxes = false;
+  bool _includeTaxes = true; // Varsayılan açık
 
   // Slider state mirrors for rate and term
-  double _rateSlider = 20.0;
+  double _rateSlider = 3.0;
   double _termSlider = 24.0;
+
+  // Per-type rate/term ranges
+  // Kaynak: hangikredi.com, hesapkurdu.com (Nisan 2026)
+  // Konut: %2.49 - %4.00 aylık, Taşıt/İhtiyaç: %2.99 - %5.00+ aylık
+  // Geniş aralık: özel kampanyalardan yüksek faizli kredilere kadar
+  double get _rateMin => 0.5;  // Kampanyalı/destekli krediler
+  double get _rateMax => 10.0; // Yüksek faizli ihtiyaç kredileri
+  double get _rateDefault => switch (_type) {
+        ChangeType.housing => 2.8,  // Konut ortalaması
+        ChangeType.car => 3.2,       // Taşıt ortalaması
+        ChangeType.credit => 3.5,    // İhtiyaç ortalaması
+        _ => 3.0,
+      };
+  double get _termMin => switch (_type) {
+        ChangeType.housing => 12,
+        ChangeType.car => 6,
+        ChangeType.credit => 3,
+        _ => 6,
+      };
+  double get _termMax => switch (_type) {
+        ChangeType.housing => 240,  // 20 yıl
+        ChangeType.car => 84,        // 7 yıl
+        ChangeType.credit => 60,     // 5 yıl
+        _ => 120,
+      };
 
   @override
   void initState() {
@@ -169,22 +196,28 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
       _initFromChange(widget.change!);
     } else {
       _type = widget.changeType ?? ChangeType.credit;
+      _rateSlider = _rateDefault;
     }
     // Keep sliders in sync when text fields are edited manually
     _rateCtrl.addListener(_syncRateSlider);
     _termCtrl.addListener(_syncTermSlider);
+    // Keep live calculations updated
+    _amountCtrl.addListener(_onAmountChanged);
+    _amount2Ctrl.addListener(_onAmountChanged);
   }
+
+  void _onAmountChanged() => setState(() {});
 
   void _syncRateSlider() {
     final v = double.tryParse(_rateCtrl.text);
-    if (v != null && v >= 10 && v <= 80) {
+    if (v != null && v >= _rateMin && v <= _rateMax) {
       setState(() => _rateSlider = v);
     }
   }
 
   void _syncTermSlider() {
     final v = double.tryParse(_termCtrl.text);
-    if (v != null && v >= 6 && v <= 120) {
+    if (v != null && v >= 6 && v <= _termMax) {
       setState(() => _termSlider = v.roundToDouble());
     }
   }
@@ -194,70 +227,91 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
       case CreditChange c:
         _type = ChangeType.credit;
         _labelCtrl.text = c.label;
-        _amountCtrl.text = _fmt(c.principal);
-        _rateCtrl.text = _fmt(c.annualRate);
+        _amountCtrl.text = _fmtMoney(c.principal);
+        _rateCtrl.text = _fmt(c.monthlyRate);
         _termCtrl.text = c.termMonths.toString();
-        _rateSlider = c.annualRate.clamp(10, 80);
-        _termSlider = c.termMonths.toDouble().clamp(6, 120);
+        _rateSlider = c.monthlyRate.clamp(_rateMin, _rateMax);
+        _termSlider = c.termMonths.toDouble().clamp(_termMin, _termMax);
       case HousingChange c:
         _type = ChangeType.housing;
         _labelCtrl.text = c.label;
-        _amountCtrl.text = _fmt(c.price);
-        _amount2Ctrl.text = _fmt(c.downPayment);
-        _rateCtrl.text = _fmt(c.annualRate);
+        _amountCtrl.text = _fmtMoney(c.price);
+        _amount2Ctrl.text = _fmtMoney(c.downPayment);
+        _rateCtrl.text = _fmt(c.monthlyRate);
         _termCtrl.text = c.termMonths.toString();
-        _extrasCtrl.text = _fmt(c.monthlyExtras);
-        _rateSlider = c.annualRate.clamp(10, 80);
-        _termSlider = c.termMonths.toDouble().clamp(6, 120);
+        _extrasCtrl.text = _fmtMoney(c.monthlyExtras);
+        _rateSlider = c.monthlyRate.clamp(_rateMin, _rateMax);
+        _termSlider = c.termMonths.toDouble().clamp(_termMin, _termMax);
       case CarChange c:
         _type = ChangeType.car;
         _labelCtrl.text = c.label;
-        _amountCtrl.text = _fmt(c.price);
-        _amount2Ctrl.text = _fmt(c.downPayment);
-        _rateCtrl.text = _fmt(c.annualRate);
+        _amountCtrl.text = _fmtMoney(c.price);
+        _amount2Ctrl.text = _fmtMoney(c.downPayment);
+        _rateCtrl.text = _fmt(c.monthlyRate);
         _termCtrl.text = c.termMonths.toString();
-        _extrasCtrl.text = _fmt(c.monthlyRunningCosts);
-        _rateSlider = c.annualRate.clamp(10, 80);
-        _termSlider = c.termMonths.toDouble().clamp(6, 120);
+        _extrasCtrl.text = _fmtMoney(c.monthlyRunningCosts);
+        _rateSlider = c.monthlyRate.clamp(_rateMin, _rateMax);
+        _termSlider = c.termMonths.toDouble().clamp(_termMin, _termMax);
       case RentChangeChange c:
         _type = ChangeType.rent;
         _labelCtrl.text = c.label;
-        _amountCtrl.text = _fmt(c.currentRent);
-        _amount2Ctrl.text = _fmt(c.newRent);
+        _amountCtrl.text = _fmtMoney(c.currentRent);
+        _amount2Ctrl.text = _fmtMoney(c.newRent);
         _annualIncreaseCtrl.text = _fmt(c.annualIncreaseRate);
       case SalaryChangeChange c:
         _type = ChangeType.salary;
         _labelCtrl.text = c.label;
-        _amountCtrl.text = _fmt(c.currentGross);
-        _amount2Ctrl.text = _fmt(c.newGross);
+        _amountCtrl.text = _fmtMoney(c.currentGross);
+        _amount2Ctrl.text = _fmtMoney(c.newGross);
       case IncomeChange c:
         _type = ChangeType.income;
         _labelCtrl.text = c.label;
-        _amountCtrl.text = _fmt(c.amount);
+        _amountCtrl.text = _fmtMoney(c.amount);
         _descCtrl.text = c.description;
         _isRecurring = c.isRecurring;
       case ExpenseChange c:
         _type = ChangeType.expense;
         _labelCtrl.text = c.label;
-        _amountCtrl.text = _fmt(c.amount);
+        _amountCtrl.text = _fmtMoney(c.amount);
         _descCtrl.text = c.description;
         _isRecurring = c.isRecurring;
       case InvestmentChange c:
         _type = ChangeType.investment;
         _labelCtrl.text = c.label;
-        _amountCtrl.text = _fmt(c.principal);
+        _amountCtrl.text = _fmtMoney(c.principal);
         _rateCtrl.text = _fmt(c.annualReturnRate);
         _termCtrl.text = c.termMonths.toString();
         _isCompound = c.isCompound;
     }
   }
 
-  String _fmt(double v) => v == 0 ? '' : v.toString();
+  String _fmt(double v) {
+    if (v == 0) return '';
+    // Tam sayıysa kuruş gösterme
+    if (v == v.truncateToDouble()) return v.toInt().toString();
+    return v.toString();
+  }
+
+  /// Para alanları için maskelenmiş format (binlik ayraçlı)
+  String _fmtMoney(double v) {
+    if (v == 0) return '';
+    final digits = v.truncateToDouble() == v
+        ? v.toInt().toString()
+        : v.toStringAsFixed(0);
+    final buffer = StringBuffer();
+    for (int i = 0; i < digits.length; i++) {
+      if (i > 0 && (digits.length - i) % 3 == 0) buffer.write('.');
+      buffer.write(digits[i]);
+    }
+    return buffer.toString();
+  }
 
   @override
   void dispose() {
     _rateCtrl.removeListener(_syncRateSlider);
     _termCtrl.removeListener(_syncTermSlider);
+    _amountCtrl.removeListener(_onAmountChanged);
+    _amount2Ctrl.removeListener(_onAmountChanged);
     _labelCtrl.dispose();
     _amountCtrl.dispose();
     _amount2Ctrl.dispose();
@@ -277,14 +331,14 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
     return switch (_type) {
       ChangeType.credit => SimulationChange.credit(
           principal: _parseAmount(_amountCtrl.text),
-          annualRate: _parseAmount(_rateCtrl.text),
+          monthlyRate: _rateSlider,
           termMonths: _parseInt(_termCtrl.text),
           label: label.isEmpty ? 'Kredi' : label,
         ),
       ChangeType.housing => SimulationChange.housing(
           price: _parseAmount(_amountCtrl.text),
           downPayment: _parseAmount(_amount2Ctrl.text),
-          annualRate: _parseAmount(_rateCtrl.text),
+          monthlyRate: _rateSlider,
           termMonths: _parseInt(_termCtrl.text),
           monthlyExtras: _parseAmount(_extrasCtrl.text),
           label: label.isEmpty ? 'Ev Alımı' : label,
@@ -292,7 +346,7 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
       ChangeType.car => SimulationChange.car(
           price: _parseAmount(_amountCtrl.text),
           downPayment: _parseAmount(_amount2Ctrl.text),
-          annualRate: _parseAmount(_rateCtrl.text),
+          monthlyRate: _rateSlider,
           termMonths: _parseInt(_termCtrl.text),
           monthlyRunningCosts: _parseAmount(_extrasCtrl.text),
           label: label.isEmpty ? 'Araç Alımı' : label,
@@ -342,6 +396,186 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
 
   Color get _color => _type.color;
 
+  /// YMO hesaplaması açıklama popup'ı
+  void _showYmoExplanation(
+    BuildContext context,
+    double monthlyRate,
+    double ymo,
+    Color color,
+  ) {
+    final c = AppColors.of(context);
+    final ymoPercent = (ymo * 100).toStringAsFixed(2);
+    final monthlyPercent = monthlyRate.toStringAsFixed(2);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: c.surfaceCard,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.cardLg),
+        title: Row(
+          children: [
+            Icon(LucideIcons.calculator, size: 20, color: color),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              'YMO Nasıl Hesaplanır?',
+              style: AppTypography.titleMedium.copyWith(color: c.textPrimary),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Yıllık Maliyet Oranı (YMO), aylık faizin bileşik etkisiyle yıllık gerçek maliyetini gösterir.',
+                style: AppTypography.bodySmall.copyWith(color: c.textSecondary),
+              ),
+              const SizedBox(height: AppSpacing.base),
+              // Formül
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.08),
+                  borderRadius: AppRadius.card,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Formül:',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'YMO = (1 + r)¹² - 1',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: c.textPrimary,
+                        fontFamily: 'monospace',
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'r = aylık faiz oranı (ondalık)',
+                      style: AppTypography.caption.copyWith(color: c.textTertiary),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.base),
+              // Hesaplama
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: c.surfaceInput,
+                  borderRadius: AppRadius.card,
+                  border: Border.all(color: c.borderDefault),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Hesaplama:',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: c.textSecondary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    _calcRow(ctx, 'Aylık Oran (r)', '%$monthlyPercent = ${(monthlyRate / 100).toStringAsFixed(4)}'),
+                    _calcRow(ctx, '(1 + r)', '(1 + ${(monthlyRate / 100).toStringAsFixed(4)}) = ${(1 + monthlyRate / 100).toStringAsFixed(4)}'),
+                    _calcRow(ctx, '(1 + r)¹²', '${(1 + monthlyRate / 100).toStringAsFixed(4)}¹² = ${((1 + ymo)).toStringAsFixed(4)}'),
+                    _calcRow(ctx, 'YMO', '${((1 + ymo)).toStringAsFixed(4)} - 1 = ${ymo.toStringAsFixed(4)}'),
+                    const Divider(height: AppSpacing.base),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Sonuç:',
+                          style: AppTypography.labelMedium.copyWith(
+                            color: c.textPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.sm,
+                            vertical: AppSpacing.xs,
+                          ),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.15),
+                            borderRadius: AppRadius.chip,
+                          ),
+                          child: Text(
+                            '%$ymoPercent',
+                            style: AppTypography.titleMedium.copyWith(
+                              color: color,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.base),
+              // Örnek
+              Text(
+                'Örnek: %$monthlyPercent aylık faizle 100.000₺ kredi çektiğinizde, 1 yıl sonunda toplam faiz yükünüz yaklaşık ${(ymo * 100000).toStringAsFixed(0)}₺ olur.',
+                style: AppTypography.caption.copyWith(
+                  color: c.textTertiary,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              'Anladım',
+              style: AppTypography.labelMedium.copyWith(color: color),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _calcRow(BuildContext context, String label, String value) {
+    final c = AppColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80,
+            child: Text(
+              label,
+              style: AppTypography.caption.copyWith(color: c.textTertiary),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: AppTypography.bodySmall.copyWith(
+                color: c.textPrimary,
+                fontFamily: 'monospace',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
@@ -349,7 +583,7 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
 
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
+        maxHeight: MediaQuery.of(context).size.height * 0.92,
       ),
       decoration: BoxDecoration(
         color: c.surfaceBackground,
@@ -447,6 +681,99 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
     );
   }
 
+  /// Builds the rate slider + YMO chip shared by credit/housing/car forms.
+  List<Widget> _rateAndTermSliders(Color color) {
+    final ymo = FinancialCalculator.calculateYMO(_rateSlider / 100);
+    return [
+      SimSlider(
+        label: 'Aylık Faiz',
+        value: _rateSlider,
+        min: _rateMin,
+        max: _rateMax,
+        step: 0.01,
+        format: (v) => '%${v.toStringAsFixed(2)}',
+        color: color,
+        isPercent: true,
+        onChanged: (v) {
+          setState(() {
+            _rateSlider = v;
+            _rateCtrl.text = v.toStringAsFixed(2);
+          });
+        },
+      ),
+      // YMO bilgi chip'i — tıklanınca detay popup
+      Padding(
+        padding: const EdgeInsets.only(
+            left: AppSpacing.sm, top: AppSpacing.xs),
+        child: GestureDetector(
+          onTap: () => _showYmoExplanation(context, _rateSlider, ymo, color),
+          child: Row(
+            children: [
+              Icon(LucideIcons.info, size: 12, color: color.withValues(alpha: 0.6)),
+              const SizedBox(width: 4),
+              Text(
+                'Yıllık Maliyet Oranı (YMO): %${(ymo * 100).toStringAsFixed(2)}',
+                style: AppTypography.caption.copyWith(
+                  color: color.withValues(alpha: 0.7),
+                  fontSize: 10,
+                  decoration: TextDecoration.underline,
+                  decorationStyle: TextDecorationStyle.dotted,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      const SizedBox(height: AppSpacing.md),
+      SimSlider(
+        label: 'Vade',
+        value: _termSlider,
+        min: _termMin,
+        max: _termMax,
+        step: 1,
+        format: (v) => '${v.toInt()} ay',
+        color: color,
+        isInteger: true,
+        onChanged: (v) {
+          setState(() {
+            _termSlider = v;
+            _termCtrl.text = v.toInt().toString();
+          });
+        },
+      ),
+    ];
+  }
+
+  /// Live "Çekilecek Kredi" widget for housing/car.
+  Widget _loanAmountIndicator(Color color) {
+    final price = _parseAmount(_amountCtrl.text);
+    final downPayment = _parseAmount(_amount2Ctrl.text);
+    final loanAmount = (price - downPayment).clamp(0.0, double.infinity);
+    final c = AppColors.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.06),
+        borderRadius: AppRadius.chip,
+      ),
+      child: Row(
+        children: [
+          Icon(LucideIcons.creditCard, size: 14, color: color),
+          const SizedBox(width: AppSpacing.xs),
+          Text('Çekilecek kredi: ', style: AppTypography.caption.copyWith(color: c.textSecondary)),
+          Text(
+            CurrencyFormatter.formatNoDecimal(loanAmount),
+            style: AppTypography.labelSmall.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   List<Widget> _buildFields(Color color) {
     return switch (_type) {
       ChangeType.credit => [
@@ -458,61 +785,12 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
               suffix: '₺',
               numeric: true),
           const SizedBox(height: AppSpacing.md),
-          Row(children: [
-            Expanded(
-                child: _Field(
-                    label: 'Yıllık Faiz',
-                    controller: _rateCtrl,
-                    color: color,
-                    icon: LucideIcons.percent,
-                    suffix: '%',
-                    numeric: true)),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-                child: _Field(
-                    label: 'Vade',
-                    controller: _termCtrl,
-                    color: color,
-                    icon: LucideIcons.calendar,
-                    suffix: 'ay',
-                    numeric: true)),
-          ]),
-          const SizedBox(height: AppSpacing.md),
-          SimSlider(
-            label: 'Yıllık Faiz Oranı',
-            value: _rateSlider,
-            min: 10,
-            max: 80,
-            step: 0.5,
-            format: (v) => '%${v.toStringAsFixed(1)}',
-            color: color,
-            onChanged: (v) {
-              setState(() {
-                _rateSlider = v;
-                _rateCtrl.text = v.toStringAsFixed(1);
-              });
-            },
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          SimSlider(
-            label: 'Vade',
-            value: _termSlider,
-            min: 6,
-            max: 120,
-            step: 6,
-            format: (v) => '${v.toInt()} ay',
-            color: color,
-            onChanged: (v) {
-              setState(() {
-                _termSlider = v;
-                _termCtrl.text = v.toInt().toString();
-              });
-            },
-          ),
+          ..._rateAndTermSliders(color),
           const SizedBox(height: AppSpacing.md),
           _TaxToggle(
             value: _includeTaxes,
             color: color,
+            isHousing: false,
             onChanged: (v) => setState(() => _includeTaxes = v),
           ),
         ],
@@ -532,59 +810,11 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
               icon: LucideIcons.wallet,
               suffix: '₺',
               numeric: true,
-              hint: 'FuzulEv / EminEvim birikimi dahil'),
-          const SizedBox(height: AppSpacing.md),
-          Row(children: [
-            Expanded(
-                child: _Field(
-                    label: 'Yıllık Faiz',
-                    controller: _rateCtrl,
-                    color: color,
-                    icon: LucideIcons.percent,
-                    suffix: '%',
-                    numeric: true)),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-                child: _Field(
-                    label: 'Vade',
-                    controller: _termCtrl,
-                    color: color,
-                    icon: LucideIcons.calendar,
-                    suffix: 'ay',
-                    numeric: true)),
-          ]),
-          const SizedBox(height: AppSpacing.md),
-          SimSlider(
-            label: 'Yıllık Faiz Oranı',
-            value: _rateSlider,
-            min: 10,
-            max: 80,
-            step: 0.5,
-            format: (v) => '%${v.toStringAsFixed(1)}',
-            color: color,
-            onChanged: (v) {
-              setState(() {
-                _rateSlider = v;
-                _rateCtrl.text = v.toStringAsFixed(1);
-              });
-            },
-          ),
+              hint: 'Ödeyeceğiniz peşinat tutarı'),
           const SizedBox(height: AppSpacing.sm),
-          SimSlider(
-            label: 'Vade',
-            value: _termSlider,
-            min: 6,
-            max: 120,
-            step: 6,
-            format: (v) => '${v.toInt()} ay',
-            color: color,
-            onChanged: (v) {
-              setState(() {
-                _termSlider = v;
-                _termCtrl.text = v.toInt().toString();
-              });
-            },
-          ),
+          _loanAmountIndicator(color),
+          const SizedBox(height: AppSpacing.md),
+          ..._rateAndTermSliders(color),
           const SizedBox(height: AppSpacing.md),
           _Field(
               label: 'Aylık Ek Giderler',
@@ -594,12 +824,9 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
               suffix: '₺',
               numeric: true,
               hint: 'Aidat, sigorta...'),
-          const SizedBox(height: AppSpacing.md),
-          _TaxToggle(
-            value: _includeTaxes,
-            color: color,
-            onChanged: (v) => setState(() => _includeTaxes = v),
-          ),
+          // Konut: KKDF+BSMV MUAF — toggle gösterilmez
+          const SizedBox(height: AppSpacing.sm),
+          _HousingTaxInfo(color: color),
         ],
       ChangeType.car => [
           _Field(
@@ -617,58 +844,10 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
               icon: LucideIcons.wallet,
               suffix: '₺',
               numeric: true),
-          const SizedBox(height: AppSpacing.md),
-          Row(children: [
-            Expanded(
-                child: _Field(
-                    label: 'Yıllık Faiz',
-                    controller: _rateCtrl,
-                    color: color,
-                    icon: LucideIcons.percent,
-                    suffix: '%',
-                    numeric: true)),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-                child: _Field(
-                    label: 'Vade',
-                    controller: _termCtrl,
-                    color: color,
-                    icon: LucideIcons.calendar,
-                    suffix: 'ay',
-                    numeric: true)),
-          ]),
-          const SizedBox(height: AppSpacing.md),
-          SimSlider(
-            label: 'Yıllık Faiz Oranı',
-            value: _rateSlider,
-            min: 10,
-            max: 80,
-            step: 0.5,
-            format: (v) => '%${v.toStringAsFixed(1)}',
-            color: color,
-            onChanged: (v) {
-              setState(() {
-                _rateSlider = v;
-                _rateCtrl.text = v.toStringAsFixed(1);
-              });
-            },
-          ),
           const SizedBox(height: AppSpacing.sm),
-          SimSlider(
-            label: 'Vade',
-            value: _termSlider,
-            min: 6,
-            max: 120,
-            step: 6,
-            format: (v) => '${v.toInt()} ay',
-            color: color,
-            onChanged: (v) {
-              setState(() {
-                _termSlider = v;
-                _termCtrl.text = v.toInt().toString();
-              });
-            },
-          ),
+          _loanAmountIndicator(color),
+          const SizedBox(height: AppSpacing.md),
+          ..._rateAndTermSliders(color),
           const SizedBox(height: AppSpacing.md),
           _Field(
               label: 'Aylık Giderler',
@@ -682,6 +861,7 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
           _TaxToggle(
             value: _includeTaxes,
             color: color,
+            isHousing: false,
             onChanged: (v) => setState(() => _includeTaxes = v),
           ),
         ],
@@ -971,11 +1151,13 @@ class _RecurringToggle extends StatelessWidget {
 class _TaxToggle extends StatelessWidget {
   final bool value;
   final Color color;
+  final bool isHousing;
   final ValueChanged<bool> onChanged;
 
   const _TaxToggle({
     required this.value,
     required this.color,
+    this.isHousing = false,
     required this.onChanged,
   });
 
@@ -1007,7 +1189,7 @@ class _TaxToggle extends StatelessWidget {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
-                    'KKDF + BSMV dahil et',
+                    'Banka vergileri (KKDF %15 + BSMV %15)',
                     style: AppTypography.bodyMedium
                         .copyWith(color: c.textPrimary),
                   ),
@@ -1036,7 +1218,7 @@ class _TaxToggle extends StatelessWidget {
                     const SizedBox(width: AppSpacing.xs),
                     Expanded(
                       child: Text(
-                        'Faiz üzerine %25 ek vergi uygulanır (KKDF %15 + BSMV %10)',
+                        'Tüketici kredilerinde faiz üzerine %30 ek uygulanır.\nGerçekçi hesaplama için açık bırakın.',
                         style: AppTypography.caption.copyWith(
                           color: color,
                           fontSize: 10,
@@ -1049,6 +1231,41 @@ class _TaxToggle extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Konut kredisi vergi muafiyeti bilgi widget'ı
+class _HousingTaxInfo extends StatelessWidget {
+  final Color color;
+  const _HousingTaxInfo({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: c.income.withValues(alpha: 0.08),
+        borderRadius: AppRadius.chip,
+      ),
+      child: Row(
+        children: [
+          Icon(LucideIcons.checkCircle, size: 14, color: c.income),
+          const SizedBox(width: AppSpacing.xs),
+          Expanded(
+            child: Text(
+              'Konut kredisi KKDF ve BSMV\'den muaftır.',
+              style: AppTypography.caption.copyWith(
+                color: c.income,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -41,7 +41,7 @@ class SimChangeCard extends StatelessWidget {
 
   String get _subtitle => switch (change) {
         CreditChange c =>
-          '${CurrencyFormatter.formatNoDecimal(c.principal)} · %${c.annualRate} · ${c.termMonths} ay',
+          '${CurrencyFormatter.formatNoDecimal(c.principal)} · %${c.monthlyRate}/ay · ${c.termMonths} ay',
         HousingChange c =>
           '${CurrencyFormatter.formatNoDecimal(c.price)} · ${c.termMonths} ay',
         CarChange c =>

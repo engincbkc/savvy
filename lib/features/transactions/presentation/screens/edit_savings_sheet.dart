@@ -12,7 +12,13 @@ import 'package:savvy/features/transactions/presentation/widgets/form_shared_wid
 
 class EditSavingsSheet extends ConsumerStatefulWidget {
   final Savings savings;
-  const EditSavingsSheet({super.key, required this.savings});
+  final ScrollController? scrollController;
+
+  const EditSavingsSheet({
+    super.key,
+    required this.savings,
+    this.scrollController,
+  });
 
   @override
   ConsumerState<EditSavingsSheet> createState() => _EditSavingsSheetState();
@@ -33,11 +39,21 @@ class _EditSavingsSheetState extends ConsumerState<EditSavingsSheet> {
 
   bool _hasChanges = false;
 
+  String _formatThousands(int value) {
+    final str = value.toString();
+    final buffer = StringBuffer();
+    for (int i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) buffer.write('.');
+      buffer.write(str[i]);
+    }
+    return buffer.toString();
+  }
+
   @override
   void initState() {
     super.initState();
     final s = widget.savings;
-    _amountController = TextEditingController(text: s.amount.toStringAsFixed(0));
+    _amountController = TextEditingController(text: _formatThousands(s.amount.round()));
     _noteController = TextEditingController(text: s.note ?? '');
     _category = s.category;
     _date = s.date;
@@ -96,97 +112,104 @@ class _EditSavingsSheetState extends ConsumerState<EditSavingsSheet> {
   Widget build(BuildContext context) {
     final formState = ref.watch(transactionFormProvider);
     final c = AppColors.of(context);
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: AppSpacing.lg,
-        right: AppSpacing.lg,
-        top: AppSpacing.base,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
-      ),
-      child: Form(
-        key: _formKey,
-        child: ListView(
-          children: [
-            Column(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: AppSpacing.lg,
+          right: AppSpacing.lg,
+          top: AppSpacing.base,
+        ),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            controller: widget.scrollController,
+            physics: const BouncingScrollPhysics(),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: EdgeInsets.only(
+              bottom: bottomInset + AppSpacing.xl,
+            ),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-              const SheetHandle(),
-              const SizedBox(height: AppSpacing.lg),
+                const SheetHandle(),
+                const SizedBox(height: AppSpacing.lg),
 
-              const SheetHeader(
-                icon: AppIcons.edit,
-                gradient: [Color(0xFFB45309), Color(0xFFD97706)],
-                title: 'Birikim Düzenle',
-                subtitle: 'Mevcut birikim kaydını güncelle',
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              AmountInputField(
-                controller: _amountController,
-                color: c.savings,
-                strongColor: c.savingsStrong,
-                bgColor: c.savingsSurfaceDim,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              FormSectionLabel(text: 'Kategori', icon: AppIcons.category),
-              const SizedBox(height: AppSpacing.sm),
-              CategoryChipSelector<SavingsCategory>(
-                values: SavingsCategory.values,
-                selected: _category,
-                labelOf: (cat) => cat.label,
-                iconOf: (cat) => cat.icon,
-                activeColor: c.savings,
-                onSelected: (cat) {
-                  setState(() => _category = cat);
-                  _checkChanges();
-                },
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              FormSectionLabel(text: 'Başlangıç Tarihi', icon: AppIcons.calendar),
-              const SizedBox(height: AppSpacing.sm),
-              GestureDetector(
-                onTap: () async {
-                  final picked = await showSavvyDatePicker(
-                    context: context,
-                    initialDate: _date,
-                    firstDate: DateTime(2020),
-                  );
-                  if (picked != null) {
-                    setState(() => _date = picked);
-                    _checkChanges();
-                  }
-                },
-                child: FieldChip(icon: AppIcons.calendar, label: formatDateTR(_date)),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-
-              TextFormField(
-                controller: _noteController,
-                maxLength: 200,
-                decoration: const InputDecoration(
-                  hintText: 'Not',
-                  prefixIcon: Icon(AppIcons.note, size: 18),
-                  counterText: '',
+                const SheetHeader(
+                  icon: AppIcons.edit,
+                  gradient: [Color(0xFFB45309), Color(0xFFD97706)],
+                  title: 'Birikim Düzenle',
+                  subtitle: 'Mevcut birikim kaydını güncelle',
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
+                const SizedBox(height: AppSpacing.xl),
 
-              if (_hasChanges) ...[
-                const SizedBox(height: AppSpacing.base),
-                FormSubmitButton(
-                  isLoading: formState.isLoading,
-                  label: 'Kaydet',
+                AmountInputField(
+                  controller: _amountController,
                   color: c.savings,
-                  onPressed: _submit,
+                  strongColor: c.savingsStrong,
+                  bgColor: c.savingsSurfaceDim,
                 ),
-              ],
-              const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.xl),
+
+                FormSectionLabel(text: 'Kategori', icon: AppIcons.category),
+                const SizedBox(height: AppSpacing.sm),
+                CategoryChipSelector<SavingsCategory>(
+                  values: SavingsCategory.values,
+                  selected: _category,
+                  labelOf: (cat) => cat.label,
+                  iconOf: (cat) => cat.icon,
+                  activeColor: c.savings,
+                  onSelected: (cat) {
+                    setState(() => _category = cat);
+                    _checkChanges();
+                  },
+                ),
+                const SizedBox(height: AppSpacing.xl),
+
+                FormSectionLabel(text: 'Başlangıç Tarihi', icon: AppIcons.calendar),
+                const SizedBox(height: AppSpacing.sm),
+                GestureDetector(
+                  onTap: () async {
+                    final picked = await showSavvyDatePicker(
+                      context: context,
+                      initialDate: _date,
+                      firstDate: DateTime(2020),
+                    );
+                    if (picked != null) {
+                      setState(() => _date = picked);
+                      _checkChanges();
+                    }
+                  },
+                  child: FieldChip(icon: AppIcons.calendar, label: formatDateTR(_date)),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+
+                TextFormField(
+                  controller: _noteController,
+                  maxLength: 200,
+                  decoration: const InputDecoration(
+                    hintText: 'Not',
+                    prefixIcon: Icon(AppIcons.note, size: 18),
+                    counterText: '',
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+
+                if (_hasChanges) ...[
+                  const SizedBox(height: AppSpacing.base),
+                  FormSubmitButton(
+                    isLoading: formState.isLoading,
+                    label: 'Kaydet',
+                    color: c.savings,
+                    onPressed: _submit,
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.sm),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );

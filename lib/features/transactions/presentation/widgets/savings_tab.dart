@@ -220,16 +220,26 @@ class SavingsTab extends ConsumerWidget {
   }
 
   void _showEdit(BuildContext context, Savings s) {
-    showModalBottomSheet(useRootNavigator: true,
+    showModalBottomSheet(
+      useRootNavigator: true,
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetCtx) => Container(
-        decoration: BoxDecoration(
-          color: AppColors.of(sheetCtx).surfaceCard,
-          borderRadius: AppRadius.bottomSheet,
+      builder: (sheetCtx) => DraggableScrollableSheet(
+        initialChildSize: 0.85,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (_, scrollController) => Container(
+          decoration: BoxDecoration(
+            color: AppColors.of(sheetCtx).surfaceCard,
+            borderRadius: AppRadius.bottomSheet,
+          ),
+          child: EditSavingsSheet(
+            savings: s,
+            scrollController: scrollController,
+          ),
         ),
-        child: EditSavingsSheet(savings: s),
       ),
     );
   }

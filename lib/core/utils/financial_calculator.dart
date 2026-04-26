@@ -164,15 +164,16 @@ class FinancialCalculator {
   // ─── Loan / Installment ──────────────────────────────────────────
 
   /// Monthly loan payment (EMI - Equal Monthly Installment)
+  /// [monthlyRate] is the monthly interest rate as a decimal (e.g. 0.0249 for %2.49)
   static double monthlyLoanPayment({
     required double principal,
-    required double annualRate,
+    required double monthlyRate,
     required int termMonths,
   }) {
-    if (annualRate == 0) return principal / termMonths;
-    final r = annualRate / 12;
-    final n = termMonths;
-    return principal * (r * pow(1 + r, n)) / (pow(1 + r, n) - 1);
+    if (principal <= 0 || termMonths <= 0) return 0;
+    if (monthlyRate == 0) return principal / termMonths;
+    final factor = pow(1 + monthlyRate, termMonths);
+    return principal * (monthlyRate * factor) / (factor - 1);
   }
 
   static double totalLoanPayment({
@@ -188,20 +189,32 @@ class FinancialCalculator {
       totalPayment - principal;
 
   // ─── Kredi Vergi Maliyeti (KKDF + BSMV) ─────────────────────────
+  // Nisan 2026 güncel oranlar:
+  // Konut kredisi: KKDF %0 + BSMV %0 = MUAF
+  // Taşıt/İhtiyaç: KKDF %15 + BSMV %15 = %30
 
-  /// Gerçek yıllık oran: nominal oran üzerine KKDF (%15) ve BSMV (%10) eklenir.
-  /// Formül: efektifOran = nominalOran × (1 + kkdf + bsmv)
-  /// Türkiye 2026 oranları: KKDF %15, BSMV %10
-  static double realAnnualRateWithTaxes(double nominalAnnualRate) {
-    const kkdf = 0.15;
-    const bsmv = 0.10;
-    return nominalAnnualRate * (1 + kkdf + bsmv);
+  /// Efektif aylık faiz oranı: vergileri dahil eder.
+  /// Konut kredisi vergilerden muaftır.
+  /// Taşıt ve ihtiyaç kredilerinde faiz üzerine %30 ek (KKDF %15 + BSMV %15).
+  static double effectiveMonthlyRate({
+    required double monthlyRate,
+    required bool isHousing,
+    required bool includeTaxes,
+  }) {
+    if (isHousing) return monthlyRate; // Konut muaf
+    if (!includeTaxes) return monthlyRate;
+    return monthlyRate * 1.30; // KKDF %15 + BSMV %15
+  }
+
+  /// Yıllık Maliyet Oranı (YMO) hesapla — bilgi amaçlı gösterim.
+  static double calculateYMO(double monthlyRate) {
+    return (pow(1 + monthlyRate, 12) - 1).toDouble();
   }
 
   /// Toplam faiz üzerindeki KKDF + BSMV tutarı.
-  /// Toplam vergi oranı: %25 (0.15 + 0.10)
+  /// Toplam vergi oranı: %30 (0.15 KKDF + 0.15 BSMV)
   static double creditTaxAmount(double totalInterest) {
-    const rate = 0.25; // 0.15 KKDF + 0.10 BSMV
+    const rate = 0.30; // 0.15 KKDF + 0.15 BSMV
     return totalInterest * rate;
   }
 
@@ -212,9 +225,9 @@ class FinancialCalculator {
     final ratio =
         monthlyIncome > 0 ? monthlyPayment / monthlyIncome : 1.0;
     return switch (ratio) {
-      < 0.25 => AffordabilityStatus.comfortable,
-      < 0.35 => AffordabilityStatus.manageable,
-      < 0.45 => AffordabilityStatus.tight,
+      < 0.30 => AffordabilityStatus.comfortable,
+      < 0.40 => AffordabilityStatus.manageable,
+      < 0.50 => AffordabilityStatus.tight,
       _ => AffordabilityStatus.risky,
     };
   }

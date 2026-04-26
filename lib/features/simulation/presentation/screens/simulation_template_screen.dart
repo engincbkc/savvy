@@ -39,21 +39,21 @@ class _SimulationTemplateScreenState
       SimulationTemplate.credit => [
           const SimulationChange.credit(
             principal: 0,
-            annualRate: 0,
+            monthlyRate: 3.50,
             termMonths: 12,
           ),
         ],
       SimulationTemplate.housing => [
           const SimulationChange.housing(
             price: 0,
-            annualRate: 0,
+            monthlyRate: 3.00,
             termMonths: 120,
           ),
         ],
       SimulationTemplate.car => [
           const SimulationChange.car(
             price: 0,
-            annualRate: 0,
+            monthlyRate: 2.50,
             termMonths: 48,
           ),
         ],
@@ -145,7 +145,7 @@ class _SimulationTemplateScreenState
           icon: Icon(LucideIcons.chevronLeft, color: c.textPrimary),
           onPressed: () => context.go('/simulate'),
         ),
-        title: Text('Yeni Simülasyon',
+        title: Text('Simülasyon',
             style: AppTypography.titleLarge.copyWith(color: c.textPrimary)),
       ),
       body: Column(

@@ -8,7 +8,6 @@ import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
-import 'package:savvy/core/design/tokens/app_animation.dart';
 import 'package:savvy/features/dashboard/domain/models/month_summary.dart';
 import 'package:savvy/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:savvy/features/simulation/domain/models/simulation_change.dart';
@@ -38,8 +37,9 @@ class _SimulationEditorScreenState
   List<SimulationChange> _changes = [];
   SimulationResult? _result;
   bool _loaded = false;
-  bool _advancedMode = false;
+  final bool _advancedMode = false;
   bool _calculating = false;
+  bool _hasUnsavedChanges = false;
   Timer? _debounceTimer;
 
   @override
@@ -72,6 +72,7 @@ class _SimulationEditorScreenState
         baseItems: ref.read(projectionBaseItemsProvider),
       );
       _calculating = false;
+      _hasUnsavedChanges = true;
     });
   }
 
@@ -93,13 +94,17 @@ class _SimulationEditorScreenState
     await ref.read(simulationProvider.notifier).updateSimulation(updated);
     _entry = updated;
 
+    setState(() {
+      _hasUnsavedChanges = false;
+    });
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Kaydedildi'),
+          content: const Text('Simülasyon kaydedildi'),
           backgroundColor: AppColors.of(context).income,
           behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 1),
+          duration: const Duration(seconds: 2),
           shape: RoundedRectangleBorder(borderRadius: AppRadius.chip),
         ),
       );
@@ -149,30 +154,65 @@ class _SimulationEditorScreenState
     setState(() => _changes.removeAt(index));
     _debouncedRecalculate();
 
-    bool undone = false;
     final snackBar = SnackBar(
       content: const Text('Değişiklik silindi'),
       behavior: SnackBarBehavior.floating,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(seconds: 3),
       shape: RoundedRectangleBorder(borderRadius: AppRadius.chip),
       action: SnackBarAction(
         label: 'Geri Al',
         onPressed: () {
-          undone = true;
           setState(() => _changes.insert(index, removed));
           _debouncedRecalculate();
         },
       ),
     );
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(snackBar)
-        .closed
-        .then((_) async {
-      if (!undone) {
-        await _save();
-      }
-    });
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  void _showUnsavedChangesDialog() {
+    final c = AppColors.of(context);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: c.surfaceCard,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.cardLg),
+        title: Text('Kaydedilmemiş Değişiklikler',
+            style: AppTypography.titleMedium.copyWith(color: c.textPrimary)),
+        content: Text(
+          'Yaptığınız değişiklikler kaydedilmedi. Çıkmak istediğinize emin misiniz?',
+          style: AppTypography.bodyMedium.copyWith(color: c.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('İptal',
+                style: AppTypography.labelMedium.copyWith(color: c.textTertiary)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              context.go('/simulate');
+            },
+            child: Text('Kaydetmeden Çık',
+                style: AppTypography.labelMedium.copyWith(color: c.expense)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              await _save();
+              if (mounted) context.go('/simulate');
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _themeColor,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Kaydet ve Çık'),
+          ),
+        ],
+      ),
+    );
   }
 
   Color get _themeColor {
@@ -229,7 +269,7 @@ class _SimulationEditorScreenState
           body: SafeArea(
             child: Column(
               children: [
-                // App bar
+                // App bar - temiz başlık
                 Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
@@ -238,7 +278,13 @@ class _SimulationEditorScreenState
                       IconButton(
                         icon: Icon(LucideIcons.chevronLeft,
                             color: c.textPrimary),
-                        onPressed: () => context.go('/simulate'),
+                        onPressed: () {
+                          if (_hasUnsavedChanges) {
+                            _showUnsavedChangesDialog();
+                          } else {
+                            context.go('/simulate');
+                          }
+                        },
                       ),
                       Expanded(
                         child: Text(entry.title,
@@ -247,54 +293,29 @@ class _SimulationEditorScreenState
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis),
                       ),
-                      // Advanced mode toggle
-                      GestureDetector(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          setState(() => _advancedMode = !_advancedMode);
-                        },
-                        child: AnimatedContainer(
-                          duration: AppDuration.fast,
+                      // Kaydedilmemiş değişiklik göstergesi
+                      if (_hasUnsavedChanges)
+                        Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: AppSpacing.sm, vertical: 4),
                           decoration: BoxDecoration(
-                            color: _advancedMode
-                                ? color.withValues(alpha: 0.15)
-                                : Colors.transparent,
+                            color: c.warning.withValues(alpha: 0.1),
                             borderRadius: AppRadius.pill,
-                            border: Border.all(
-                              color: _advancedMode
-                                  ? color
-                                  : c.borderDefault,
-                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(LucideIcons.settings2,
-                                  size: 14,
-                                  color: _advancedMode
-                                      ? color
-                                      : c.textTertiary),
+                              Icon(LucideIcons.pencil,
+                                  size: 12, color: c.warning),
                               const SizedBox(width: 4),
-                              Text('Detay',
+                              Text('Düzenleniyor',
                                   style: AppTypography.caption.copyWith(
-                                    color: _advancedMode
-                                        ? color
-                                        : c.textTertiary,
+                                    color: c.warning,
                                     fontWeight: FontWeight.w600,
                                   )),
                             ],
                           ),
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      // Save button
-                      IconButton(
-                        icon: Icon(LucideIcons.save,
-                            color: color, size: 22),
-                        onPressed: _save,
-                      ),
                     ],
                   ),
                 ),
@@ -416,6 +437,16 @@ class _SimulationEditorScreenState
                           ),
                         ],
 
+                        // Kaydet butonu - sayfanın altında
+                        if (_changes.isNotEmpty) ...[
+                          const SizedBox(height: AppSpacing.xl2),
+                          _SaveButton(
+                            hasChanges: _hasUnsavedChanges,
+                            color: color,
+                            onSave: _save,
+                          ),
+                        ],
+
                         const SizedBox(height: AppSpacing.xl5),
                       ],
                     ),
@@ -426,6 +457,99 @@ class _SimulationEditorScreenState
           ),
         );
       },
+    );
+  }
+}
+
+/// Büyük kaydet butonu - sayfanın altında
+class _SaveButton extends StatelessWidget {
+  final bool hasChanges;
+  final Color color;
+  final VoidCallback onSave;
+
+  const _SaveButton({
+    required this.hasChanges,
+    required this.color,
+    required this.onSave,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
+    return Column(
+      children: [
+        // Ayraç
+        Container(
+          margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+          height: 1,
+          color: c.borderDefault.withValues(alpha: 0.3),
+        ),
+
+        // Kaydet butonu
+        GestureDetector(
+          onTap: hasChanges ? onSave : null,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+            decoration: BoxDecoration(
+              gradient: hasChanges
+                  ? LinearGradient(
+                      colors: [color, color.withValues(alpha: 0.85)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
+              color: hasChanges ? null : c.surfaceCard,
+              borderRadius: AppRadius.card,
+              border: hasChanges
+                  ? null
+                  : Border.all(color: c.borderDefault),
+              boxShadow: hasChanges
+                  ? [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  hasChanges ? LucideIcons.save : LucideIcons.checkCircle,
+                  size: 20,
+                  color: hasChanges ? Colors.white : c.textTertiary,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  hasChanges ? 'Simülasyonu Kaydet' : 'Kaydedildi',
+                  style: AppTypography.labelLarge.copyWith(
+                    color: hasChanges ? Colors.white : c.textTertiary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // Bilgilendirme metni
+        if (hasChanges)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.sm),
+            child: Text(
+              'Değişiklikler henüz kaydedilmedi',
+              style: AppTypography.caption.copyWith(
+                color: c.warning,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

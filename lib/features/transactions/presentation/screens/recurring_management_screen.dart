@@ -313,14 +313,20 @@ class RecurringManagementScreen extends ConsumerWidget {
         minChildSize: 0.5,
         maxChildSize: 0.95,
         expand: false,
-        builder: (_, controller) => Container(
+        builder: (_, scrollController) => Container(
           decoration: BoxDecoration(
             color: AppColors.of(context).surfaceCard,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
           child: item.type == _ItemType.income
-              ? EditIncomeSheet(income: item.income!)
-              : EditExpenseSheet(expense: item.expense!),
+              ? EditIncomeSheet(
+                  income: item.income!,
+                  scrollController: scrollController,
+                )
+              : EditExpenseSheet(
+                  expense: item.expense!,
+                  scrollController: scrollController,
+                ),
         ),
       ),
     );

@@ -23,9 +23,7 @@ class SavingsToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onToggle,
-      child: AnimatedContainer(
+    return AnimatedContainer(
         duration: AppDuration.normal,
         curve: AppCurve.standard,
         padding: const EdgeInsets.symmetric(
@@ -78,41 +76,43 @@ class SavingsToggle extends StatelessWidget {
                 ],
               ),
             ),
-            // Custom toggle
-            AnimatedContainer(
-              duration: AppDuration.fast,
-              width: 48,
-              height: 28,
-              decoration: BoxDecoration(
-                color: isEnabled ? AppColors.of(context).savings : AppColors.of(context).surfaceOverlay,
-                borderRadius: AppRadius.pill,
-              ),
-              child: AnimatedAlign(
+            // Custom toggle — sadece buraya tıklayınca çalışır
+            GestureDetector(
+              onTap: onToggle,
+              child: AnimatedContainer(
                 duration: AppDuration.fast,
-                curve: AppCurve.standard,
-                alignment:
-                    isEnabled ? Alignment.centerRight : Alignment.centerLeft,
-                child: Container(
-                  width: 22,
-                  height: 22,
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.15),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
+                width: 48,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: isEnabled ? AppColors.of(context).savings : AppColors.of(context).surfaceOverlay,
+                  borderRadius: AppRadius.pill,
+                ),
+                child: AnimatedAlign(
+                  duration: AppDuration.fast,
+                  curve: AppCurve.standard,
+                  alignment:
+                      isEnabled ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    width: 22,
+                    height: 22,
+                    margin: const EdgeInsets.symmetric(horizontal: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.15),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ],
         ),
-      ),
     );
   }
 }

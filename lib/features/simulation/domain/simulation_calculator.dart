@@ -109,7 +109,7 @@ class SimulationCalculator {
     return _calcLoanBased(
       change: c,
       loanPrincipal: c.principal,
-      annualRate: c.annualRate,
+      monthlyRate: c.monthlyRate,
       termMonths: c.termMonths,
       downPayment: 0,
       monthlyExtras: 0,
@@ -120,7 +120,7 @@ class SimulationCalculator {
     return _calcLoanBased(
       change: c,
       loanPrincipal: c.price - c.downPayment,
-      annualRate: c.annualRate,
+      monthlyRate: c.monthlyRate,
       termMonths: c.termMonths,
       downPayment: c.downPayment,
       monthlyExtras: c.monthlyExtras,
@@ -131,7 +131,7 @@ class SimulationCalculator {
     return _calcLoanBased(
       change: c,
       loanPrincipal: c.price - c.downPayment,
-      annualRate: c.annualRate,
+      monthlyRate: c.monthlyRate,
       termMonths: c.termMonths,
       downPayment: c.downPayment,
       monthlyExtras: c.monthlyRunningCosts,
@@ -142,7 +142,7 @@ class SimulationCalculator {
   static ChangeResult _calcLoanBased({
     required SimulationChange change,
     required double loanPrincipal,
-    required double annualRate,
+    required double monthlyRate,
     required int termMonths,
     required double downPayment,
     required double monthlyExtras,
@@ -155,10 +155,10 @@ class SimulationCalculator {
       );
     }
 
-    final rate = annualRate / 100;
+    final rate = monthlyRate / 100;
     final monthly = FinancialCalculator.monthlyLoanPayment(
       principal: loanPrincipal,
-      annualRate: rate,
+      monthlyRate: rate,
       termMonths: termMonths,
     );
     final total = monthly * termMonths;
@@ -172,7 +172,7 @@ class SimulationCalculator {
       totalInterest: interest,
       amortizationSchedule: _amortizationSchedule(
         principal: loanPrincipal,
-        annualRate: rate,
+        monthlyRate: rate,
         termMonths: termMonths,
       ),
     );
@@ -432,18 +432,17 @@ class SimulationCalculator {
 
   static List<AmortizationRow> _amortizationSchedule({
     required double principal,
-    required double annualRate,
+    required double monthlyRate,
     required int termMonths,
   }) {
-    final r = annualRate / 12;
     final monthly = FinancialCalculator.monthlyLoanPayment(
       principal: principal,
-      annualRate: annualRate,
+      monthlyRate: monthlyRate,
       termMonths: termMonths,
     );
     double balance = principal;
     return List.generate(termMonths, (i) {
-      final interest = balance * r;
+      final interest = balance * monthlyRate;
       final principalPaid = monthly - interest;
       balance -= principalPaid;
       return AmortizationRow(

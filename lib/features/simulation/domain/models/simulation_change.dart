@@ -12,7 +12,7 @@ sealed class SimulationChange with _$SimulationChange {
   /// Kredi cekimi — ihtiyac, konut, ticari
   const factory SimulationChange.credit({
     required double principal,
-    required double annualRate,
+    required double monthlyRate,
     required int termMonths,
     @Default('Kredi') String label,
   }) = CreditChange;
@@ -21,7 +21,7 @@ sealed class SimulationChange with _$SimulationChange {
   const factory SimulationChange.housing({
     required double price,
     @Default(0) double downPayment,
-    required double annualRate,
+    required double monthlyRate,
     required int termMonths,
     @Default(0) double monthlyExtras,
     @Default('Ev Alımı') String label,
@@ -31,7 +31,7 @@ sealed class SimulationChange with _$SimulationChange {
   const factory SimulationChange.car({
     required double price,
     @Default(0) double downPayment,
-    required double annualRate,
+    required double monthlyRate,
     required int termMonths,
     @Default(0) double monthlyRunningCosts,
     @Default('Araç Alımı') String label,
@@ -137,11 +137,11 @@ extension SimulationChangeUI on SimulationChange {
         _ => null,
       };
 
-  /// Annual rate (null if not applicable).
-  double? get annualRate => switch (this) {
-        CreditChange(:final annualRate) => annualRate,
-        HousingChange(:final annualRate) => annualRate,
-        CarChange(:final annualRate) => annualRate,
+  /// Monthly rate for loans, annual return rate for investments (null if N/A).
+  double? get monthlyRate => switch (this) {
+        CreditChange(:final monthlyRate) => monthlyRate,
+        HousingChange(:final monthlyRate) => monthlyRate,
+        CarChange(:final monthlyRate) => monthlyRate,
         InvestmentChange(:final annualReturnRate) => annualReturnRate,
         _ => null,
       };

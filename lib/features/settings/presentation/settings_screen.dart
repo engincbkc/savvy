@@ -1078,11 +1078,6 @@ class _ThemeSegmentControl extends StatelessWidget {
             isActive: current == ThemeMode.dark,
             onTap: () => onChanged(ThemeMode.dark),
           ),
-          _SegmentButton(
-            label: 'Sistem',
-            isActive: current == ThemeMode.system,
-            onTap: () => onChanged(ThemeMode.system),
-          ),
         ],
       ),
     );

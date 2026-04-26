@@ -171,14 +171,11 @@ class _SimulationListScreenState extends ConsumerState<SimulationListScreen>
                     AppSpacing.lg, AppSpacing.base, AppSpacing.lg, 0),
                 child: Row(
                   children: [
-                    Flexible(
-                      child: Text(
-                        'Simülasyonlar',
-                        style: AppTypography.headlineMedium.copyWith(
-                          color: colors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                    Text(
+                      'Simülasyon',
+                      style: AppTypography.headlineMedium.copyWith(
+                        color: colors.textPrimary,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const Spacer(),

@@ -59,10 +59,11 @@ void main() {
     });
 
     group('monthlyLoanPayment', () {
-      test('standard loan calculation', () {
+      test('standard loan calculation (monthly rate)', () {
+        // 3% monthly rate, 100K principal, 24 months
         final monthly = FinancialCalculator.monthlyLoanPayment(
           principal: 100000,
-          annualRate: 0.36,
+          monthlyRate: 0.03,
           termMonths: 24,
         );
         expect(monthly, closeTo(5904.7, 1.0));
@@ -72,11 +73,31 @@ void main() {
         expect(
           FinancialCalculator.monthlyLoanPayment(
             principal: 12000,
-            annualRate: 0.0,
+            monthlyRate: 0.0,
             termMonths: 12,
           ),
           equals(1000),
         );
+      });
+
+      test('konut kredisi — 1M @ %2.49 aylık, 120 ay', () {
+        // Hesapkurdu referansı: ~26.273 ₺
+        final monthly = FinancialCalculator.monthlyLoanPayment(
+          principal: 1000000,
+          monthlyRate: 0.0249,
+          termMonths: 120,
+        );
+        expect(monthly, closeTo(26273, 200));
+      });
+
+      test('konut kredisi — 10M @ %3.00 aylık, 120 ay', () {
+        // Beklenen: ~310.620 ₺
+        final monthly = FinancialCalculator.monthlyLoanPayment(
+          principal: 10000000,
+          monthlyRate: 0.03,
+          termMonths: 120,
+        );
+        expect(monthly, closeTo(310620, 2000));
       });
     });
 

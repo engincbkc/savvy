@@ -99,7 +99,7 @@ double simulationMonthlyPayment(SimulationEntry sim) {
       case CreditChange():
         total += FinancialCalculator.monthlyLoanPayment(
           principal: change.principal,
-          annualRate: change.annualRate / 100,
+          monthlyRate: change.monthlyRate / 100,
           termMonths: change.termMonths,
         );
       case HousingChange():
@@ -107,7 +107,7 @@ double simulationMonthlyPayment(SimulationEntry sim) {
         if (loan > 0) {
           total += FinancialCalculator.monthlyLoanPayment(
             principal: loan,
-            annualRate: change.annualRate / 100,
+            monthlyRate: change.monthlyRate / 100,
             termMonths: change.termMonths,
           );
         }
@@ -117,7 +117,7 @@ double simulationMonthlyPayment(SimulationEntry sim) {
         if (loan > 0) {
           total += FinancialCalculator.monthlyLoanPayment(
             principal: loan,
-            annualRate: change.annualRate / 100,
+            monthlyRate: change.monthlyRate / 100,
             termMonths: change.termMonths,
           );
         }

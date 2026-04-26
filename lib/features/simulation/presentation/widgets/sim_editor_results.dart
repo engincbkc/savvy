@@ -6,7 +6,9 @@ import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/utils/currency_formatter.dart';
+import 'package:savvy/core/utils/financial_calculator.dart';
 import 'package:savvy/features/dashboard/domain/models/month_summary.dart';
+import 'package:savvy/features/simulation/domain/models/simulation_change.dart';
 import 'package:savvy/features/simulation/domain/models/simulation_result.dart';
 import 'package:savvy/features/simulation/presentation/widgets/affordability_gauge.dart';
 import 'package:savvy/features/simulation/presentation/widgets/before_after_card.dart';
@@ -99,22 +101,15 @@ class SimResultsSection extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(AppSpacing.lg),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                color.withValues(alpha: 0.15),
-                color.withValues(alpha: 0.05),
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: c.surfaceCard,
             borderRadius: AppRadius.cardLg,
-            border: Border.all(color: color.withValues(alpha: 0.2)),
+            border: Border.all(color: c.borderDefault.withValues(alpha: 0.5)),
           ),
           child: Column(
             children: [
-              Text('AYLIK ETKİ',
+              Text('AYLIK BÜTÇE ETKİSİ',
                   style: AppTypography.labelSmall.copyWith(
-                      color: color,
+                      color: c.textSecondary,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.5)),
               const SizedBox(height: AppSpacing.sm),
@@ -129,8 +124,19 @@ class SimResultsSection extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'Yıllık: ${isPositive ? '+' : ''}${CurrencyFormatter.formatNoDecimal(result.annualNetImpact)}',
+                isPositive
+                    ? 'Bu simülasyon aylık bütçenize ${CurrencyFormatter.formatNoDecimal(result.monthlyNetImpact)} ekleyecek'
+                    : 'Bu simülasyon aylık bütçenizden ${CurrencyFormatter.formatNoDecimal(result.monthlyNetImpact.abs())} çıkaracak',
                 style: AppTypography.caption.copyWith(color: c.textTertiary),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Yıllık: ${isPositive ? '+' : ''}${CurrencyFormatter.formatNoDecimal(result.annualNetImpact)}',
+                style: AppTypography.caption.copyWith(
+                  color: c.textTertiary.withValues(alpha: 0.7),
+                  fontSize: 10,
+                ),
               ),
             ],
           ),
@@ -153,6 +159,10 @@ class SimResultsSection extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.base),
         ],
+
+        // Hesaplama Özeti kutusu
+        _CalculationSummaryBox(result: result, color: color),
+        const SizedBox(height: AppSpacing.base),
 
         // Summary stats
         SimSummaryRow(
@@ -214,6 +224,33 @@ class SimResultsSection extends StatelessWidget {
           ),
         ),
 
+        // Disclaimer
+        const SizedBox(height: AppSpacing.base),
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: c.surfaceCard,
+            borderRadius: AppRadius.chip,
+            border: Border.all(color: c.borderDefault.withValues(alpha: 0.3)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(LucideIcons.info, size: 12, color: c.textTertiary),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  'Bu simülasyon bilgilendirme amaçlıdır. Bankaların gerçek kredi tekliflerinde kredi notu, gelir düzeyi ve kampanyalar gibi faktörler faiz oranını değiştirebilir. Kesin teklif için bankanızla görüşün.',
+                  style: AppTypography.caption.copyWith(
+                    color: c.textTertiary,
+                    fontSize: 9,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
         // Per-change breakdown in advanced mode
         if (advancedMode) ...[
           const SizedBox(height: AppSpacing.lg),
@@ -227,6 +264,146 @@ class SimResultsSection extends StatelessWidget {
               )),
         ],
       ],
+    );
+  }
+}
+
+/// Hesaplama Özeti — shows detailed breakdown for loan-based simulations.
+class _CalculationSummaryBox extends StatelessWidget {
+  final SimulationResult result;
+  final Color color;
+
+  const _CalculationSummaryBox({required this.result, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
+    // Find the first loan-based change for detail display
+    final loanResult = result.changeResults
+        .where((cr) => cr.change.hasLoan && cr.totalInterest != null)
+        .firstOrNull;
+
+    if (loanResult == null) return const SizedBox.shrink();
+
+    final change = loanResult.change;
+    final monthlyRate = change.monthlyRate ?? 0.0;
+    final termMonths = change.termMonths ?? 0;
+    final principal = change.loanPrincipal;
+    final monthlyPayment = loanResult.monthlyImpact.abs();
+    final totalPayment = monthlyPayment * termMonths;
+    final totalInterest = loanResult.totalInterest ?? 0.0;
+    final ymo = FinancialCalculator.calculateYMO(monthlyRate / 100);
+
+    // Determine if housing (tax exempt)
+    final isHousing = change is HousingChange;
+    final taxLabel = isHousing ? 'Konut muaf' : 'KKDF %15 + BSMV %15';
+
+    // For housing/car: show price and down payment
+    double? price;
+    double? downPayment;
+    if (change is HousingChange) {
+      price = change.price;
+      downPayment = change.downPayment;
+    } else if (change is CarChange) {
+      price = change.price;
+      downPayment = change.downPayment;
+    }
+
+    final termYears = termMonths ~/ 12;
+    final termRemainder = termMonths % 12;
+    final termLabel = termRemainder == 0
+        ? '$termMonths ay ($termYears yıl)'
+        : '$termMonths ay';
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.base),
+      decoration: BoxDecoration(
+        color: c.surfaceCard,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: c.borderDefault.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(LucideIcons.calculator, size: 16, color: color),
+              const SizedBox(width: AppSpacing.xs),
+              Text('Hesaplama Özeti',
+                  style: AppTypography.titleMedium
+                      .copyWith(color: c.textPrimary, fontSize: 14)),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          if (price != null) ...[
+            _SummaryLine(label: change.label, value: CurrencyFormatter.formatNoDecimal(price)),
+            if (downPayment != null && downPayment > 0)
+              _SummaryLine(label: 'Peşinat', value: '- ${CurrencyFormatter.formatNoDecimal(downPayment)}'),
+            Divider(color: c.borderDefault.withValues(alpha: 0.3), height: AppSpacing.md),
+          ],
+
+          _SummaryLine(label: 'Çekilecek kredi', value: CurrencyFormatter.formatNoDecimal(principal), bold: true),
+          const SizedBox(height: AppSpacing.sm),
+          _SummaryLine(label: 'Aylık faiz', value: '%${monthlyRate.toStringAsFixed(2)}'),
+          _SummaryLine(label: 'KKDF + BSMV', value: taxLabel),
+          _SummaryLine(label: 'YMO', value: '%${(ymo * 100).toStringAsFixed(2)}'),
+          _SummaryLine(label: 'Vade', value: termLabel),
+          Divider(color: c.borderDefault.withValues(alpha: 0.3), height: AppSpacing.md),
+          _SummaryLine(label: 'Aylık taksit', value: CurrencyFormatter.formatNoDecimal(monthlyPayment), bold: true),
+          _SummaryLine(label: 'Toplam ödeme', value: CurrencyFormatter.formatNoDecimal(totalPayment)),
+          _SummaryLine(label: 'Toplam faiz', value: CurrencyFormatter.formatNoDecimal(totalInterest), valueColor: c.expense),
+
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Hesaplama bankaların kullandığı anüite (eşit taksit) yöntemine göre yapılmıştır.',
+            style: AppTypography.caption.copyWith(
+              color: c.textTertiary,
+              fontSize: 9,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryLine extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool bold;
+  final Color? valueColor;
+
+  const _SummaryLine({
+    required this.label,
+    required this.value,
+    this.bold = false,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: AppTypography.caption.copyWith(
+                color: c.textSecondary,
+                fontWeight: bold ? FontWeight.w600 : FontWeight.normal,
+              )),
+          Text(value,
+              style: AppTypography.labelSmall.copyWith(
+                color: valueColor ?? c.textPrimary,
+                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              )),
+        ],
+      ),
     );
   }
 }

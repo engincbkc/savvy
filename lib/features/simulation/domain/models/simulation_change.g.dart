@@ -8,7 +8,7 @@ part of 'simulation_change.dart';
 
 CreditChange _$CreditChangeFromJson(Map<String, dynamic> json) => CreditChange(
   principal: (json['principal'] as num).toDouble(),
-  annualRate: (json['annualRate'] as num).toDouble(),
+  monthlyRate: (json['monthlyRate'] as num).toDouble(),
   termMonths: (json['termMonths'] as num).toInt(),
   label: json['label'] as String? ?? 'Kredi',
   $type: json['changeType'] as String?,
@@ -17,7 +17,7 @@ CreditChange _$CreditChangeFromJson(Map<String, dynamic> json) => CreditChange(
 Map<String, dynamic> _$CreditChangeToJson(CreditChange instance) =>
     <String, dynamic>{
       'principal': instance.principal,
-      'annualRate': instance.annualRate,
+      'monthlyRate': instance.monthlyRate,
       'termMonths': instance.termMonths,
       'label': instance.label,
       'changeType': instance.$type,
@@ -27,7 +27,7 @@ HousingChange _$HousingChangeFromJson(Map<String, dynamic> json) =>
     HousingChange(
       price: (json['price'] as num).toDouble(),
       downPayment: (json['downPayment'] as num?)?.toDouble() ?? 0,
-      annualRate: (json['annualRate'] as num).toDouble(),
+      monthlyRate: (json['monthlyRate'] as num).toDouble(),
       termMonths: (json['termMonths'] as num).toInt(),
       monthlyExtras: (json['monthlyExtras'] as num?)?.toDouble() ?? 0,
       label: json['label'] as String? ?? 'Ev Alımı',
@@ -38,7 +38,7 @@ Map<String, dynamic> _$HousingChangeToJson(HousingChange instance) =>
     <String, dynamic>{
       'price': instance.price,
       'downPayment': instance.downPayment,
-      'annualRate': instance.annualRate,
+      'monthlyRate': instance.monthlyRate,
       'termMonths': instance.termMonths,
       'monthlyExtras': instance.monthlyExtras,
       'label': instance.label,
@@ -48,7 +48,7 @@ Map<String, dynamic> _$HousingChangeToJson(HousingChange instance) =>
 CarChange _$CarChangeFromJson(Map<String, dynamic> json) => CarChange(
   price: (json['price'] as num).toDouble(),
   downPayment: (json['downPayment'] as num?)?.toDouble() ?? 0,
-  annualRate: (json['annualRate'] as num).toDouble(),
+  monthlyRate: (json['monthlyRate'] as num).toDouble(),
   termMonths: (json['termMonths'] as num).toInt(),
   monthlyRunningCosts: (json['monthlyRunningCosts'] as num?)?.toDouble() ?? 0,
   label: json['label'] as String? ?? 'Araç Alımı',
@@ -58,7 +58,7 @@ CarChange _$CarChangeFromJson(Map<String, dynamic> json) => CarChange(
 Map<String, dynamic> _$CarChangeToJson(CarChange instance) => <String, dynamic>{
   'price': instance.price,
   'downPayment': instance.downPayment,
-  'annualRate': instance.annualRate,
+  'monthlyRate': instance.monthlyRate,
   'termMonths': instance.termMonths,
   'monthlyRunningCosts': instance.monthlyRunningCosts,
   'label': instance.label,

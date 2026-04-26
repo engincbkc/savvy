@@ -176,9 +176,9 @@ enum AffordabilityStatus {
 
   String get label => switch (this) {
         comfortable => 'Rahat',
-        manageable => 'İdare Edilebilir',
+        manageable => 'İdare edilir',
         tight => 'Sıkışık',
-        risky => 'Riskli',
+        risky => 'Yasal limit aşımı',
       };
 }
 
@@ -198,7 +198,7 @@ enum SimulationTemplate {
         housing => 'Ev Alımı',
         car => 'Araç Alımı',
         rentChange => 'Kira Değişimi',
-        salaryChange => 'İş Değişikliği / Zam',
+        salaryChange => 'Maaş Değişikliği',
         investment => 'Yatırım',
         custom => 'Özel Senaryo',
       };
@@ -210,7 +210,7 @@ enum SimulationTemplate {
         rentChange => 'Kira artışı veya yeni eve taşınma',
         salaryChange => 'Zam, terfi veya iş değişikliği',
         investment => 'Vadeli mevduat, fon, hisse...',
-        custom => 'Gelir/gider ekleyerek kendi senaryonu oluştur',
+        custom => 'Örn: "3 ay sonra freelance geliri +15K" veya "Haziranda düğün gideri -50K"',
       };
 
   IconData get icon => switch (this) {

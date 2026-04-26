@@ -31,10 +31,10 @@ class AffordabilityGauge extends StatelessWidget {
     };
 
     final statusIcon = switch (status) {
-      AffordabilityStatus.comfortable => LucideIcons.checkCircle,
+      AffordabilityStatus.comfortable => LucideIcons.checkCircle2,
       AffordabilityStatus.manageable => LucideIcons.info,
       AffordabilityStatus.tight => LucideIcons.alertTriangle,
-      AffordabilityStatus.risky => LucideIcons.alertOctagon,
+      AffordabilityStatus.risky => LucideIcons.shieldAlert,
     };
 
     return Container(
@@ -50,7 +50,7 @@ class AffordabilityGauge extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(LucideIcons.gauge, size: 16, color: statusColor),
+              Icon(LucideIcons.activity, size: 16, color: statusColor),
               const SizedBox(width: AppSpacing.xs),
               Text('Karşılanabilirlik',
                   style: AppTypography.titleMedium
@@ -137,12 +137,23 @@ class AffordabilityGauge extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              _ThresholdChip(label: '<%25 Rahat', color: c.income),
-              _ThresholdChip(label: '<%35 İdare', color: c.brandPrimary),
-              _ThresholdChip(label: '<%45 Sıkışık', color: c.warning),
-              _ThresholdChip(label: '≥%45 Risk', color: c.expense),
+              _ThresholdChip(label: '<%30 Rahat', color: c.income),
+              _ThresholdChip(label: '<%40 İdare', color: c.brandPrimary),
+              _ThresholdChip(label: '<%50 Sıkışık', color: c.warning),
+              _ThresholdChip(label: '≥%50 Risk', color: c.expense),
             ],
           ),
+          // Yasal uyarı
+          if (ratio > 0.50) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'Aylık taksitiniz gelirinizin %50\'sini aşıyor. Bankalar genellikle bu oranın üstündeki kredileri onaylamaz.',
+              style: AppTypography.caption.copyWith(
+                color: c.expense,
+                fontSize: 10,
+              ),
+            ),
+          ],
         ],
       ),
     );

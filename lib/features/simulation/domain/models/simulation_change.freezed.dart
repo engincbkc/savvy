@@ -219,12 +219,12 @@ return investment(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( double principal,  double annualRate,  int termMonths,  String label)?  credit,TResult Function( double price,  double downPayment,  double annualRate,  int termMonths,  double monthlyExtras,  String label)?  housing,TResult Function( double price,  double downPayment,  double annualRate,  int termMonths,  double monthlyRunningCosts,  String label)?  car,TResult Function( double currentRent,  double newRent,  double annualIncreaseRate,  String label)?  rentChange,TResult Function( double currentGross,  double newGross,  String label)?  salaryChange,TResult Function( double amount,  String description,  bool isRecurring,  String label)?  income,TResult Function( double amount,  String description,  bool isRecurring,  String label)?  expense,TResult Function( double principal,  double annualReturnRate,  int termMonths,  bool isCompound,  String label)?  investment,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( double principal,  double monthlyRate,  int termMonths,  String label)?  credit,TResult Function( double price,  double downPayment,  double monthlyRate,  int termMonths,  double monthlyExtras,  String label)?  housing,TResult Function( double price,  double downPayment,  double monthlyRate,  int termMonths,  double monthlyRunningCosts,  String label)?  car,TResult Function( double currentRent,  double newRent,  double annualIncreaseRate,  String label)?  rentChange,TResult Function( double currentGross,  double newGross,  String label)?  salaryChange,TResult Function( double amount,  String description,  bool isRecurring,  String label)?  income,TResult Function( double amount,  String description,  bool isRecurring,  String label)?  expense,TResult Function( double principal,  double annualReturnRate,  int termMonths,  bool isCompound,  String label)?  investment,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case CreditChange() when credit != null:
-return credit(_that.principal,_that.annualRate,_that.termMonths,_that.label);case HousingChange() when housing != null:
-return housing(_that.price,_that.downPayment,_that.annualRate,_that.termMonths,_that.monthlyExtras,_that.label);case CarChange() when car != null:
-return car(_that.price,_that.downPayment,_that.annualRate,_that.termMonths,_that.monthlyRunningCosts,_that.label);case RentChangeChange() when rentChange != null:
+return credit(_that.principal,_that.monthlyRate,_that.termMonths,_that.label);case HousingChange() when housing != null:
+return housing(_that.price,_that.downPayment,_that.monthlyRate,_that.termMonths,_that.monthlyExtras,_that.label);case CarChange() when car != null:
+return car(_that.price,_that.downPayment,_that.monthlyRate,_that.termMonths,_that.monthlyRunningCosts,_that.label);case RentChangeChange() when rentChange != null:
 return rentChange(_that.currentRent,_that.newRent,_that.annualIncreaseRate,_that.label);case SalaryChangeChange() when salaryChange != null:
 return salaryChange(_that.currentGross,_that.newGross,_that.label);case IncomeChange() when income != null:
 return income(_that.amount,_that.description,_that.isRecurring,_that.label);case ExpenseChange() when expense != null:
@@ -247,12 +247,12 @@ return investment(_that.principal,_that.annualReturnRate,_that.termMonths,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( double principal,  double annualRate,  int termMonths,  String label)  credit,required TResult Function( double price,  double downPayment,  double annualRate,  int termMonths,  double monthlyExtras,  String label)  housing,required TResult Function( double price,  double downPayment,  double annualRate,  int termMonths,  double monthlyRunningCosts,  String label)  car,required TResult Function( double currentRent,  double newRent,  double annualIncreaseRate,  String label)  rentChange,required TResult Function( double currentGross,  double newGross,  String label)  salaryChange,required TResult Function( double amount,  String description,  bool isRecurring,  String label)  income,required TResult Function( double amount,  String description,  bool isRecurring,  String label)  expense,required TResult Function( double principal,  double annualReturnRate,  int termMonths,  bool isCompound,  String label)  investment,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( double principal,  double monthlyRate,  int termMonths,  String label)  credit,required TResult Function( double price,  double downPayment,  double monthlyRate,  int termMonths,  double monthlyExtras,  String label)  housing,required TResult Function( double price,  double downPayment,  double monthlyRate,  int termMonths,  double monthlyRunningCosts,  String label)  car,required TResult Function( double currentRent,  double newRent,  double annualIncreaseRate,  String label)  rentChange,required TResult Function( double currentGross,  double newGross,  String label)  salaryChange,required TResult Function( double amount,  String description,  bool isRecurring,  String label)  income,required TResult Function( double amount,  String description,  bool isRecurring,  String label)  expense,required TResult Function( double principal,  double annualReturnRate,  int termMonths,  bool isCompound,  String label)  investment,}) {final _that = this;
 switch (_that) {
 case CreditChange():
-return credit(_that.principal,_that.annualRate,_that.termMonths,_that.label);case HousingChange():
-return housing(_that.price,_that.downPayment,_that.annualRate,_that.termMonths,_that.monthlyExtras,_that.label);case CarChange():
-return car(_that.price,_that.downPayment,_that.annualRate,_that.termMonths,_that.monthlyRunningCosts,_that.label);case RentChangeChange():
+return credit(_that.principal,_that.monthlyRate,_that.termMonths,_that.label);case HousingChange():
+return housing(_that.price,_that.downPayment,_that.monthlyRate,_that.termMonths,_that.monthlyExtras,_that.label);case CarChange():
+return car(_that.price,_that.downPayment,_that.monthlyRate,_that.termMonths,_that.monthlyRunningCosts,_that.label);case RentChangeChange():
 return rentChange(_that.currentRent,_that.newRent,_that.annualIncreaseRate,_that.label);case SalaryChangeChange():
 return salaryChange(_that.currentGross,_that.newGross,_that.label);case IncomeChange():
 return income(_that.amount,_that.description,_that.isRecurring,_that.label);case ExpenseChange():
@@ -271,12 +271,12 @@ return investment(_that.principal,_that.annualReturnRate,_that.termMonths,_that.
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( double principal,  double annualRate,  int termMonths,  String label)?  credit,TResult? Function( double price,  double downPayment,  double annualRate,  int termMonths,  double monthlyExtras,  String label)?  housing,TResult? Function( double price,  double downPayment,  double annualRate,  int termMonths,  double monthlyRunningCosts,  String label)?  car,TResult? Function( double currentRent,  double newRent,  double annualIncreaseRate,  String label)?  rentChange,TResult? Function( double currentGross,  double newGross,  String label)?  salaryChange,TResult? Function( double amount,  String description,  bool isRecurring,  String label)?  income,TResult? Function( double amount,  String description,  bool isRecurring,  String label)?  expense,TResult? Function( double principal,  double annualReturnRate,  int termMonths,  bool isCompound,  String label)?  investment,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( double principal,  double monthlyRate,  int termMonths,  String label)?  credit,TResult? Function( double price,  double downPayment,  double monthlyRate,  int termMonths,  double monthlyExtras,  String label)?  housing,TResult? Function( double price,  double downPayment,  double monthlyRate,  int termMonths,  double monthlyRunningCosts,  String label)?  car,TResult? Function( double currentRent,  double newRent,  double annualIncreaseRate,  String label)?  rentChange,TResult? Function( double currentGross,  double newGross,  String label)?  salaryChange,TResult? Function( double amount,  String description,  bool isRecurring,  String label)?  income,TResult? Function( double amount,  String description,  bool isRecurring,  String label)?  expense,TResult? Function( double principal,  double annualReturnRate,  int termMonths,  bool isCompound,  String label)?  investment,}) {final _that = this;
 switch (_that) {
 case CreditChange() when credit != null:
-return credit(_that.principal,_that.annualRate,_that.termMonths,_that.label);case HousingChange() when housing != null:
-return housing(_that.price,_that.downPayment,_that.annualRate,_that.termMonths,_that.monthlyExtras,_that.label);case CarChange() when car != null:
-return car(_that.price,_that.downPayment,_that.annualRate,_that.termMonths,_that.monthlyRunningCosts,_that.label);case RentChangeChange() when rentChange != null:
+return credit(_that.principal,_that.monthlyRate,_that.termMonths,_that.label);case HousingChange() when housing != null:
+return housing(_that.price,_that.downPayment,_that.monthlyRate,_that.termMonths,_that.monthlyExtras,_that.label);case CarChange() when car != null:
+return car(_that.price,_that.downPayment,_that.monthlyRate,_that.termMonths,_that.monthlyRunningCosts,_that.label);case RentChangeChange() when rentChange != null:
 return rentChange(_that.currentRent,_that.newRent,_that.annualIncreaseRate,_that.label);case SalaryChangeChange() when salaryChange != null:
 return salaryChange(_that.currentGross,_that.newGross,_that.label);case IncomeChange() when income != null:
 return income(_that.amount,_that.description,_that.isRecurring,_that.label);case ExpenseChange() when expense != null:
@@ -293,11 +293,11 @@ return investment(_that.principal,_that.annualReturnRate,_that.termMonths,_that.
 @JsonSerializable()
 
 class CreditChange implements SimulationChange {
-  const CreditChange({required this.principal, required this.annualRate, required this.termMonths, this.label = 'Kredi', final  String? $type}): $type = $type ?? 'credit';
+  const CreditChange({required this.principal, required this.monthlyRate, required this.termMonths, this.label = 'Kredi', final  String? $type}): $type = $type ?? 'credit';
   factory CreditChange.fromJson(Map<String, dynamic> json) => _$CreditChangeFromJson(json);
 
  final  double principal;
- final  double annualRate;
+ final  double monthlyRate;
  final  int termMonths;
 @override@JsonKey() final  String label;
 
@@ -318,16 +318,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreditChange&&(identical(other.principal, principal) || other.principal == principal)&&(identical(other.annualRate, annualRate) || other.annualRate == annualRate)&&(identical(other.termMonths, termMonths) || other.termMonths == termMonths)&&(identical(other.label, label) || other.label == label));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CreditChange&&(identical(other.principal, principal) || other.principal == principal)&&(identical(other.monthlyRate, monthlyRate) || other.monthlyRate == monthlyRate)&&(identical(other.termMonths, termMonths) || other.termMonths == termMonths)&&(identical(other.label, label) || other.label == label));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,principal,annualRate,termMonths,label);
+int get hashCode => Object.hash(runtimeType,principal,monthlyRate,termMonths,label);
 
 @override
 String toString() {
-  return 'SimulationChange.credit(principal: $principal, annualRate: $annualRate, termMonths: $termMonths, label: $label)';
+  return 'SimulationChange.credit(principal: $principal, monthlyRate: $monthlyRate, termMonths: $termMonths, label: $label)';
 }
 
 
@@ -338,7 +338,7 @@ abstract mixin class $CreditChangeCopyWith<$Res> implements $SimulationChangeCop
   factory $CreditChangeCopyWith(CreditChange value, $Res Function(CreditChange) _then) = _$CreditChangeCopyWithImpl;
 @override @useResult
 $Res call({
- double principal, double annualRate, int termMonths, String label
+ double principal, double monthlyRate, int termMonths, String label
 });
 
 
@@ -355,10 +355,10 @@ class _$CreditChangeCopyWithImpl<$Res>
 
 /// Create a copy of SimulationChange
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? principal = null,Object? annualRate = null,Object? termMonths = null,Object? label = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? principal = null,Object? monthlyRate = null,Object? termMonths = null,Object? label = null,}) {
   return _then(CreditChange(
 principal: null == principal ? _self.principal : principal // ignore: cast_nullable_to_non_nullable
-as double,annualRate: null == annualRate ? _self.annualRate : annualRate // ignore: cast_nullable_to_non_nullable
+as double,monthlyRate: null == monthlyRate ? _self.monthlyRate : monthlyRate // ignore: cast_nullable_to_non_nullable
 as double,termMonths: null == termMonths ? _self.termMonths : termMonths // ignore: cast_nullable_to_non_nullable
 as int,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,
@@ -372,12 +372,12 @@ as String,
 @JsonSerializable()
 
 class HousingChange implements SimulationChange {
-  const HousingChange({required this.price, this.downPayment = 0, required this.annualRate, required this.termMonths, this.monthlyExtras = 0, this.label = 'Ev Alımı', final  String? $type}): $type = $type ?? 'housing';
+  const HousingChange({required this.price, this.downPayment = 0, required this.monthlyRate, required this.termMonths, this.monthlyExtras = 0, this.label = 'Ev Alımı', final  String? $type}): $type = $type ?? 'housing';
   factory HousingChange.fromJson(Map<String, dynamic> json) => _$HousingChangeFromJson(json);
 
  final  double price;
 @JsonKey() final  double downPayment;
- final  double annualRate;
+ final  double monthlyRate;
  final  int termMonths;
 @JsonKey() final  double monthlyExtras;
 @override@JsonKey() final  String label;
@@ -399,16 +399,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is HousingChange&&(identical(other.price, price) || other.price == price)&&(identical(other.downPayment, downPayment) || other.downPayment == downPayment)&&(identical(other.annualRate, annualRate) || other.annualRate == annualRate)&&(identical(other.termMonths, termMonths) || other.termMonths == termMonths)&&(identical(other.monthlyExtras, monthlyExtras) || other.monthlyExtras == monthlyExtras)&&(identical(other.label, label) || other.label == label));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is HousingChange&&(identical(other.price, price) || other.price == price)&&(identical(other.downPayment, downPayment) || other.downPayment == downPayment)&&(identical(other.monthlyRate, monthlyRate) || other.monthlyRate == monthlyRate)&&(identical(other.termMonths, termMonths) || other.termMonths == termMonths)&&(identical(other.monthlyExtras, monthlyExtras) || other.monthlyExtras == monthlyExtras)&&(identical(other.label, label) || other.label == label));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,price,downPayment,annualRate,termMonths,monthlyExtras,label);
+int get hashCode => Object.hash(runtimeType,price,downPayment,monthlyRate,termMonths,monthlyExtras,label);
 
 @override
 String toString() {
-  return 'SimulationChange.housing(price: $price, downPayment: $downPayment, annualRate: $annualRate, termMonths: $termMonths, monthlyExtras: $monthlyExtras, label: $label)';
+  return 'SimulationChange.housing(price: $price, downPayment: $downPayment, monthlyRate: $monthlyRate, termMonths: $termMonths, monthlyExtras: $monthlyExtras, label: $label)';
 }
 
 
@@ -419,7 +419,7 @@ abstract mixin class $HousingChangeCopyWith<$Res> implements $SimulationChangeCo
   factory $HousingChangeCopyWith(HousingChange value, $Res Function(HousingChange) _then) = _$HousingChangeCopyWithImpl;
 @override @useResult
 $Res call({
- double price, double downPayment, double annualRate, int termMonths, double monthlyExtras, String label
+ double price, double downPayment, double monthlyRate, int termMonths, double monthlyExtras, String label
 });
 
 
@@ -436,11 +436,11 @@ class _$HousingChangeCopyWithImpl<$Res>
 
 /// Create a copy of SimulationChange
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? price = null,Object? downPayment = null,Object? annualRate = null,Object? termMonths = null,Object? monthlyExtras = null,Object? label = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? price = null,Object? downPayment = null,Object? monthlyRate = null,Object? termMonths = null,Object? monthlyExtras = null,Object? label = null,}) {
   return _then(HousingChange(
 price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
 as double,downPayment: null == downPayment ? _self.downPayment : downPayment // ignore: cast_nullable_to_non_nullable
-as double,annualRate: null == annualRate ? _self.annualRate : annualRate // ignore: cast_nullable_to_non_nullable
+as double,monthlyRate: null == monthlyRate ? _self.monthlyRate : monthlyRate // ignore: cast_nullable_to_non_nullable
 as double,termMonths: null == termMonths ? _self.termMonths : termMonths // ignore: cast_nullable_to_non_nullable
 as int,monthlyExtras: null == monthlyExtras ? _self.monthlyExtras : monthlyExtras // ignore: cast_nullable_to_non_nullable
 as double,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
@@ -455,12 +455,12 @@ as String,
 @JsonSerializable()
 
 class CarChange implements SimulationChange {
-  const CarChange({required this.price, this.downPayment = 0, required this.annualRate, required this.termMonths, this.monthlyRunningCosts = 0, this.label = 'Araç Alımı', final  String? $type}): $type = $type ?? 'car';
+  const CarChange({required this.price, this.downPayment = 0, required this.monthlyRate, required this.termMonths, this.monthlyRunningCosts = 0, this.label = 'Araç Alımı', final  String? $type}): $type = $type ?? 'car';
   factory CarChange.fromJson(Map<String, dynamic> json) => _$CarChangeFromJson(json);
 
  final  double price;
 @JsonKey() final  double downPayment;
- final  double annualRate;
+ final  double monthlyRate;
  final  int termMonths;
 @JsonKey() final  double monthlyRunningCosts;
 @override@JsonKey() final  String label;
@@ -482,16 +482,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CarChange&&(identical(other.price, price) || other.price == price)&&(identical(other.downPayment, downPayment) || other.downPayment == downPayment)&&(identical(other.annualRate, annualRate) || other.annualRate == annualRate)&&(identical(other.termMonths, termMonths) || other.termMonths == termMonths)&&(identical(other.monthlyRunningCosts, monthlyRunningCosts) || other.monthlyRunningCosts == monthlyRunningCosts)&&(identical(other.label, label) || other.label == label));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CarChange&&(identical(other.price, price) || other.price == price)&&(identical(other.downPayment, downPayment) || other.downPayment == downPayment)&&(identical(other.monthlyRate, monthlyRate) || other.monthlyRate == monthlyRate)&&(identical(other.termMonths, termMonths) || other.termMonths == termMonths)&&(identical(other.monthlyRunningCosts, monthlyRunningCosts) || other.monthlyRunningCosts == monthlyRunningCosts)&&(identical(other.label, label) || other.label == label));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,price,downPayment,annualRate,termMonths,monthlyRunningCosts,label);
+int get hashCode => Object.hash(runtimeType,price,downPayment,monthlyRate,termMonths,monthlyRunningCosts,label);
 
 @override
 String toString() {
-  return 'SimulationChange.car(price: $price, downPayment: $downPayment, annualRate: $annualRate, termMonths: $termMonths, monthlyRunningCosts: $monthlyRunningCosts, label: $label)';
+  return 'SimulationChange.car(price: $price, downPayment: $downPayment, monthlyRate: $monthlyRate, termMonths: $termMonths, monthlyRunningCosts: $monthlyRunningCosts, label: $label)';
 }
 
 
@@ -502,7 +502,7 @@ abstract mixin class $CarChangeCopyWith<$Res> implements $SimulationChangeCopyWi
   factory $CarChangeCopyWith(CarChange value, $Res Function(CarChange) _then) = _$CarChangeCopyWithImpl;
 @override @useResult
 $Res call({
- double price, double downPayment, double annualRate, int termMonths, double monthlyRunningCosts, String label
+ double price, double downPayment, double monthlyRate, int termMonths, double monthlyRunningCosts, String label
 });
 
 
@@ -519,11 +519,11 @@ class _$CarChangeCopyWithImpl<$Res>
 
 /// Create a copy of SimulationChange
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? price = null,Object? downPayment = null,Object? annualRate = null,Object? termMonths = null,Object? monthlyRunningCosts = null,Object? label = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? price = null,Object? downPayment = null,Object? monthlyRate = null,Object? termMonths = null,Object? monthlyRunningCosts = null,Object? label = null,}) {
   return _then(CarChange(
 price: null == price ? _self.price : price // ignore: cast_nullable_to_non_nullable
 as double,downPayment: null == downPayment ? _self.downPayment : downPayment // ignore: cast_nullable_to_non_nullable
-as double,annualRate: null == annualRate ? _self.annualRate : annualRate // ignore: cast_nullable_to_non_nullable
+as double,monthlyRate: null == monthlyRate ? _self.monthlyRate : monthlyRate // ignore: cast_nullable_to_non_nullable
 as double,termMonths: null == termMonths ? _self.termMonths : termMonths // ignore: cast_nullable_to_non_nullable
 as int,monthlyRunningCosts: null == monthlyRunningCosts ? _self.monthlyRunningCosts : monthlyRunningCosts // ignore: cast_nullable_to_non_nullable
 as double,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable

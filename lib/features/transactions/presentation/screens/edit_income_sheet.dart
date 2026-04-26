@@ -14,7 +14,13 @@ import 'package:savvy/shared/widgets/salary_breakdown_panel.dart';
 
 class EditIncomeSheet extends ConsumerStatefulWidget {
   final Income income;
-  const EditIncomeSheet({super.key, required this.income});
+  final ScrollController? scrollController;
+
+  const EditIncomeSheet({
+    super.key,
+    required this.income,
+    this.scrollController,
+  });
 
   @override
   ConsumerState<EditIncomeSheet> createState() => _EditIncomeSheetState();
@@ -70,7 +76,7 @@ class _EditIncomeSheetState extends ConsumerState<EditIncomeSheet> {
     } else {
       _grossController = TextEditingController();
       _amountController = TextEditingController(
-          text: i.amount.toStringAsFixed(0));
+          text: _formatThousands(i.amount.round()));
     }
 
     _noteController = TextEditingController(text: i.note ?? '');
@@ -234,19 +240,26 @@ class _EditIncomeSheetState extends ConsumerState<EditIncomeSheet> {
     final formState = ref.watch(transactionFormProvider);
     final c = AppColors.of(context);
     final isSalary = _category == IncomeCategory.salary;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: AppSpacing.lg,
-        right: AppSpacing.lg,
-        top: AppSpacing.base,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
-      ),
-      child: Form(
-        key: _formKey,
-        child: ListView(
-          children: [
-            Column(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: AppSpacing.lg,
+          right: AppSpacing.lg,
+          top: AppSpacing.base,
+        ),
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            controller: widget.scrollController,
+            physics: const BouncingScrollPhysics(),
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: EdgeInsets.only(
+              bottom: bottomInset + AppSpacing.xl + 20,
+            ),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SheetHandle(),
@@ -445,7 +458,7 @@ class _EditIncomeSheetState extends ConsumerState<EditIncomeSheet> {
                 const SizedBox(height: AppSpacing.sm),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );

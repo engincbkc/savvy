@@ -35,7 +35,7 @@ class _AddSimulationSheetState extends ConsumerState<AddSimulationSheet> {
   // Parameters
   double _price = 1000000;
   double _downPaymentPercent = 20;
-  double _annualRate = 2.5;
+  double _monthlyRate = 2.5;
   int _termMonths = 48;
 
   @override
@@ -67,7 +67,7 @@ class _AddSimulationSheetState extends ConsumerState<AddSimulationSheet> {
 
   double get _monthlyPayment {
     if (_loanAmount <= 0 || _termMonths <= 0) return 0;
-    final r = _annualRate / 100 / 12;
+    final r = _monthlyRate / 100;
     if (r == 0) return _loanAmount / _termMonths;
     final pow = math.pow(1 + r, _termMonths);
     return _loanAmount * (r * pow) / (pow - 1);
@@ -127,7 +127,7 @@ class _AddSimulationSheetState extends ConsumerState<AddSimulationSheet> {
           'principal': _price,
           'downPayment': _downPayment,
           'downPaymentPercent': _downPaymentPercent,
-          'annualRate': _annualRate,
+          'monthlyRate': _monthlyRate,
           'termMonths': _termMonths,
           'loanAmount': _loanAmount,
           'monthlyPayment': _monthlyPayment,
@@ -393,29 +393,29 @@ class _AddSimulationSheetState extends ConsumerState<AddSimulationSheet> {
 
                   // ── Annual Rate ────────────────────────────
                   _SliderSection(
-                    label: 'Yıllık Faiz',
-                    valueText: '%${_annualRate.toStringAsFixed(1)}',
+                    label: 'Aylık Faiz',
+                    valueText: '%${_monthlyRate.toStringAsFixed(1)}',
                     minLabel: '%0',
                     maxLabel: '%5',
-                    valueColor: _annualRate < 2
+                    valueColor: _monthlyRate < 2
                         ? c.income
-                        : _annualRate < 3.5
+                        : _monthlyRate < 3.5
                             ? c.savings
                             : c.expense,
                     child: Slider(
-                      value: _annualRate,
+                      value: _monthlyRate,
                       min: 0,
                       max: 5,
                       divisions: 50,
-                      activeColor: _annualRate < 2
+                      activeColor: _monthlyRate < 2
                           ? c.income
-                          : _annualRate < 3.5
+                          : _monthlyRate < 3.5
                               ? c.savings
                               : c.expense,
                       onChanged: (v) {
                         HapticFeedback.selectionClick();
                         setState(
-                            () => _annualRate = (v * 10).round() / 10);
+                            () => _monthlyRate = (v * 10).round() / 10);
                       },
                     ),
                   ),
