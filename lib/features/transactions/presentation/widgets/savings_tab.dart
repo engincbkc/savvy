@@ -11,7 +11,6 @@ import 'package:savvy/features/transactions/presentation/widgets/delete_dialog.d
 import 'package:savvy/features/savings/domain/models/savings.dart';
 import 'package:savvy/features/transactions/presentation/providers/transaction_form_provider.dart';
 import 'package:savvy/features/transactions/presentation/screens/edit_savings_sheet.dart';
-import 'package:savvy/features/transactions/presentation/widgets/transaction_detail_sheet.dart';
 import 'package:savvy/features/transactions/presentation/widgets/category_icons.dart';
 import 'package:savvy/features/transactions/presentation/widgets/monthly_category_table.dart';
 import 'package:savvy/features/transactions/presentation/widgets/transaction_shared_widgets.dart';
@@ -125,12 +124,6 @@ class SavingsTab extends ConsumerWidget {
           },
           buildActions: (row) => [
             PortfolioAction(
-              icon: Icons.info_outline_rounded,
-              label: 'Detay',
-              onTap: () => _showDetail(
-                  context, savings.firstWhere((s) => s.id == row.id)),
-            ),
-            PortfolioAction(
               icon: Icons.edit_rounded,
               label: 'Düzenle',
               onTap: () => _showEdit(
@@ -191,31 +184,6 @@ class SavingsTab extends ConsumerWidget {
       context: context,
       type: 'Birikim',
       onConfirm: () => ref.read(transactionFormProvider.notifier).deleteSavings(id),
-    );
-  }
-
-  void _showDetail(BuildContext context, Savings s) {
-    showModalBottomSheet(useRootNavigator: true,
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetCtx) => Container(
-        decoration: BoxDecoration(
-          color: AppColors.of(sheetCtx).surfaceCard,
-          borderRadius: AppRadius.bottomSheet,
-        ),
-        child: TransactionDetailSheet(
-          title: 'Birikim',
-          categoryLabel: s.category.label,
-          categoryIcon: savingsIcon(s.category),
-          amount: s.amount,
-          date: s.date,
-          color: AppColors.of(context).savings,
-          gradient: const [Color(0xFFB45309), Color(0xFFD97706)],
-          note: s.note,
-          onEdit: () => _showEdit(context, s),
-        ),
-      ),
     );
   }
 

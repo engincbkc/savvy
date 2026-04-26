@@ -11,7 +11,6 @@ import 'package:savvy/features/transactions/presentation/widgets/delete_dialog.d
 import 'package:savvy/features/transactions/domain/models/expense.dart';
 import 'package:savvy/features/transactions/presentation/providers/transaction_form_provider.dart';
 import 'package:savvy/features/transactions/presentation/screens/edit_expense_sheet.dart';
-import 'package:savvy/features/transactions/presentation/widgets/transaction_detail_sheet.dart';
 import 'package:savvy/features/transactions/presentation/widgets/category_icons.dart';
 import 'package:savvy/features/transactions/presentation/widgets/monthly_category_table.dart';
 import 'package:savvy/features/transactions/presentation/widgets/transaction_shared_widgets.dart';
@@ -135,12 +134,6 @@ class ExpenseTab extends ConsumerWidget {
           },
           buildActions: (row) => [
             PortfolioAction(
-              icon: Icons.info_outline_rounded,
-              label: 'Detay',
-              onTap: () => _showDetail(
-                  context, expenses.firstWhere((e) => e.id == row.id)),
-            ),
-            PortfolioAction(
               icon: Icons.edit_rounded,
               label: 'Düzenle',
               onTap: () => _showEdit(
@@ -201,36 +194,6 @@ class ExpenseTab extends ConsumerWidget {
       context: context,
       type: 'Gider',
       onConfirm: () => ref.read(transactionFormProvider.notifier).deleteExpense(id),
-    );
-  }
-
-  void _showDetail(BuildContext context, Expense expense) {
-    showModalBottomSheet(useRootNavigator: true,
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetCtx) => Container(
-        decoration: BoxDecoration(
-          color: AppColors.of(sheetCtx).surfaceCard,
-          borderRadius: AppRadius.bottomSheet,
-        ),
-        child: TransactionDetailSheet(
-          title: 'Gider',
-          categoryLabel: expense.category.label,
-          categoryIcon: expenseIcon(expense.category),
-          amount: expense.amount,
-          date: expense.date,
-          color: AppColors.of(context).expense,
-          gradient: const [Color(0xFFC81E1E), Color(0xFFEF4444)],
-          note: expense.note,
-          person: expense.person,
-          isRecurring: expense.isRecurring,
-          recurringEndDate: expense.recurringEndDate,
-          extraLabel: 'Gider Tipi',
-          extraValue: expense.expenseType.label,
-          onEdit: () => _showEdit(context, expense),
-        ),
-      ),
     );
   }
 

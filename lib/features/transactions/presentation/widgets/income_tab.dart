@@ -13,7 +13,6 @@ import 'package:savvy/features/transactions/domain/models/income.dart';
 import 'package:savvy/features/transactions/presentation/providers/transaction_form_provider.dart';
 import 'package:savvy/features/transactions/presentation/screens/edit_income_sheet.dart';
 import 'package:savvy/features/transactions/presentation/widgets/category_icons.dart';
-import 'package:savvy/features/transactions/presentation/widgets/transaction_detail_sheet.dart';
 import 'package:savvy/features/transactions/presentation/widgets/monthly_category_table.dart';
 import 'package:savvy/features/transactions/presentation/widgets/transaction_shared_widgets.dart';
 import 'package:savvy/shared/widgets/empty_state.dart';
@@ -125,7 +124,7 @@ class IncomeTab extends ConsumerWidget {
                       displayMonth: displayMonth,
                       color: AppColors.of(context).income,
                       onDelete: () => _confirmDelete(context, ref, i.id, 'brüt maaş'),
-                      onTap: () => _showDetail(context, i),
+                      onTap: () => _showEdit(context, i),
                     ),
                   )).toList(),
             ),
@@ -163,12 +162,6 @@ class IncomeTab extends ConsumerWidget {
               CurrencyFormatter.formatNoDecimal(row.amount),
             ],
             buildActions: (row) => [
-              PortfolioAction(
-                icon: Icons.info_outline_rounded,
-                label: 'Detay',
-                onTap: () => _showDetail(
-                    context, regularIncomes.firstWhere((i) => i.id == row.id)),
-              ),
               PortfolioAction(
                 icon: Icons.edit_rounded,
                 label: 'Düzenle',
@@ -240,34 +233,6 @@ class IncomeTab extends ConsumerWidget {
         isGross: income.isGross,
         month: isTumuMode ? income.date.month : displayMonth,
       );
-
-  void _showDetail(BuildContext context, Income income) {
-    showModalBottomSheet(useRootNavigator: true, 
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetCtx) => Container(
-        decoration: BoxDecoration(
-          color: AppColors.of(sheetCtx).surfaceCard,
-          borderRadius: AppRadius.bottomSheet,
-        ),
-        child: TransactionDetailSheet(
-          title: income.isGross ? 'Gelir (Brüt Maaş)' : 'Gelir',
-          categoryLabel: income.category.label,
-          categoryIcon: incomeIcon(income.category),
-          amount: _resolveAmount(income),
-          date: income.date,
-          color: AppColors.of(context).income,
-          gradient: const [Color(0xFF059669), Color(0xFF10B981)],
-          note: income.note,
-          person: income.person,
-          isRecurring: income.isRecurring,
-          recurringEndDate: income.recurringEndDate,
-          onEdit: () => _showEdit(context, income),
-        ),
-      ),
-    );
-  }
 
   void _showEdit(BuildContext context, Income income) {
     showModalBottomSheet(

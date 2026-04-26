@@ -1,4 +1,8 @@
 {
+  "files.exclude": {
+    "SavvyApp/build/**": true,
+    "SavvyApp/SourcePackages/**": true
+  },
   "dart.flutterSdkPath": null,
   "dart.previewFlutterUiGuides": true,
   "dart.previewFlutterUiGuidesCustomTracking": true,
