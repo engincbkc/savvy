@@ -287,7 +287,7 @@ class SheetHeader extends StatelessWidget {
   }
 }
 
-/// Premium animated amount input field with glassmorphism effect.
+/// Compact premium amount input field.
 class AmountInputField extends StatefulWidget {
   final TextEditingController controller;
   final Color color;
@@ -306,218 +306,105 @@ class AmountInputField extends StatefulWidget {
   State<AmountInputField> createState() => _AmountInputFieldState();
 }
 
-class _AmountInputFieldState extends State<AmountInputField>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _glowController;
-  late Animation<double> _glowAnimation;
+class _AmountInputFieldState extends State<AmountInputField> {
   final FocusNode _focusNode = FocusNode();
   bool _isFocused = false;
 
   @override
   void initState() {
     super.initState();
-    _glowController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-    _glowAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _glowController, curve: Curves.easeInOut),
-    );
-    _focusNode.addListener(_onFocusChange);
-  }
-
-  void _onFocusChange() {
-    setState(() => _isFocused = _focusNode.hasFocus);
-    if (_focusNode.hasFocus) {
-      _glowController.repeat(reverse: true);
-    } else {
-      _glowController.stop();
-      _glowController.reset();
-    }
+    _focusNode.addListener(() {
+      setState(() => _isFocused = _focusNode.hasFocus);
+    });
   }
 
   @override
   void dispose() {
-    _glowController.dispose();
-    _focusNode.removeListener(_onFocusChange);
     _focusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final c = AppColors.of(context);
-    final hasValue = widget.controller.text.isNotEmpty;
-
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.96, end: 1.0),
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOutBack,
-      builder: (context, scale, child) => Transform.scale(
-        scale: scale,
-        child: child,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.base,
+        vertical: AppSpacing.md,
       ),
-      child: AnimatedBuilder(
-        animation: _glowAnimation,
-        builder: (context, child) {
-          return Container(
+      decoration: BoxDecoration(
+        color: widget.bgColor,
+        borderRadius: AppRadius.card,
+        border: Border.all(
+          color: _isFocused
+              ? widget.color.withValues(alpha: 0.5)
+              : widget.color.withValues(alpha: 0.12),
+          width: _isFocused ? 1.5 : 1,
+        ),
+        boxShadow: _isFocused
+            ? [
+                BoxShadow(
+                  color: widget.color.withValues(alpha: 0.12),
+                  blurRadius: 12,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
+      ),
+      child: Row(
+        children: [
+          // Currency badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              borderRadius: AppRadius.cardLg,
-              boxShadow: _isFocused
-                  ? [
-                      BoxShadow(
-                        color: widget.color
-                            .withValues(alpha: 0.15 + (_glowAnimation.value * 0.1)),
-                        blurRadius: 20 + (_glowAnimation.value * 8),
-                        spreadRadius: -2,
-                        offset: const Offset(0, 4),
-                      ),
-                    ]
-                  : [
-                      BoxShadow(
-                        color: c.shadowColor.withValues(alpha: 0.06),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+              color: widget.color.withValues(alpha: 0.1),
+              borderRadius: AppRadius.chip,
             ),
-            child: child,
-          );
-        },
-        child: ClipRRect(
-          borderRadius: AppRadius.cardLg,
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.xl,
-                vertical: AppSpacing.lg,
-              ),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    widget.bgColor,
-                    widget.bgColor.withValues(alpha: 0.7),
-                  ],
-                ),
-                borderRadius: AppRadius.cardLg,
-                border: Border.all(
-                  color: _isFocused
-                      ? widget.color.withValues(alpha: 0.4)
-                      : widget.color.withValues(alpha: 0.08),
-                  width: _isFocused ? 1.5 : 1,
-                ),
-              ),
-              child: Column(
-                children: [
-                  // Currency row with animated indicator
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _isFocused || hasValue
-                              ? widget.color.withValues(alpha: 0.12)
-                              : Colors.transparent,
-                          borderRadius: AppRadius.pill,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '₺',
-                              style: AppTypography.titleLarge.copyWith(
-                                color: widget.color.withValues(
-                                    alpha: _isFocused || hasValue ? 0.9 : 0.4),
-                                fontWeight: FontWeight.w700,
-                                fontSize: 18,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'TRY',
-                              style: AppTypography.caption.copyWith(
-                                color: widget.color.withValues(
-                                    alpha: _isFocused || hasValue ? 0.7 : 0.3),
-                                fontWeight: FontWeight.w600,
-                                fontSize: 10,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-
-                  // Amount input
-                  TextFormField(
-                    controller: widget.controller,
-                    focusNode: _focusNode,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
-                      ThousandFormatter(),
-                    ],
-                    textInputAction: TextInputAction.next,
-                    style: AppTypography.numericHero.copyWith(
-                      color: widget.strongColor,
-                      fontSize: 44,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -1,
-                    ),
-                    textAlign: TextAlign.center,
-                    cursorColor: widget.color,
-                    cursorWidth: 2.5,
-                    cursorRadius: const Radius.circular(2),
-                    decoration: InputDecoration(
-                      hintText: '0',
-                      hintStyle: AppTypography.numericHero.copyWith(
-                        color: widget.color.withValues(alpha: 0.15),
-                        fontSize: 44,
-                        fontWeight: FontWeight.w300,
-                      ),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                      isDense: true,
-                    ),
-                    validator: validateAmount,
-                  ),
-
-                  // Subtle divider line
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    margin: const EdgeInsets.only(top: AppSpacing.sm),
-                    height: 2,
-                    width: _isFocused ? 120 : 60,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          widget.color.withValues(alpha: 0.0),
-                          widget.color.withValues(alpha: _isFocused ? 0.5 : 0.2),
-                          widget.color.withValues(alpha: 0.0),
-                        ],
-                      ),
-                      borderRadius: AppRadius.pill,
-                    ),
-                  ),
-                ],
+            child: Text(
+              '₺',
+              style: AppTypography.titleMedium.copyWith(
+                color: widget.color,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
-        ),
+          const SizedBox(width: AppSpacing.md),
+
+          // Amount input
+          Expanded(
+            child: TextFormField(
+              controller: widget.controller,
+              focusNode: _focusNode,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
+                ThousandFormatter(),
+              ],
+              textInputAction: TextInputAction.next,
+              style: AppTypography.numericLarge.copyWith(
+                color: widget.strongColor,
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+              ),
+              cursorColor: widget.color,
+              decoration: InputDecoration(
+                hintText: '0',
+                hintStyle: AppTypography.numericLarge.copyWith(
+                  color: widget.color.withValues(alpha: 0.25),
+                  fontSize: 28,
+                  fontWeight: FontWeight.w400,
+                ),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+                isDense: true,
+              ),
+              validator: validateAmount,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -887,8 +774,8 @@ class FormSectionLabel extends StatelessWidget {
 // Brüt Maaş — Shared Premium Components
 // ═══════════════════════════════════════════════════════════════════
 
-/// Premium gross salary amount input with gradient card and animated entrance.
-class GrossAmountInput extends StatelessWidget {
+/// Compact gross salary amount input matching AmountInputField style.
+class GrossAmountInput extends StatefulWidget {
   final TextEditingController controller;
   final Color accentColor;
   final Color strongColor;
@@ -903,69 +790,91 @@ class GrossAmountInput extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+  State<GrossAmountInput> createState() => _GrossAmountInputState();
+}
 
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.95, end: 1.0),
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeOutCubic,
-      builder: (context, scale, child) => Transform.scale(
-        scale: scale,
-        child: child,
+class _GrossAmountInputState extends State<GrossAmountInput> {
+  final FocusNode _focusNode = FocusNode();
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      setState(() => _isFocused = _focusNode.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.base,
+        vertical: AppSpacing.md,
       ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.lg,
-          vertical: AppSpacing.xl,
+      decoration: BoxDecoration(
+        color: widget.bgColor,
+        borderRadius: AppRadius.card,
+        border: Border.all(
+          color: _isFocused
+              ? widget.accentColor.withValues(alpha: 0.5)
+              : widget.accentColor.withValues(alpha: 0.12),
+          width: _isFocused ? 1.5 : 1,
         ),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              bgColor,
-              isDark
-                  ? accentColor.withValues(alpha: 0.08)
-                  : accentColor.withValues(alpha: 0.04),
-            ],
-          ),
-          borderRadius: AppRadius.cardLg,
-          border: Border.all(
-            color: accentColor.withValues(alpha: 0.15),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: accentColor.withValues(alpha: 0.08),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
+        boxShadow: _isFocused
+            ? [
+                BoxShadow(
+                  color: widget.accentColor.withValues(alpha: 0.12),
+                  blurRadius: 12,
+                  offset: const Offset(0, 2),
+                ),
+              ]
+            : null,
+      ),
+      child: Row(
+        children: [
+          // Brüt badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            decoration: BoxDecoration(
+              color: widget.accentColor.withValues(alpha: 0.1),
+              borderRadius: AppRadius.chip,
             ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   Icons.account_balance_rounded,
                   size: 14,
-                  color: accentColor.withValues(alpha: 0.5),
+                  color: widget.accentColor,
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 Text(
-                  'BRÜT MAAŞ',
+                  'BRÜT',
                   style: AppTypography.caption.copyWith(
-                    color: accentColor.withValues(alpha: 0.6),
+                    color: widget.accentColor,
                     fontWeight: FontWeight.w700,
-                    letterSpacing: 1.5,
+                    fontSize: 10,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AppSpacing.sm),
-            TextFormField(
-              controller: controller,
+          ),
+          const SizedBox(width: AppSpacing.md),
+
+          // Amount input
+          Expanded(
+            child: TextFormField(
+              controller: widget.controller,
+              focusNode: _focusNode,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: false),
               inputFormatters: [
@@ -973,28 +882,34 @@ class GrossAmountInput extends StatelessWidget {
                 ThousandFormatter(),
               ],
               textInputAction: TextInputAction.done,
-              style: AppTypography.numericHero.copyWith(
-                color: strongColor,
-                fontSize: 36,
+              style: AppTypography.numericLarge.copyWith(
+                color: widget.strongColor,
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
               ),
-              textAlign: TextAlign.center,
+              cursorColor: widget.accentColor,
               decoration: InputDecoration(
                 hintText: '0',
-                hintStyle: AppTypography.numericHero.copyWith(
-                  color: accentColor.withValues(alpha: 0.2),
-                  fontSize: 36,
+                hintStyle: AppTypography.numericLarge.copyWith(
+                  color: widget.accentColor.withValues(alpha: 0.25),
+                  fontSize: 28,
+                  fontWeight: FontWeight.w400,
                 ),
                 border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
+                isDense: true,
                 suffixText: '₺',
-                suffixStyle: AppTypography.numericLarge.copyWith(
-                  color: accentColor.withValues(alpha: 0.4),
+                suffixStyle: AppTypography.titleMedium.copyWith(
+                  color: widget.accentColor.withValues(alpha: 0.5),
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               validator: validateAmount,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

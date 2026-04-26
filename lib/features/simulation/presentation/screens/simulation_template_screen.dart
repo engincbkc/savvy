@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,14 +25,34 @@ class SimulationTemplateScreen extends ConsumerStatefulWidget {
 }
 
 class _SimulationTemplateScreenState
-    extends ConsumerState<SimulationTemplateScreen> {
+    extends ConsumerState<SimulationTemplateScreen>
+    with SingleTickerProviderStateMixin {
   final _nameCtrl = TextEditingController();
+  final _nameFocus = FocusNode();
   SimulationTemplate _selected = SimulationTemplate.credit;
   bool _saving = false;
+  bool _nameError = false;
+  late final AnimationController _shakeCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _shakeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _nameCtrl.addListener(() {
+      if (_nameError && _nameCtrl.text.trim().isNotEmpty) {
+        setState(() => _nameError = false);
+      }
+    });
+  }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
+    _nameFocus.dispose();
+    _shakeCtrl.dispose();
     super.dispose();
   }
 
@@ -98,14 +120,9 @@ class _SimulationTemplateScreenState
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
       HapticFeedback.heavyImpact();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Simülasyon adı gerekli'),
-          backgroundColor: AppColors.of(context).expense,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.chip),
-        ),
-      );
+      setState(() => _nameError = true);
+      _nameFocus.requestFocus();
+      _shakeCtrl.forward(from: 0);
       return;
     }
 
@@ -158,22 +175,51 @@ class _SimulationTemplateScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Name input
-                  TextFormField(
-                    controller: _nameCtrl,
-                    style: AppTypography.headlineSmall.copyWith(
-                      color: c.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Simülasyon adı...',
-                      hintStyle: AppTypography.headlineSmall.copyWith(
-                        color: c.textTertiary.withValues(alpha: 0.5),
-                        fontWeight: FontWeight.w400,
+                  AnimatedBuilder(
+                    animation: _shakeCtrl,
+                    builder: (context, child) {
+                      // Sinüs dalgasıyla 4 kez sallanma (-8 → +8)
+                      final shake = sin(_shakeCtrl.value * pi * 4) * 8;
+                      return Transform.translate(
+                        offset: Offset(shake, 0),
+                        child: child,
+                      );
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md, vertical: 4),
+                      decoration: BoxDecoration(
+                        borderRadius: AppRadius.card,
+                        border: Border.all(
+                          color: _nameError
+                              ? c.expense
+                              : Colors.transparent,
+                          width: 1.5,
+                        ),
+                        color: _nameError
+                            ? c.expense.withValues(alpha: 0.06)
+                            : Colors.transparent,
                       ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
+                      child: TextFormField(
+                        controller: _nameCtrl,
+                        focusNode: _nameFocus,
+                        style: AppTypography.headlineSmall.copyWith(
+                          color: c.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Simülasyon adı...',
+                          hintStyle: AppTypography.headlineSmall.copyWith(
+                            color: c.textTertiary.withValues(alpha: 0.5),
+                            fontWeight: FontWeight.w400,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        textInputAction: TextInputAction.done,
+                      ),
                     ),
-                    textInputAction: TextInputAction.done,
                   ),
                   Divider(color: c.borderDefault.withValues(alpha: 0.3)),
 
@@ -297,7 +343,7 @@ class _SimulationTemplateScreenState
                       )
                     : const Icon(LucideIcons.plus, size: 18, color: Colors.white),
                 label: Text(
-                  _saving ? 'Oluşturuluyor...' : 'Oluştur ve Düzenle',
+                  _saving ? 'Oluşturuluyor...' : 'Oluştur',
                   style: AppTypography.labelLarge
                       .copyWith(color: Colors.white),
                 ),

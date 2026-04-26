@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:savvy/core/constants/financial_enums.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
@@ -23,9 +22,8 @@ class AddSavingsSheet extends ConsumerStatefulWidget {
 class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
+  final _titleController = TextEditingController();
   final _noteController = TextEditingController();
-  SavingsCategory _category = SavingsCategory.emergency;
-  DateTime _date = DateTime.now();
   bool _amountOk = false;
 
   @override
@@ -42,16 +40,9 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
   @override
   void dispose() {
     _amountController.dispose();
+    _titleController.dispose();
     _noteController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showSavvyDatePicker(
-      context: context,
-      initialDate: _date,
-    );
-    if (picked != null) setState(() => _date = picked);
   }
 
   Future<void> _submit() async {
@@ -61,8 +52,8 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
     final savings = Savings(
       id: const Uuid().v4(),
       amount: amount,
-      category: _category,
-      date: _date,
+      title: _titleController.text.isEmpty ? null : _titleController.text,
+      date: DateTime.now(),
       note: _noteController.text.isEmpty ? null : _noteController.text,
       createdAt: DateTime.now(),
     );
@@ -114,6 +105,17 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
                 ),
                 const SizedBox(height: AppSpacing.xl),
 
+                // Title
+                TextFormField(
+                  controller: _titleController,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    hintText: 'Başlık (ör: Acil durum fonu)',
+                    prefixIcon: Icon(Icons.label_outline_rounded, size: 18),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.base),
+
                 // Amount
                 AmountInputField(
                   controller: _amountController,
@@ -121,32 +123,7 @@ class _AddSavingsSheetState extends ConsumerState<AddSavingsSheet> {
                   strongColor: c.savingsStrong,
                   bgColor: c.savingsSurfaceDim,
                 ),
-                const SizedBox(height: AppSpacing.xl),
-
-                // Category
-                FormSectionLabel(text: 'Kategori', icon: AppIcons.category),
-                const SizedBox(height: AppSpacing.sm),
-                CategoryChipSelector<SavingsCategory>(
-                  values: SavingsCategory.values,
-                  selected: _category,
-                  labelOf: (cat) => cat.label,
-                  iconOf: (cat) => cat.icon,
-                  activeColor: c.savings,
-                  onSelected: (cat) => setState(() => _category = cat),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-
-                // Date
-                FormSectionLabel(text: 'Başlangıç Tarihi', icon: AppIcons.calendar),
-                const SizedBox(height: AppSpacing.sm),
-                GestureDetector(
-                  onTap: _pickDate,
-                  child: FieldChip(
-                    icon: AppIcons.calendar,
-                    label: formatDateTR(_date),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.base),
 
                 // Note
                 TextFormField(

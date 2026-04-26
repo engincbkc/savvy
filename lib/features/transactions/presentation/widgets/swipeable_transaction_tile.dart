@@ -116,8 +116,29 @@ class SwipeableTransactionTile extends StatelessWidget {
                               overflow: TextOverflow.ellipsis),
                         ),
                         if (isRecurring) ...[
-                          const SizedBox(width: 4),
-                          Icon(AppIcons.recurring, size: 12, color: color),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: color.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(AppIcons.recurring,
+                                    size: 10, color: color),
+                                const SizedBox(width: 3),
+                                Text('Periyodik',
+                                    style: AppTypography.caption.copyWith(
+                                      color: color,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w600,
+                                    )),
+                              ],
+                            ),
+                          ),
                         ],
                       ],
                     ),

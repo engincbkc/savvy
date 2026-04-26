@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Savings {
 
- String get id; double get amount; SavingsCategory get category; String? get goalId; String? get note; DateTime get date; SavingsStatus get status; bool get isDeleted; DateTime get createdAt;
+ String get id; double get amount; SavingsCategory get category; String? get title; String? get goalId; String? get note; DateTime get date; SavingsStatus get status; bool get isDeleted; DateTime get createdAt;
 /// Create a copy of Savings
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $SavingsCopyWith<Savings> get copyWith => _$SavingsCopyWithImpl<Savings>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Savings&&(identical(other.id, id) || other.id == id)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.category, category) || other.category == category)&&(identical(other.goalId, goalId) || other.goalId == goalId)&&(identical(other.note, note) || other.note == note)&&(identical(other.date, date) || other.date == date)&&(identical(other.status, status) || other.status == status)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Savings&&(identical(other.id, id) || other.id == id)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.category, category) || other.category == category)&&(identical(other.title, title) || other.title == title)&&(identical(other.goalId, goalId) || other.goalId == goalId)&&(identical(other.note, note) || other.note == note)&&(identical(other.date, date) || other.date == date)&&(identical(other.status, status) || other.status == status)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,amount,category,goalId,note,date,status,isDeleted,createdAt);
+int get hashCode => Object.hash(runtimeType,id,amount,category,title,goalId,note,date,status,isDeleted,createdAt);
 
 @override
 String toString() {
-  return 'Savings(id: $id, amount: $amount, category: $category, goalId: $goalId, note: $note, date: $date, status: $status, isDeleted: $isDeleted, createdAt: $createdAt)';
+  return 'Savings(id: $id, amount: $amount, category: $category, title: $title, goalId: $goalId, note: $note, date: $date, status: $status, isDeleted: $isDeleted, createdAt: $createdAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $SavingsCopyWith<$Res>  {
   factory $SavingsCopyWith(Savings value, $Res Function(Savings) _then) = _$SavingsCopyWithImpl;
 @useResult
 $Res call({
- String id, double amount, SavingsCategory category, String? goalId, String? note, DateTime date, SavingsStatus status, bool isDeleted, DateTime createdAt
+ String id, double amount, SavingsCategory category, String? title, String? goalId, String? note, DateTime date, SavingsStatus status, bool isDeleted, DateTime createdAt
 });
 
 
@@ -65,12 +65,13 @@ class _$SavingsCopyWithImpl<$Res>
 
 /// Create a copy of Savings
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? amount = null,Object? category = null,Object? goalId = freezed,Object? note = freezed,Object? date = null,Object? status = null,Object? isDeleted = null,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? amount = null,Object? category = null,Object? title = freezed,Object? goalId = freezed,Object? note = freezed,Object? date = null,Object? status = null,Object? isDeleted = null,Object? createdAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
 as double,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
-as SavingsCategory,goalId: freezed == goalId ? _self.goalId : goalId // ignore: cast_nullable_to_non_nullable
+as SavingsCategory,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,goalId: freezed == goalId ? _self.goalId : goalId // ignore: cast_nullable_to_non_nullable
 as String?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as DateTime,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -161,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  double amount,  SavingsCategory category,  String? goalId,  String? note,  DateTime date,  SavingsStatus status,  bool isDeleted,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  double amount,  SavingsCategory category,  String? title,  String? goalId,  String? note,  DateTime date,  SavingsStatus status,  bool isDeleted,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Savings() when $default != null:
-return $default(_that.id,_that.amount,_that.category,_that.goalId,_that.note,_that.date,_that.status,_that.isDeleted,_that.createdAt);case _:
+return $default(_that.id,_that.amount,_that.category,_that.title,_that.goalId,_that.note,_that.date,_that.status,_that.isDeleted,_that.createdAt);case _:
   return orElse();
 
 }
@@ -182,10 +183,10 @@ return $default(_that.id,_that.amount,_that.category,_that.goalId,_that.note,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  double amount,  SavingsCategory category,  String? goalId,  String? note,  DateTime date,  SavingsStatus status,  bool isDeleted,  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  double amount,  SavingsCategory category,  String? title,  String? goalId,  String? note,  DateTime date,  SavingsStatus status,  bool isDeleted,  DateTime createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _Savings():
-return $default(_that.id,_that.amount,_that.category,_that.goalId,_that.note,_that.date,_that.status,_that.isDeleted,_that.createdAt);case _:
+return $default(_that.id,_that.amount,_that.category,_that.title,_that.goalId,_that.note,_that.date,_that.status,_that.isDeleted,_that.createdAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -202,10 +203,10 @@ return $default(_that.id,_that.amount,_that.category,_that.goalId,_that.note,_th
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  double amount,  SavingsCategory category,  String? goalId,  String? note,  DateTime date,  SavingsStatus status,  bool isDeleted,  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  double amount,  SavingsCategory category,  String? title,  String? goalId,  String? note,  DateTime date,  SavingsStatus status,  bool isDeleted,  DateTime createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Savings() when $default != null:
-return $default(_that.id,_that.amount,_that.category,_that.goalId,_that.note,_that.date,_that.status,_that.isDeleted,_that.createdAt);case _:
+return $default(_that.id,_that.amount,_that.category,_that.title,_that.goalId,_that.note,_that.date,_that.status,_that.isDeleted,_that.createdAt);case _:
   return null;
 
 }
@@ -217,12 +218,13 @@ return $default(_that.id,_that.amount,_that.category,_that.goalId,_that.note,_th
 @JsonSerializable()
 
 class _Savings implements Savings {
-  const _Savings({required this.id, required this.amount, required this.category, this.goalId, this.note, required this.date, this.status = SavingsStatus.active, this.isDeleted = false, required this.createdAt});
+  const _Savings({required this.id, required this.amount, this.category = SavingsCategory.other, this.title, this.goalId, this.note, required this.date, this.status = SavingsStatus.active, this.isDeleted = false, required this.createdAt});
   factory _Savings.fromJson(Map<String, dynamic> json) => _$SavingsFromJson(json);
 
 @override final  String id;
 @override final  double amount;
-@override final  SavingsCategory category;
+@override@JsonKey() final  SavingsCategory category;
+@override final  String? title;
 @override final  String? goalId;
 @override final  String? note;
 @override final  DateTime date;
@@ -243,16 +245,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Savings&&(identical(other.id, id) || other.id == id)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.category, category) || other.category == category)&&(identical(other.goalId, goalId) || other.goalId == goalId)&&(identical(other.note, note) || other.note == note)&&(identical(other.date, date) || other.date == date)&&(identical(other.status, status) || other.status == status)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Savings&&(identical(other.id, id) || other.id == id)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.category, category) || other.category == category)&&(identical(other.title, title) || other.title == title)&&(identical(other.goalId, goalId) || other.goalId == goalId)&&(identical(other.note, note) || other.note == note)&&(identical(other.date, date) || other.date == date)&&(identical(other.status, status) || other.status == status)&&(identical(other.isDeleted, isDeleted) || other.isDeleted == isDeleted)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,amount,category,goalId,note,date,status,isDeleted,createdAt);
+int get hashCode => Object.hash(runtimeType,id,amount,category,title,goalId,note,date,status,isDeleted,createdAt);
 
 @override
 String toString() {
-  return 'Savings(id: $id, amount: $amount, category: $category, goalId: $goalId, note: $note, date: $date, status: $status, isDeleted: $isDeleted, createdAt: $createdAt)';
+  return 'Savings(id: $id, amount: $amount, category: $category, title: $title, goalId: $goalId, note: $note, date: $date, status: $status, isDeleted: $isDeleted, createdAt: $createdAt)';
 }
 
 
@@ -263,7 +265,7 @@ abstract mixin class _$SavingsCopyWith<$Res> implements $SavingsCopyWith<$Res> {
   factory _$SavingsCopyWith(_Savings value, $Res Function(_Savings) _then) = __$SavingsCopyWithImpl;
 @override @useResult
 $Res call({
- String id, double amount, SavingsCategory category, String? goalId, String? note, DateTime date, SavingsStatus status, bool isDeleted, DateTime createdAt
+ String id, double amount, SavingsCategory category, String? title, String? goalId, String? note, DateTime date, SavingsStatus status, bool isDeleted, DateTime createdAt
 });
 
 
@@ -280,12 +282,13 @@ class __$SavingsCopyWithImpl<$Res>
 
 /// Create a copy of Savings
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? amount = null,Object? category = null,Object? goalId = freezed,Object? note = freezed,Object? date = null,Object? status = null,Object? isDeleted = null,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? amount = null,Object? category = null,Object? title = freezed,Object? goalId = freezed,Object? note = freezed,Object? date = null,Object? status = null,Object? isDeleted = null,Object? createdAt = null,}) {
   return _then(_Savings(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
 as double,category: null == category ? _self.category : category // ignore: cast_nullable_to_non_nullable
-as SavingsCategory,goalId: freezed == goalId ? _self.goalId : goalId // ignore: cast_nullable_to_non_nullable
+as SavingsCategory,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
+as String?,goalId: freezed == goalId ? _self.goalId : goalId // ignore: cast_nullable_to_non_nullable
 as String?,note: freezed == note ? _self.note : note // ignore: cast_nullable_to_non_nullable
 as String?,date: null == date ? _self.date : date // ignore: cast_nullable_to_non_nullable
 as DateTime,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable

@@ -9,7 +9,10 @@ part of 'savings.dart';
 _Savings _$SavingsFromJson(Map<String, dynamic> json) => _Savings(
   id: json['id'] as String,
   amount: (json['amount'] as num).toDouble(),
-  category: $enumDecode(_$SavingsCategoryEnumMap, json['category']),
+  category:
+      $enumDecodeNullable(_$SavingsCategoryEnumMap, json['category']) ??
+      SavingsCategory.other,
+  title: json['title'] as String?,
   goalId: json['goalId'] as String?,
   note: json['note'] as String?,
   date: DateTime.parse(json['date'] as String),
@@ -24,6 +27,7 @@ Map<String, dynamic> _$SavingsToJson(_Savings instance) => <String, dynamic>{
   'id': instance.id,
   'amount': instance.amount,
   'category': _$SavingsCategoryEnumMap[instance.category]!,
+  'title': instance.title,
   'goalId': instance.goalId,
   'note': instance.note,
   'date': instance.date.toIso8601String(),

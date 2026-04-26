@@ -9,7 +9,8 @@ abstract class Savings with _$Savings {
   const factory Savings({
     required String id,
     required double amount,
-    required SavingsCategory category,
+    @Default(SavingsCategory.other) SavingsCategory category,
+    String? title,
     String? goalId,
     String? note,
     required DateTime date,

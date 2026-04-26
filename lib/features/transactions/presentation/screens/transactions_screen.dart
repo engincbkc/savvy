@@ -30,7 +30,9 @@ import 'package:savvy/shared/widgets/loading_shimmer.dart';
 // ═══════════════════════════════════════════════════════════════════════
 
 class TransactionsScreen extends ConsumerStatefulWidget {
-  const TransactionsScreen({super.key});
+  final int initialTab;
+
+  const TransactionsScreen({super.key, this.initialTab = 0});
 
   @override
   ConsumerState<TransactionsScreen> createState() => _TransactionsScreenState();
@@ -49,10 +51,14 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.initialTab.clamp(0, 2),
+    );
     _tabController.addListener(() => setState(() {}));
-    // Varsayılan: mevcut ay seçili
-    _selectedMonth = DateTime.now().toYearMonth();
+    // Varsayılan: Tümü (tüm aylar görünür)
+    _selectedMonth = null;
   }
 
   @override

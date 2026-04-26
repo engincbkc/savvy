@@ -256,10 +256,16 @@ class _SimpleExpenseSummary extends StatelessWidget {
         ? topCat.first.value.fold(0.0, (s, e) => s + e.amount)
         : 0.0;
 
-    // Sabit vs değişken
-    final fixedTotal = expenses
+    // Sabit vs değişken — sadece bu ay
+    final now = DateTime.now();
+    final thisMonthExpenses = expenses
+        .where((e) => e.date.year == now.year && e.date.month == now.month)
+        .toList();
+    final fixedTotal = thisMonthExpenses
         .where((e) => e.expenseType == ExpenseType.fixed)
         .fold(0.0, (s, e) => s + e.amount);
+    final thisMonthTotal =
+        thisMonthExpenses.fold(0.0, (s, e) => s + e.amount);
     final recurringCount = expenses.where((e) => e.isRecurring).length;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -298,10 +304,10 @@ class _SimpleExpenseSummary extends StatelessWidget {
           _SummaryRow(
             icon: Icons.lock_outline_rounded,
             iconColor: accent.withValues(alpha: 0.6),
-            label: 'Sabit giderler',
+            label: 'Bu ayki sabit giderler',
             value: CurrencyFormatter.formatNoDecimal(fixedTotal),
-            detail: total > 0
-                ? '%${(fixedTotal / total * 100).toStringAsFixed(0)}'
+            detail: thisMonthTotal > 0
+                ? '%${(fixedTotal / thisMonthTotal * 100).toStringAsFixed(0)}'
                 : '%0',
           ),
           _thinDivider(accent),

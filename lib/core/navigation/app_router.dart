@@ -93,9 +93,13 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: '/transactions',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: TransactionsScreen(),
-          ),
+          pageBuilder: (context, state) {
+            final tabParam = state.uri.queryParameters['tab'];
+            final initialTab = int.tryParse(tabParam ?? '') ?? 0;
+            return NoTransitionPage(
+              child: TransactionsScreen(initialTab: initialTab),
+            );
+          },
           routes: [
             GoRoute(
               path: 'recurring',

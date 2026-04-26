@@ -115,6 +115,7 @@ class _SimulationEditorScreenState
     // Step 1: Pick type
     final type = await showModalBottomSheet<ChangeType>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => const ChangeTypePicker(),
@@ -124,6 +125,7 @@ class _SimulationEditorScreenState
     // Step 2: Edit the new change
     final change = await showModalBottomSheet<SimulationChange>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => ChangeEditorSheet(changeType: type),
@@ -138,6 +140,7 @@ class _SimulationEditorScreenState
     final current = _changes[index];
     final updated = await showModalBottomSheet<SimulationChange>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => ChangeEditorSheet(change: current),

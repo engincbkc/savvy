@@ -9,7 +9,7 @@ import 'package:savvy/features/budget/data/budget_limit_repository.dart';
 
 part 'repository_providers.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 IncomeRepository incomeRepository(Ref ref) {
   final uid = ref.watch(currentUserProvider)?.uid;
   if (uid == null) throw StateError('User not authenticated');
@@ -19,7 +19,7 @@ IncomeRepository incomeRepository(Ref ref) {
   );
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 ExpenseRepository expenseRepository(Ref ref) {
   final uid = ref.watch(currentUserProvider)?.uid;
   if (uid == null) throw StateError('User not authenticated');
@@ -29,7 +29,7 @@ ExpenseRepository expenseRepository(Ref ref) {
   );
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 SavingsRepository savingsRepository(Ref ref) {
   final uid = ref.watch(currentUserProvider)?.uid;
   if (uid == null) throw StateError('User not authenticated');

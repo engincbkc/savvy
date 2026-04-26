@@ -303,7 +303,7 @@ final class AllIncomesProvider
         argument: null,
         retry: null,
         name: r'allIncomesProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -323,7 +323,7 @@ final class AllIncomesProvider
   }
 }
 
-String _$allIncomesHash() => r'4ad2e7a3d58965d4eab9af8ccf87c9dc5f3f78ac';
+String _$allIncomesHash() => r'00acc9b96750497e5cae21163c1a3a53f4e71fa8';
 
 @ProviderFor(allExpenses)
 final allExpensesProvider = AllExpensesProvider._();
@@ -342,7 +342,7 @@ final class AllExpensesProvider
         argument: null,
         retry: null,
         name: r'allExpensesProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -362,7 +362,7 @@ final class AllExpensesProvider
   }
 }
 
-String _$allExpensesHash() => r'e333f6a5a01147dd1ee3d46f481f3f891d2f4bad';
+String _$allExpensesHash() => r'90f2e2c0e5ee1cd7d7454f6505a8b38af458b79d';
 
 @ProviderFor(allSavings)
 final allSavingsProvider = AllSavingsProvider._();
@@ -381,7 +381,7 @@ final class AllSavingsProvider
         argument: null,
         retry: null,
         name: r'allSavingsProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -401,7 +401,7 @@ final class AllSavingsProvider
   }
 }
 
-String _$allSavingsHash() => r'dc44a6630f91f581d2a48e8e3faa49496f32a726';
+String _$allSavingsHash() => r'70e5237ef8e35773c383c06c58b0120591f7faf0';
 
 /// All month summaries grouped by yearMonth, sorted most recent first.
 /// Each summary includes carry-over from previous months.

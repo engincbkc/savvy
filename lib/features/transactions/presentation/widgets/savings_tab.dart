@@ -53,8 +53,8 @@ class SavingsTab extends ConsumerWidget {
 
     final monthlyData = buildMonthlyCategoryData<Savings>(
       allSavings,
-      (s) => s.category.label,
-      (s) => savingsIcon(s.category),
+      (s) => s.title ?? 'Birikim',
+      (s) => AppIcons.savings,
       (s) => s.date,
       (s) => s.amount,
     );
@@ -68,11 +68,11 @@ class SavingsTab extends ConsumerWidget {
 
       return PortfolioRow(
         id: s.id,
-        title: s.category.label,
+        title: s.title ?? 'Birikim',
         subtitle: s.note?.isNotEmpty == true ? '${s.note} · $dateStr' : dateStr,
         amount: s.amount,
         date: s.date,
-        icon: savingsIcon(s.category),
+        icon: AppIcons.savings,
         accentColor: AppColors.of(context).savings,
         extraColumns: {
           'PAY': '%${pct.toStringAsFixed(1)}',
@@ -237,15 +237,6 @@ class _SimpleSavingsSummary extends StatelessWidget {
         ? savings.reduce((a, b) => a.amount > b.amount ? a : b)
         : null;
 
-    // En büyük kategori
-    final topCat = grouped.entries.toList()
-      ..sort((a, b) {
-        final aT = a.value.fold(0.0, (s, i) => s + i.amount);
-        final bT = b.value.fold(0.0, (s, i) => s + i.amount);
-        return bT.compareTo(aT);
-      });
-    final topCatName = topCat.isNotEmpty ? topCat.first.key.label : '-';
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent = c.savings;
 
@@ -278,15 +269,7 @@ class _SimpleSavingsSummary extends StatelessWidget {
             value: maxSaving != null
                 ? CurrencyFormatter.formatNoDecimal(maxSaving.amount)
                 : '-',
-            detail: maxSaving != null ? maxSaving.category.label : '',
-          ),
-          _thinDivider(accent),
-          _SavRow(
-            icon: Icons.category_rounded,
-            iconColor: accent.withValues(alpha: 0.6),
-            label: 'Ağırlıklı kategori',
-            value: topCatName,
-            detail: '${grouped.length} kategori',
+            detail: maxSaving?.title ?? '',
           ),
           _thinDivider(accent),
           _SavRow(

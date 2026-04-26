@@ -19,6 +19,9 @@ Stream<List<SimulationEntry>> allSimulations(Ref ref) {
 /// Builds the dynamic projection base from all active recurring incomes/expenses.
 /// Each screen passes this to [SimulationCalculator.calculateScenario] so that
 /// the 12-month projection respects start/end dates of recurring items.
+///
+/// Brüt maaşlar: bir sonraki yılın Ocak'ına kadar (Ocak dahil, Şubat hariç).
+/// Çünkü vergi dilimleri yıllık kümülatif olarak hesaplanır ve Ocak'ta sıfırlanır.
 @riverpod
 List<ProjectionBaseItem> projectionBaseItems(Ref ref) {
   final incomes = ref.watch(allIncomesProvider).value ?? [];
@@ -26,12 +29,17 @@ List<ProjectionBaseItem> projectionBaseItems(Ref ref) {
 
   return [
     for (final i in incomes)
-      if (!i.isDeleted && i.isRecurring)
+      // Periyodik VEYA brüt maaş (brüt maaş otomatik dahil)
+      if (!i.isDeleted && (i.isRecurring || i.isGross))
         ProjectionBaseItem(
           label: i.source?.isNotEmpty == true ? i.source! : i.category.label,
           isIncome: true,
           startDate: i.date,
-          endDate: i.recurringEndDate,
+          // Brüt maaş: kullanıcı bitiş tarihi girdiyse onu kullan,
+          // yoksa bir sonraki yılın Ocak ayı (Ocak dahil)
+          endDate: i.isGross
+              ? (i.recurringEndDate ?? DateTime(i.date.year + 1, 1, 31))
+              : i.recurringEndDate,
           grossAmount: i.isGross ? i.amount : null,
           netAmount: i.isGross ? 0 : i.amount,
         ),

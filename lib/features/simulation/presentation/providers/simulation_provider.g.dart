@@ -53,6 +53,9 @@ String _$allSimulationsHash() => r'3d09af415fc2ea6b0b8da8418c1ee2df6439f9fe';
 /// Builds the dynamic projection base from all active recurring incomes/expenses.
 /// Each screen passes this to [SimulationCalculator.calculateScenario] so that
 /// the 12-month projection respects start/end dates of recurring items.
+///
+/// Brüt maaşlar: bir sonraki yılın Ocak'ına kadar (Ocak dahil, Şubat hariç).
+/// Çünkü vergi dilimleri yıllık kümülatif olarak hesaplanır ve Ocak'ta sıfırlanır.
 
 @ProviderFor(projectionBaseItems)
 final projectionBaseItemsProvider = ProjectionBaseItemsProvider._();
@@ -60,6 +63,9 @@ final projectionBaseItemsProvider = ProjectionBaseItemsProvider._();
 /// Builds the dynamic projection base from all active recurring incomes/expenses.
 /// Each screen passes this to [SimulationCalculator.calculateScenario] so that
 /// the 12-month projection respects start/end dates of recurring items.
+///
+/// Brüt maaşlar: bir sonraki yılın Ocak'ına kadar (Ocak dahil, Şubat hariç).
+/// Çünkü vergi dilimleri yıllık kümülatif olarak hesaplanır ve Ocak'ta sıfırlanır.
 
 final class ProjectionBaseItemsProvider
     extends
@@ -72,6 +78,9 @@ final class ProjectionBaseItemsProvider
   /// Builds the dynamic projection base from all active recurring incomes/expenses.
   /// Each screen passes this to [SimulationCalculator.calculateScenario] so that
   /// the 12-month projection respects start/end dates of recurring items.
+  ///
+  /// Brüt maaşlar: bir sonraki yılın Ocak'ına kadar (Ocak dahil, Şubat hariç).
+  /// Çünkü vergi dilimleri yıllık kümülatif olarak hesaplanır ve Ocak'ta sıfırlanır.
   ProjectionBaseItemsProvider._()
     : super(
         from: null,
@@ -107,7 +116,7 @@ final class ProjectionBaseItemsProvider
 }
 
 String _$projectionBaseItemsHash() =>
-    r'3ce790350ccb2a55859d85c0ceda9a6c5a9dc54b';
+    r'f60e1ab4bdd44fa2a0f7f8b11733f8f305a23eaf';
 
 @ProviderFor(SimulationNotifier)
 final simulationProvider = SimulationNotifierProvider._();

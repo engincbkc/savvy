@@ -11,7 +11,6 @@ import 'package:savvy/core/utils/currency_formatter.dart';
 import 'package:savvy/features/transactions/domain/models/expense.dart';
 import 'package:savvy/features/transactions/presentation/providers/transaction_form_provider.dart';
 import 'package:savvy/features/transactions/presentation/widgets/form_shared_widgets.dart';
-import 'package:savvy/shared/widgets/info_tooltip.dart';
 import 'package:uuid/uuid.dart';
 
 class AddExpenseSheet extends ConsumerStatefulWidget {
@@ -19,7 +18,6 @@ class AddExpenseSheet extends ConsumerStatefulWidget {
   final double? initialAmount;
   final ExpenseCategory? initialCategory;
   final String? initialNote;
-  final ExpenseType? initialExpenseType;
 
   const AddExpenseSheet({
     super.key,
@@ -27,7 +25,6 @@ class AddExpenseSheet extends ConsumerStatefulWidget {
     this.initialAmount,
     this.initialCategory,
     this.initialNote,
-    this.initialExpenseType,
   });
 
   /// Convenience static method to open AddExpenseSheet as a bottom sheet,
@@ -37,7 +34,6 @@ class AddExpenseSheet extends ConsumerStatefulWidget {
     double? initialAmount,
     ExpenseCategory? initialCategory,
     String? initialNote,
-    ExpenseType? initialExpenseType,
   }) {
     return showModalBottomSheet(
       context: context,
@@ -59,7 +55,6 @@ class AddExpenseSheet extends ConsumerStatefulWidget {
             initialAmount: initialAmount,
             initialCategory: initialCategory,
             initialNote: initialNote,
-            initialExpenseType: initialExpenseType,
           ),
         ),
       ),
@@ -76,7 +71,6 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
   final _noteController = TextEditingController();
   final _personController = TextEditingController();
   ExpenseCategory _category = ExpenseCategory.market;
-  ExpenseType _expenseType = ExpenseType.variable;
   DateTime _date = DateTime.now();
   bool _isRecurring = false;
   DateTime? _recurringEndDate;
@@ -95,9 +89,6 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
     }
     if (widget.initialNote != null) {
       _noteController.text = widget.initialNote!;
-    }
-    if (widget.initialExpenseType != null) {
-      _expenseType = widget.initialExpenseType!;
     }
     _amountController.addListener(_onAmountChanged);
     _amountOk = isAmountValid(_amountController.text);
@@ -141,7 +132,7 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
       id: const Uuid().v4(),
       amount: amount,
       category: _category,
-      expenseType: _expenseType,
+      expenseType: ExpenseType.variable, // Varsayılan değer
       person: _personController.text.isEmpty ? null : _personController.text,
       date: _date,
       note: _noteController.text.isEmpty ? null : _noteController.text,
@@ -258,73 +249,6 @@ class _AddExpenseSheetState extends ConsumerState<AddExpenseSheet> {
                     ),
                   ),
                 ],
-                const SizedBox(height: AppSpacing.xl),
-
-                // Expense type with InfoTooltips
-                Row(
-                  children: [
-                    FormSectionLabel(text: 'Gider Tipi', icon: Icons.tune_rounded),
-                    const Spacer(),
-                    InfoTooltip(
-                      title: 'Gider Tipleri',
-                      description:
-                          'Sabit: Her ay düzenli tekrarlayan giderler (kira, fatura).\n\n'
-                          'Değişken: Aydan aya miktarı değişen giderler (market, ulaşım).\n\n'
-                          'İsteğe Bağlı: Zorunlu olmayan, kısılabilir harcamalar (eğlence, yeme-içme).\n\n'
-                          'İş/Yatırım: İş veya yatırım amaçlı yapılan giderler.',
-                      size: 14,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Row(
-                  children: ExpenseType.values.map((type) {
-                    final isSelected = _expenseType == type;
-                    return Expanded(
-                      child: GestureDetector(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          setState(() => _expenseType = type);
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          margin: EdgeInsets.only(
-                              right: type != ExpenseType.values.last
-                                  ? AppSpacing.xs
-                                  : 0),
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? c.expense
-                                : c.surfaceOverlay,
-                            borderRadius: AppRadius.chip,
-                            border: Border.all(
-                              color: isSelected ? c.expense : c.borderDefault,
-                            ),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: c.expense.withValues(alpha: 0.2),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            type.label,
-                            style: AppTypography.caption.copyWith(
-                              color: isSelected ? Colors.white : c.textSecondary,
-                              fontWeight:
-                                  isSelected ? FontWeight.w700 : FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
                 const SizedBox(height: AppSpacing.xl),
 
                 // Date

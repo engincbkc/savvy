@@ -25,7 +25,6 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: cs,
-      fontFamily: 'Inter',
       scaffoldBackgroundColor: c.surfaceBackground,
       extensions: const [SavvyColors.light],
       cardTheme: CardThemeData(
@@ -118,7 +117,6 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       colorScheme: cs,
-      fontFamily: 'Inter',
       scaffoldBackgroundColor: c.surfaceBackground,
       extensions: const [SavvyColors.dark],
       cardTheme: CardThemeData(

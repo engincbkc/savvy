@@ -34,17 +34,18 @@ Stream<List<Savings>> monthSavings(Ref ref, String yearMonth) {
 }
 
 // All-time streams for multi-month overview
-@riverpod
+// keepAlive: true — ekranlar arası geçişte stream bağlantısı kopmaz
+@Riverpod(keepAlive: true)
 Stream<List<Income>> allIncomes(Ref ref) {
   return ref.watch(incomeRepositoryProvider).watchAll();
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Stream<List<Expense>> allExpenses(Ref ref) {
   return ref.watch(expenseRepositoryProvider).watchAll();
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Stream<List<Savings>> allSavings(Ref ref) {
   return ref.watch(savingsRepositoryProvider).watchAll();
 }

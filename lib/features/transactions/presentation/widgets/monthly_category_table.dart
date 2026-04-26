@@ -94,17 +94,44 @@ MonthlyCategoryData buildMonthlyCategoryData<T>(
 
     addEntry(ym, cat, resolveAmount(ym, itemDate.month), icon);
 
-    // Project recurring items into future months
-    if (isRecurring != null && isRecurring(item)) {
+    // Brüt maaş: bir sonraki yılın Ocak'ına kadar (Ocak dahil, Şubat hariç)
+    // Çünkü vergi dilimleri yıllık kümülatif, Ocak'ta sıfırlanır
+    final isGross = isYearBounded != null && isYearBounded(item);
+    final isRecurringItem = isRecurring != null && isRecurring(item);
+
+    // Project: ya recurring ya da brüt maaş (yıl bazlı)
+    if (isRecurringItem || isGross) {
       final endDate = getRecurringEndDate?.call(item);
-      final isGross = isYearBounded != null && isYearBounded(item);
-      final defaultLimit = isGross ? 60 : 12;
-      final projLimit = endDate != null
-          ? ((endDate.year - itemDate.year) * 12 + endDate.month - itemDate.month).clamp(1, maxProjectionMonths)
-          : defaultLimit;
+
+      // Brüt maaş için: bir sonraki yılın Ocak'ına kadar (Ocak dahil)
+      // Örn: Mayıs 2026 → Oca 2027'ye kadar (9 ay)
+      DateTime? grossEndDate;
+      if (isGross) {
+        // Bir sonraki yılın Ocak ayının sonu
+        grossEndDate = DateTime(itemDate.year + 1, 1, 31);
+      }
+
+      // Hangi bitiş tarihi kullanılacak?
+      DateTime? effectiveEndDate;
+      if (isGross) {
+        // Brüt maaş: kullanıcı bitiş tarihi girdiyse onu kullan, yoksa Ocak'a kadar
+        effectiveEndDate = endDate ?? grossEndDate;
+      } else {
+        effectiveEndDate = endDate;
+      }
+
+      // Projeksiyon limiti hesapla
+      int projLimit;
+      if (effectiveEndDate != null) {
+        projLimit = ((effectiveEndDate.year - itemDate.year) * 12 +
+                     effectiveEndDate.month - itemDate.month).clamp(1, maxProjectionMonths);
+      } else {
+        projLimit = 12; // Normal periyodik için 12 ay
+      }
+
       for (int m = 1; m <= projLimit; m++) {
         final futureDate = DateTime(itemDate.year, itemDate.month + m, 1);
-        if (endDate != null && futureDate.isAfter(endDate)) break;
+        if (effectiveEndDate != null && futureDate.isAfter(effectiveEndDate)) break;
         final futureYm = futureDate.toYearMonth();
         addEntry(futureYm, cat, resolveAmount(futureYm, futureDate.month), icon);
       }

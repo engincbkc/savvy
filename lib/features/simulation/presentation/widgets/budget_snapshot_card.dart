@@ -5,12 +5,22 @@ import 'package:savvy/core/design/tokens/app_radius.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/utils/currency_formatter.dart';
+import 'package:savvy/core/utils/financial_calculator.dart';
 import 'package:savvy/features/dashboard/domain/models/month_summary.dart';
 
 class BudgetSnapshotCard extends StatelessWidget {
   final MonthSummary budget;
 
   const BudgetSnapshotCard({super.key, required this.budget});
+
+  String _monthLabel() {
+    // budget.yearMonth format: "2026-04"
+    final parts = budget.yearMonth.split('-');
+    if (parts.length < 2) return 'Mevcut';
+    final monthIdx = int.tryParse(parts[1]);
+    if (monthIdx == null || monthIdx < 1 || monthIdx > 12) return 'Mevcut';
+    return FinancialCalculator.monthNamesTR[monthIdx - 1];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +49,7 @@ class BudgetSnapshotCard extends StatelessWidget {
             children: [
               Icon(LucideIcons.wallet, size: 16, color: c.brandPrimary),
               const SizedBox(width: AppSpacing.xs),
-              Text('Mevcut Bütçe Durumunuz',
+              Text('${_monthLabel()} Ayı Bütçe Durumunuz',
                   style: AppTypography.labelMedium
                       .copyWith(color: c.brandPrimary)),
             ],

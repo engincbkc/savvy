@@ -142,8 +142,13 @@ class DebtDashboardScreen extends ConsumerWidget {
 
           // Borc listesi
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
-                AppSpacing.lg, 0, AppSpacing.lg, AppSpacing.xl),
+            padding: EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                0,
+                AppSpacing.lg,
+                AppSpacing.xl5 +
+                    MediaQuery.of(context).padding.bottom +
+                    80),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) => Padding(

@@ -26,7 +26,7 @@ final class IncomeRepositoryProvider
         argument: null,
         retry: null,
         name: r'incomeRepositoryProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -53,7 +53,7 @@ final class IncomeRepositoryProvider
   }
 }
 
-String _$incomeRepositoryHash() => r'be2197287abae213b83eaa7175fbea4febfb5e38';
+String _$incomeRepositoryHash() => r'86b0c143d643e4891778167477e87773a8109a32';
 
 @ProviderFor(expenseRepository)
 final expenseRepositoryProvider = ExpenseRepositoryProvider._();
@@ -72,7 +72,7 @@ final class ExpenseRepositoryProvider
         argument: null,
         retry: null,
         name: r'expenseRepositoryProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -100,7 +100,7 @@ final class ExpenseRepositoryProvider
   }
 }
 
-String _$expenseRepositoryHash() => r'1ff72d252256ff436b3c247c37a6d7860557f024';
+String _$expenseRepositoryHash() => r'c243c193355de4fde0bdd5bbfc1c9dd43e9788c2';
 
 @ProviderFor(savingsRepository)
 final savingsRepositoryProvider = SavingsRepositoryProvider._();
@@ -119,7 +119,7 @@ final class SavingsRepositoryProvider
         argument: null,
         retry: null,
         name: r'savingsRepositoryProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -147,7 +147,7 @@ final class SavingsRepositoryProvider
   }
 }
 
-String _$savingsRepositoryHash() => r'0d35a9adb75cce8722cde130a31544e22c7688bb';
+String _$savingsRepositoryHash() => r'873416f6509c2f1862c18be6fcf06ea4e100bdd5';
 
 @ProviderFor(savingsGoalRepository)
 final savingsGoalRepositoryProvider = SavingsGoalRepositoryProvider._();

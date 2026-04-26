@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:savvy/core/constants/financial_enums.dart';
 import 'package:savvy/core/design/tokens/app_colors.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/core/design/tokens/app_spacing.dart';
@@ -27,15 +26,13 @@ class EditSavingsSheet extends ConsumerStatefulWidget {
 class _EditSavingsSheetState extends ConsumerState<EditSavingsSheet> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _amountController;
+  late final TextEditingController _titleController;
   late final TextEditingController _noteController;
-  late SavingsCategory _category;
-  late DateTime _date;
 
   // Original values for change detection
   late final String _origAmount;
+  late final String _origTitle;
   late final String _origNote;
-  late final SavingsCategory _origCategory;
-  late final DateTime _origDate;
 
   bool _hasChanges = false;
 
@@ -54,30 +51,29 @@ class _EditSavingsSheetState extends ConsumerState<EditSavingsSheet> {
     super.initState();
     final s = widget.savings;
     _amountController = TextEditingController(text: _formatThousands(s.amount.round()));
+    _titleController = TextEditingController(text: s.title ?? '');
     _noteController = TextEditingController(text: s.note ?? '');
-    _category = s.category;
-    _date = s.date;
 
     _origAmount = _amountController.text;
+    _origTitle = _titleController.text;
     _origNote = _noteController.text;
-    _origCategory = s.category;
-    _origDate = s.date;
 
     _amountController.addListener(_checkChanges);
+    _titleController.addListener(_checkChanges);
     _noteController.addListener(_checkChanges);
   }
 
   void _checkChanges() {
     final changed = _amountController.text != _origAmount ||
-        _noteController.text != _origNote ||
-        _category != _origCategory ||
-        _date != _origDate;
+        _titleController.text != _origTitle ||
+        _noteController.text != _origNote;
     if (changed != _hasChanges) setState(() => _hasChanges = changed);
   }
 
   @override
   void dispose() {
     _amountController.dispose();
+    _titleController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -88,8 +84,7 @@ class _EditSavingsSheetState extends ConsumerState<EditSavingsSheet> {
 
     final updated = widget.savings.copyWith(
       amount: amount,
-      category: _category,
-      date: _date,
+      title: _titleController.text.isEmpty ? null : _titleController.text,
       note: _noteController.text.isEmpty ? null : _noteController.text,
     );
 
@@ -145,52 +140,30 @@ class _EditSavingsSheetState extends ConsumerState<EditSavingsSheet> {
                 ),
                 const SizedBox(height: AppSpacing.xl),
 
+                // Title
+                TextFormField(
+                  controller: _titleController,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    hintText: 'Başlık',
+                    prefixIcon: Icon(Icons.label_outline_rounded, size: 18),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.base),
+
                 AmountInputField(
                   controller: _amountController,
                   color: c.savings,
                   strongColor: c.savingsStrong,
                   bgColor: c.savingsSurfaceDim,
                 ),
-                const SizedBox(height: AppSpacing.xl),
-
-                FormSectionLabel(text: 'Kategori', icon: AppIcons.category),
-                const SizedBox(height: AppSpacing.sm),
-                CategoryChipSelector<SavingsCategory>(
-                  values: SavingsCategory.values,
-                  selected: _category,
-                  labelOf: (cat) => cat.label,
-                  iconOf: (cat) => cat.icon,
-                  activeColor: c.savings,
-                  onSelected: (cat) {
-                    setState(() => _category = cat);
-                    _checkChanges();
-                  },
-                ),
-                const SizedBox(height: AppSpacing.xl),
-
-                FormSectionLabel(text: 'Başlangıç Tarihi', icon: AppIcons.calendar),
-                const SizedBox(height: AppSpacing.sm),
-                GestureDetector(
-                  onTap: () async {
-                    final picked = await showSavvyDatePicker(
-                      context: context,
-                      initialDate: _date,
-                      firstDate: DateTime(2020),
-                    );
-                    if (picked != null) {
-                      setState(() => _date = picked);
-                      _checkChanges();
-                    }
-                  },
-                  child: FieldChip(icon: AppIcons.calendar, label: formatDateTR(_date)),
-                ),
-                const SizedBox(height: AppSpacing.sm),
+                const SizedBox(height: AppSpacing.base),
 
                 TextFormField(
                   controller: _noteController,
                   maxLength: 200,
                   decoration: const InputDecoration(
-                    hintText: 'Not',
+                    hintText: 'Not (opsiyonel)',
                     prefixIcon: Icon(AppIcons.note, size: 18),
                     counterText: '',
                   ),

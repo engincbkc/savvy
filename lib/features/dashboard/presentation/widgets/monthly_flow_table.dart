@@ -615,7 +615,9 @@ class _FullScreenColumnZoom extends StatelessWidget {
     final c = AppColors.of(context);
     final displayNet = month.totalIncome - month.totalExpense;
 
-    return AnimatedBuilder(
+    return Material(
+      type: MaterialType.transparency,
+      child: AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
         final t = Curves.easeOutCubic.transform(animation.value);
@@ -793,6 +795,7 @@ class _FullScreenColumnZoom extends StatelessWidget {
           ),
         );
       },
+    ),
     );
   }
 }

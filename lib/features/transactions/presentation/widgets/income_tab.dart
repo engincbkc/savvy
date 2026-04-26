@@ -87,8 +87,8 @@ class IncomeTab extends ConsumerWidget {
       children: [
         // Özet — sade
         _SimpleIncomeSummary(
-          grossIncomes: grossIncomes,
-          regularIncomes: regularIncomes,
+          allIncomes: allIncomes,
+          filteredIncomes: incomes,
           total: total,
           grouped: grouped,
           resolveAmount: _resolveAmount,
@@ -577,15 +577,15 @@ class _GrossSalaryCardState extends State<_GrossSalaryCard> {
 // ═══════════════════════════════════════════════════════════════════
 
 class _SimpleIncomeSummary extends StatelessWidget {
-  final List<Income> grossIncomes;
-  final List<Income> regularIncomes;
+  final List<Income> allIncomes; // Tüm gelirler (filtre uygulanmamış)
+  final List<Income> filteredIncomes; // Filtrelenmiş gelirler (liste için)
   final double total;
   final Map<IncomeCategory, List<Income>> grouped;
   final double Function(Income) resolveAmount;
 
   const _SimpleIncomeSummary({
-    required this.grossIncomes,
-    required this.regularIncomes,
+    required this.allIncomes,
+    required this.filteredIncomes,
     required this.total,
     required this.grouped,
     required this.resolveAmount,
@@ -594,13 +594,20 @@ class _SimpleIncomeSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = AppColors.of(context);
+    final now = DateTime.now();
+    final currentMonth = now.month;
+    final currentYear = now.year;
 
-    final grossTotal = grossIncomes.fold(0.0, (s, i) => s + resolveAmount(i));
-    final otherTotal = regularIncomes.fold(0.0, (s, i) => s + resolveAmount(i));
-    final recurringCount = [...grossIncomes, ...regularIncomes]
-        .where((i) => i.isRecurring)
-        .length;
-    final sourceCount = grossIncomes.length + regularIncomes.length;
+    // Bu ayki gelirler (sadece bu ay)
+    final thisMonthIncomes = allIncomes.where((i) =>
+        i.date.month == currentMonth && i.date.year == currentYear).toList();
+
+    final thisMonthTotal = thisMonthIncomes.fold(0.0, (s, i) =>
+        FinancialCalculator.resolveNetForMonth(
+          amount: i.amount, isGross: i.isGross, month: currentMonth));
+
+    final recurringCount = filteredIncomes.where((i) => i.isRecurring).length;
+    final sourceCount = filteredIncomes.length;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final accent = c.income;
@@ -627,28 +634,16 @@ class _SimpleIncomeSummary extends StatelessWidget {
       ),
       child: Column(
         children: [
-          if (grossIncomes.isNotEmpty)
-            _IncRow(
-              icon: Icons.account_balance_rounded,
-              iconColor: accent,
-              label: 'Maaş (net)',
-              value: CurrencyFormatter.formatNoDecimal(grossTotal),
-              detail: total > 0
-                  ? '%${(grossTotal / total * 100).toStringAsFixed(0)}'
-                  : '',
-            ),
-          if (grossIncomes.isNotEmpty && regularIncomes.isNotEmpty)
-            _thinDivider(accent),
-          if (regularIncomes.isNotEmpty)
-            _IncRow(
-              icon: Icons.payments_outlined,
-              iconColor: accent.withValues(alpha: 0.6),
-              label: 'Bu ayki gelirler',
-              value: CurrencyFormatter.formatNoDecimal(otherTotal),
-              detail: total > 0
-                  ? '%${(otherTotal / total * 100).toStringAsFixed(0)}'
-                  : '',
-            ),
+          // Bu ayki gelirlerim (her zaman göster, 0 olsa bile)
+          _IncRow(
+            icon: Icons.account_balance_rounded,
+            iconColor: accent,
+            label: 'Bu ayki gelirlerim',
+            value: CurrencyFormatter.formatNoDecimal(thisMonthTotal),
+            detail: thisMonthIncomes.isNotEmpty
+                ? '${thisMonthIncomes.length} kaynak'
+                : '',
+          ),
           _thinDivider(accent),
           _IncRow(
             icon: Icons.receipt_long_rounded,

@@ -78,14 +78,12 @@ class _SimSliderState extends State<SimSlider> {
   void _startEditing() {
     setState(() {
       _isEditing = true;
-      // Sadece sayısal değeri göster
       if (widget.isInteger) {
         _controller.text = _clampedValue.toInt().toString();
       } else {
         _controller.text = _clampedValue.toStringAsFixed(2);
       }
     });
-    // Focus input after build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
       _controller.selection = TextSelection(
@@ -100,19 +98,14 @@ class _SimSliderState extends State<SimSlider> {
     final parsed = double.tryParse(text);
 
     if (parsed != null) {
-      double newValue = parsed;
-      // Clamp to valid range
-      newValue = newValue.clamp(widget.min, widget.max);
-      // Snap to step if integer
+      double newValue = parsed.clamp(widget.min, widget.max);
       if (widget.isInteger) {
         newValue = newValue.roundToDouble();
       }
       widget.onChanged(newValue);
     }
 
-    setState(() {
-      _isEditing = false;
-    });
+    setState(() => _isEditing = false);
   }
 
   @override
@@ -190,17 +183,11 @@ class _SimSliderState extends State<SimSlider> {
         _startEditing();
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.sm,
-          vertical: 2,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: 2),
         decoration: BoxDecoration(
           color: widget.color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(AppSpacing.xs),
-          border: Border.all(
-            color: widget.color.withValues(alpha: 0.3),
-            width: 1,
-          ),
+          border: Border.all(color: widget.color.withValues(alpha: 0.3), width: 1),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -213,11 +200,7 @@ class _SimSliderState extends State<SimSlider> {
               ),
             ),
             const SizedBox(width: 4),
-            Icon(
-              Icons.edit_outlined,
-              size: 10,
-              color: widget.color.withValues(alpha: 0.6),
-            ),
+            Icon(Icons.edit_outlined, size: 10, color: widget.color.withValues(alpha: 0.6)),
           ],
         ),
       ),
@@ -226,22 +209,19 @@ class _SimSliderState extends State<SimSlider> {
 
   Widget _buildEditInput() {
     return SizedBox(
-      width: 80,
+      width: 70,
       height: 28,
       child: TextField(
         controller: _controller,
         focusNode: _focusNode,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
         style: AppTypography.labelSmall.copyWith(
           color: widget.color,
           fontWeight: FontWeight.w700,
         ),
         decoration: InputDecoration(
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.xs,
-            vertical: 4,
-          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           filled: true,
           fillColor: widget.color.withValues(alpha: 0.1),
           border: OutlineInputBorder(
@@ -252,11 +232,12 @@ class _SimSliderState extends State<SimSlider> {
             borderRadius: AppRadius.chip,
             borderSide: BorderSide(color: widget.color, width: 1.5),
           ),
-          suffixText: widget.isPercent ? '%' : (widget.isInteger ? ' ay' : null),
+          suffixText: widget.isPercent ? '%' : null,
           suffixStyle: AppTypography.caption.copyWith(
             color: widget.color.withValues(alpha: 0.7),
           ),
         ),
+        // Hem nokta hem virgül kabul et (ikisi de ondalık ayracı)
         inputFormatters: [
           FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
         ],
@@ -265,3 +246,4 @@ class _SimSliderState extends State<SimSlider> {
     );
   }
 }
+

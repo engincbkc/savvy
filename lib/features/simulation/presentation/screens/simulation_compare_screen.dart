@@ -329,6 +329,7 @@ class _ScenarioPicker extends StatelessWidget {
     final colors = AppColors.of(context);
     showModalBottomSheet<SimulationEntry>(
       context: context,
+      useRootNavigator: true,
       backgroundColor: colors.surfaceCard,
       shape: const RoundedRectangleBorder(borderRadius: AppRadius.bottomSheet),
       builder: (ctx) {
