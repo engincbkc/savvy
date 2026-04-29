@@ -15,6 +15,7 @@ import 'package:savvy/features/simulation/domain/models/simulation_entry.dart';
 import 'package:savvy/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:savvy/core/providers/repository_providers.dart';
 import 'package:savvy/features/transactions/presentation/widgets/form_shared_widgets.dart';
+import 'package:savvy/shared/widgets/savvy_snackbar.dart';
 import 'package:uuid/uuid.dart';
 
 class AddSimulationSheet extends ConsumerStatefulWidget {
@@ -100,14 +101,7 @@ class _AddSimulationSheetState extends ConsumerState<AddSimulationSheet> {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
       HapticFeedback.heavyImpact();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Simülasyon adı gerekli'),
-          backgroundColor: AppColors.of(context).expense,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.chip),
-        ),
-      );
+      SavvySnackbar.error(context, 'Simülasyon adı gerekli');
       return;
     }
 
@@ -146,12 +140,7 @@ class _AddSimulationSheetState extends ConsumerState<AddSimulationSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Hata: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        SavvySnackbar.error(context, 'Hata: $e');
       }
     }
   }

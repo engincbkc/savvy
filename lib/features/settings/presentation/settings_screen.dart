@@ -22,6 +22,7 @@ import 'package:savvy/features/settings/presentation/screens/settings_dialogs.da
 import 'package:savvy/features/settings/presentation/widgets/profile_card.dart';
 import 'package:savvy/features/settings/presentation/widgets/settings_shared_widgets.dart';
 import 'package:savvy/features/settings/presentation/providers/security_provider.dart';
+import 'package:savvy/features/settings/presentation/providers/app_lock_provider.dart';
 import 'dart:io' show Platform;
 
 class SettingsScreen extends ConsumerWidget {
@@ -164,6 +165,10 @@ class SettingsScreen extends ConsumerWidget {
                             ref
                                 .read(securitySettingsProvider.notifier)
                                 .setAppLock(val);
+                            // Notify app lock provider
+                            ref
+                                .read(appLockProvider.notifier)
+                                .onAppLockSettingChanged(val);
                           },
                           activeTrackColor: const Color(0xFF7E3AF2),
                         ),
@@ -283,6 +288,22 @@ class SettingsScreen extends ConsumerWidget {
                           _confirmDeleteAllData(context, ref);
                         },
                       ),
+                      tileDivider(
+                        color: AppColors.of(context)
+                            .borderDefault
+                            .withValues(alpha: 0.3),
+                      ),
+                      ModernTile(
+                        icon: LucideIcons.userX,
+                        iconColor: const Color(0xFF991B1B),
+                        iconBgColor: const Color(0xFF991B1B),
+                        title: 'Hesabı Sil',
+                        subtitle: 'Hesabınızı ve tüm verilerinizi kalıcı olarak silin',
+                        onTap: () {
+                          HapticFeedback.mediumImpact();
+                          _confirmDeleteAccount(context, ref);
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -389,34 +410,6 @@ class SettingsScreen extends ConsumerWidget {
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: AppSpacing.md),
-
-                // ─── Hesabı Sil ──────────────────────────────────────
-                _StaggeredEntry(
-                  delay: 440,
-                  child: Center(
-                    child: GestureDetector(
-                      onTap: () {
-                        HapticFeedback.mediumImpact();
-                        _confirmDeleteAccount(context, ref);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.sm,
-                        ),
-                        child: Text(
-                          'Hesabı Sil',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.of(context).textTertiary,
-                            decoration: TextDecoration.underline,
-                            decorationColor: AppColors.of(context).textTertiary,
-                          ),
-                        ),
                       ),
                     ),
                   ),

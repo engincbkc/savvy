@@ -120,6 +120,10 @@ double simulationMonthlyPayment(SimulationEntry sim) {
           );
         }
         total += change.monthlyExtras;
+      case HousingFinanceChange():
+        final remaining = change.price - change.downPayment;
+        total += remaining / change.termMonths;
+        total += change.monthlyExtras;
       case CarChange():
         final loan = change.price - change.downPayment;
         if (loan > 0) {
@@ -150,6 +154,7 @@ int? simulationMaxTermMonths(SimulationEntry sim) {
     final term = switch (change) {
       CreditChange() => change.termMonths,
       HousingChange() => change.termMonths,
+      HousingFinanceChange() => change.termMonths,
       CarChange() => change.termMonths,
       InvestmentChange() => change.termMonths,
       _ => null,

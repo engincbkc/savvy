@@ -27,6 +27,16 @@ sealed class SimulationChange with _$SimulationChange {
     @Default('Ev Alımı') String label,
   }) = HousingChange;
 
+  /// Ev alimi — Finansman Evim Sistemi (faizsiz, organizasyon bedeliyle)
+  const factory SimulationChange.housingFinance({
+    required double price,
+    @Default(0) double downPayment,
+    @Default(0) double orgFeePercent, // Organizasyon bedeli %
+    required int termMonths,
+    @Default(0) double monthlyExtras,
+    @Default('Ev Alımı (Finansman)') String label,
+  }) = HousingFinanceChange;
+
   /// Arac alimi — taşıt kredisi + aylık giderler
   const factory SimulationChange.car({
     required double price,
@@ -88,6 +98,7 @@ extension SimulationChangeUI on SimulationChange {
   IconData get icon => switch (this) {
         CreditChange() => LucideIcons.creditCard,
         HousingChange() => LucideIcons.home,
+        HousingFinanceChange() => LucideIcons.building2,
         CarChange() => LucideIcons.car,
         RentChangeChange() => LucideIcons.building2,
         SalaryChangeChange() => LucideIcons.briefcase,
@@ -100,6 +111,7 @@ extension SimulationChangeUI on SimulationChange {
   Color get color => switch (this) {
         CreditChange() => const Color(0xFFF59E0B),
         HousingChange() => const Color(0xFF3B82F6),
+        HousingFinanceChange() => const Color(0xFF3B82F6),
         CarChange() => const Color(0xFF8B5CF6),
         RentChangeChange() => const Color(0xFFEF4444),
         SalaryChangeChange() => const Color(0xFF10B981),
@@ -113,6 +125,7 @@ extension SimulationChangeUI on SimulationChange {
         CreditChange() => true,
         HousingChange(:final price, :final downPayment) =>
           price - downPayment > 0,
+        HousingFinanceChange() => false, // Finansman sisteminde kredi yok
         CarChange(:final price, :final downPayment) =>
           price - downPayment > 0,
         _ => false,
@@ -132,6 +145,7 @@ extension SimulationChangeUI on SimulationChange {
   int? get termMonths => switch (this) {
         CreditChange(:final termMonths) => termMonths,
         HousingChange(:final termMonths) => termMonths,
+        HousingFinanceChange(:final termMonths) => termMonths,
         CarChange(:final termMonths) => termMonths,
         InvestmentChange(:final termMonths) => termMonths,
         _ => null,
@@ -152,6 +166,8 @@ extension SimulationChangeUI on SimulationChange {
           '₺${_compactNum(principal)} · $termMonths ay',
         HousingChange(:final price, :final termMonths) =>
           '₺${_compactNum(price)} · $termMonths ay',
+        HousingFinanceChange(:final price, :final termMonths) =>
+          '₺${_compactNum(price)} · $termMonths ay (Finansman)',
         CarChange(:final price, :final termMonths) =>
           '₺${_compactNum(price)} · $termMonths ay',
         RentChangeChange(:final currentRent, :final newRent) =>

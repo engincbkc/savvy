@@ -45,6 +45,30 @@ Map<String, dynamic> _$HousingChangeToJson(HousingChange instance) =>
       'changeType': instance.$type,
     };
 
+HousingFinanceChange _$HousingFinanceChangeFromJson(
+  Map<String, dynamic> json,
+) => HousingFinanceChange(
+  price: (json['price'] as num).toDouble(),
+  downPayment: (json['downPayment'] as num?)?.toDouble() ?? 0,
+  orgFeePercent: (json['orgFeePercent'] as num?)?.toDouble() ?? 0,
+  termMonths: (json['termMonths'] as num).toInt(),
+  monthlyExtras: (json['monthlyExtras'] as num?)?.toDouble() ?? 0,
+  label: json['label'] as String? ?? 'Ev Alımı (Finansman)',
+  $type: json['changeType'] as String?,
+);
+
+Map<String, dynamic> _$HousingFinanceChangeToJson(
+  HousingFinanceChange instance,
+) => <String, dynamic>{
+  'price': instance.price,
+  'downPayment': instance.downPayment,
+  'orgFeePercent': instance.orgFeePercent,
+  'termMonths': instance.termMonths,
+  'monthlyExtras': instance.monthlyExtras,
+  'label': instance.label,
+  'changeType': instance.$type,
+};
+
 CarChange _$CarChangeFromJson(Map<String, dynamic> json) => CarChange(
   price: (json['price'] as num).toDouble(),
   downPayment: (json['downPayment'] as num?)?.toDouble() ?? 0,

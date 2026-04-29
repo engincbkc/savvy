@@ -48,7 +48,7 @@ class AddExpenseSheet extends ConsumerStatefulWidget {
         builder: (sheetCtx, scrollController) => Container(
           decoration: BoxDecoration(
             color: AppColors.of(sheetCtx).surfaceCard,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+            borderRadius: AppRadius.bottomSheet,
           ),
           child: AddExpenseSheet(
             scrollController: scrollController,

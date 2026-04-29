@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:savvy/core/design/app_theme.dart';
 import 'package:savvy/core/navigation/app_router.dart';
 import 'package:savvy/core/providers/theme_provider.dart';
+import 'package:savvy/features/settings/presentation/providers/app_lock_provider.dart';
+import 'package:savvy/features/settings/presentation/widgets/lock_screen.dart';
 import 'package:savvy/firebase_options.dart';
 
 Future<void> main() async {
@@ -39,6 +41,9 @@ class SavvyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
 
+    // Initialize app lock provider to start lifecycle observer
+    ref.watch(appLockProvider);
+
     return MaterialApp.router(
       title: 'Savvy',
       debugShowCheckedModeBanner: false,
@@ -53,6 +58,10 @@ class SavvyApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      builder: (context, child) {
+        // Wrap with lock screen for security
+        return LockScreen(child: child ?? const SizedBox.shrink());
+      },
     );
   }
 }

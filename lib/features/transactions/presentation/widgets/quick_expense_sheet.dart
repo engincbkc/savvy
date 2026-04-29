@@ -155,7 +155,6 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
       initialAmount: template.amount,
       initialCategory: template.category,
       initialNote: template.label,
-      initialExpenseType: template.expenseType,
     );
   }
 

@@ -96,6 +96,7 @@ class SimulationCalculator {
     return switch (change) {
       CreditChange() => _calcCredit(change, budget),
       HousingChange() => _calcHousing(change, budget),
+      HousingFinanceChange() => _calcHousingFinance(change, budget),
       CarChange() => _calcCar(change, budget),
       RentChangeChange() => _calcRentChange(change),
       SalaryChangeChange() => _calcSalaryChange(change),
@@ -124,6 +125,22 @@ class SimulationCalculator {
       termMonths: c.termMonths,
       downPayment: c.downPayment,
       monthlyExtras: c.monthlyExtras,
+    );
+  }
+
+  /// Finansman Evim Sistemleri (Eminevim, Fuzulevim) — faizsiz, org bedeliyle
+  static ChangeResult _calcHousingFinance(HousingFinanceChange c, MonthSummary budget) {
+    final remaining = c.price - c.downPayment;
+    final monthlyPayment = remaining / c.termMonths;
+    final orgFee = remaining * (c.orgFeePercent / 100);
+    final totalCost = c.downPayment + remaining + orgFee;
+    final totalMonthly = monthlyPayment + c.monthlyExtras;
+
+    return ChangeResult(
+      change: c,
+      monthlyImpact: -totalMonthly,
+      totalCost: totalCost + (c.monthlyExtras * c.termMonths),
+      totalInterest: orgFee, // Organizasyon bedelini faiz yerine göster
     );
   }
 
@@ -286,6 +303,7 @@ class SimulationCalculator {
         final effectiveMonths = switch (change) {
           CreditChange c => min(c.termMonths, 12),
           HousingChange c => min(c.termMonths, 12),
+          HousingFinanceChange c => min(c.termMonths, 12),
           CarChange c => min(c.termMonths, 12),
           InvestmentChange c => min(c.termMonths, 12),
           _ => 12,
@@ -360,6 +378,7 @@ class SimulationCalculator {
         final isWithinTerm = switch (change) {
           CreditChange c => i < c.termMonths,
           HousingChange c => i < c.termMonths,
+          HousingFinanceChange c => i < c.termMonths,
           CarChange c => i < c.termMonths,
           InvestmentChange c => i < c.termMonths,
           _ => true,

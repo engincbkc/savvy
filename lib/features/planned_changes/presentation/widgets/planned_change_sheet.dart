@@ -9,6 +9,7 @@ import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/utils/currency_formatter.dart';
 import 'package:savvy/features/planned_changes/domain/models/planned_change.dart';
 import 'package:savvy/features/planned_changes/presentation/providers/planned_change_provider.dart';
+import 'package:savvy/shared/widgets/savvy_snackbar.dart';
 import 'package:uuid/uuid.dart';
 
 class PlannedChangeSheet extends ConsumerStatefulWidget {
@@ -95,13 +96,7 @@ class _PlannedChangeSheetState extends ConsumerState<PlannedChangeSheet> {
 
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Planlı değişiklik kaydedildi'),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.of(context).textPrimary,
-          ),
-        );
+        SavvySnackbar.success(context, 'Planlı değişiklik kaydedildi');
       }
     } catch (e) {
       if (mounted) _showError('Kaydedilemedi: $e');
@@ -111,13 +106,7 @@ class _PlannedChangeSheetState extends ConsumerState<PlannedChangeSheet> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.of(context).expense,
-      ),
-    );
+    SavvySnackbar.error(context, message);
   }
 
   String _formatDate(DateTime date) {

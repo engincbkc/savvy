@@ -6,6 +6,7 @@ import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/features/auth/presentation/providers/auth_provider.dart';
+import 'package:savvy/shared/widgets/savvy_snackbar.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -46,15 +47,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     ref.listen(authProvider, (prev, next) {
       if (next.hasError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              ref
-                  .read(authProvider.notifier)
-                  .mapFirebaseError(next.error!),
-            ),
-            backgroundColor: AppColors.of(context).expense,
-          ),
+        SavvySnackbar.error(
+          context,
+          ref.read(authProvider.notifier).mapFirebaseError(next.error!),
         );
       }
       // Navigate to dashboard after successful sign-up

@@ -178,17 +178,20 @@ class _SimulationTemplateScreenState
                   AnimatedBuilder(
                     animation: _shakeCtrl,
                     builder: (context, child) {
-                      // Sinüs dalgasıyla 4 kez sallanma (-8 → +8)
-                      final shake = sin(_shakeCtrl.value * pi * 4) * 8;
+                      // Damped sine: 3 oscillation, ±6px, sönerek azalır
+                      final t = _shakeCtrl.value;
+                      final damping = (1 - t);
+                      final shake = sin(t * pi * 6) * 6 * damping;
                       return Transform.translate(
                         offset: Offset(shake, 0),
                         child: child,
                       );
                     },
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOut,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md, vertical: 4),
+                          horizontal: AppSpacing.md, vertical: AppSpacing.sm),
                       decoration: BoxDecoration(
                         borderRadius: AppRadius.card,
                         border: Border.all(
@@ -200,6 +203,16 @@ class _SimulationTemplateScreenState
                         color: _nameError
                             ? c.expense.withValues(alpha: 0.06)
                             : Colors.transparent,
+                        boxShadow: _nameError
+                            ? [
+                                BoxShadow(
+                                  color: c.expense.withValues(alpha: 0.15),
+                                  blurRadius: 12,
+                                  spreadRadius: 0,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
                       ),
                       child: TextFormField(
                         controller: _nameCtrl,
@@ -208,20 +221,87 @@ class _SimulationTemplateScreenState
                           color: c.textPrimary,
                           fontWeight: FontWeight.w600,
                         ),
+                        cursorColor: _nameError ? c.expense : c.textPrimary,
                         decoration: InputDecoration(
                           hintText: 'Simülasyon adı...',
                           hintStyle: AppTypography.headlineSmall.copyWith(
                             color: c.textTertiary.withValues(alpha: 0.5),
                             fontWeight: FontWeight.w400,
                           ),
+                          isDense: true,
+                          filled: false,
                           border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          disabledBorder: InputBorder.none,
+                          errorBorder: InputBorder.none,
+                          focusedErrorBorder: InputBorder.none,
                           contentPadding: EdgeInsets.zero,
                         ),
                         textInputAction: TextInputAction.done,
                       ),
                     ),
                   ),
-                  Divider(color: c.borderDefault.withValues(alpha: 0.3)),
+
+                  // Animated error message (slide + fade in)
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutCubic,
+                    alignment: Alignment.topCenter,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 220),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (child, animation) {
+                        final offset = Tween<Offset>(
+                          begin: const Offset(0, -0.3),
+                          end: Offset.zero,
+                        ).animate(animation);
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                              position: offset, child: child),
+                        );
+                      },
+                      child: _nameError
+                          ? Padding(
+                              key: const ValueKey('error'),
+                              padding: const EdgeInsets.only(
+                                  top: AppSpacing.xs,
+                                  left: AppSpacing.md),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    LucideIcons.alertCircle,
+                                    size: 14,
+                                    color: c.expense,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Lütfen simülasyon adı giriniz',
+                                    style: AppTypography.caption.copyWith(
+                                      color: c.expense,
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 12,
+                                      letterSpacing: 0.1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : const SizedBox(
+                              key: ValueKey('empty'), width: 0, height: 0),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.sm),
+                  AnimatedOpacity(
+                    duration: const Duration(milliseconds: 220),
+                    opacity: _nameError ? 0 : 1,
+                    child: Divider(
+                        color: c.borderDefault.withValues(alpha: 0.3)),
+                  ),
 
                   const SizedBox(height: AppSpacing.xl),
 

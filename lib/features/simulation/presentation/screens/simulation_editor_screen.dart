@@ -20,6 +20,7 @@ import 'package:savvy/features/simulation/presentation/widgets/budget_snapshot_c
 import 'package:savvy/features/simulation/presentation/widgets/sim_editor_change_card.dart';
 import 'package:savvy/features/simulation/presentation/widgets/sim_editor_results.dart';
 import 'package:savvy/features/simulation/presentation/widgets/sim_empty_changes.dart';
+import 'package:savvy/shared/widgets/savvy_dialog.dart';
 
 class SimulationEditorScreen extends ConsumerStatefulWidget {
   final String simulationId;
@@ -175,46 +176,19 @@ class _SimulationEditorScreenState
   }
 
   void _showUnsavedChangesDialog() {
-    final c = AppColors.of(context);
-    showDialog(
+    SavvyDialog.tripleAction(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: c.surfaceCard,
-        shape: RoundedRectangleBorder(borderRadius: AppRadius.cardLg),
-        title: Text('Kaydedilmemiş Değişiklikler',
-            style: AppTypography.titleMedium.copyWith(color: c.textPrimary)),
-        content: Text(
+      title: 'Kaydedilmemiş Değişiklikler',
+      message:
           'Yaptığınız değişiklikler kaydedilmedi. Çıkmak istediğinize emin misiniz?',
-          style: AppTypography.bodyMedium.copyWith(color: c.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('İptal',
-                style: AppTypography.labelMedium.copyWith(color: c.textTertiary)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              context.go('/simulate');
-            },
-            child: Text('Kaydetmeden Çık',
-                style: AppTypography.labelMedium.copyWith(color: c.expense)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.of(ctx).pop();
-              await _save();
-              if (mounted) context.go('/simulate');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _themeColor,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Kaydet ve Çık'),
-          ),
-        ],
-      ),
+      confirmLabel: 'Kaydet ve Çık',
+      destructiveLabel: 'Kaydetmeden Çık',
+      cancelLabel: 'İptal',
+      onConfirm: () async {
+        await _save();
+        if (mounted) context.go('/simulate');
+      },
+      onDestructive: () => context.go('/simulate'),
     );
   }
 

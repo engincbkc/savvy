@@ -42,7 +42,7 @@ final class SecuritySettingsNotifierProvider
 }
 
 String _$securitySettingsNotifierHash() =>
-    r'79ae03a1569f9537c6128bcf087bfe038d470652';
+    r'4b4d34e88016af2b910315e05dea1bea7a978864';
 
 abstract class _$SecuritySettingsNotifier extends $Notifier<SecuritySettings> {
   SecuritySettings build();

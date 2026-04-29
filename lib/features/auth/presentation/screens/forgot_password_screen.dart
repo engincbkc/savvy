@@ -6,6 +6,7 @@ import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/features/auth/presentation/providers/auth_provider.dart';
+import 'package:savvy/shared/widgets/savvy_snackbar.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -42,15 +43,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
     ref.listen(authProvider, (_, next) {
       if (next.hasError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              ref
-                  .read(authProvider.notifier)
-                  .mapFirebaseError(next.error!),
-            ),
-            backgroundColor: AppColors.of(context).expense,
-          ),
+        SavvySnackbar.error(
+          context,
+          ref.read(authProvider.notifier).mapFirebaseError(next.error!),
         );
       }
     });

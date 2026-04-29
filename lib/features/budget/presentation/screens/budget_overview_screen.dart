@@ -10,6 +10,7 @@ import 'package:savvy/features/budget/presentation/providers/budget_provider.dar
 import 'package:savvy/features/budget/presentation/widgets/budget_progress_card.dart';
 import 'package:savvy/features/budget/presentation/widgets/budget_setup_sheet.dart';
 import 'package:savvy/shared/widgets/loading_shimmer.dart';
+import 'package:savvy/shared/widgets/savvy_dialog.dart';
 
 class BudgetOverviewScreen extends ConsumerWidget {
   const BudgetOverviewScreen({super.key});
@@ -198,28 +199,11 @@ class BudgetOverviewScreen extends ConsumerWidget {
   }
 
   void _confirmDelete(BuildContext context, WidgetRef ref, String id) {
-    showDialog(
+    SavvyDialog.destructive(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Limiti Sil'),
-        content: const Text('Bu bütçe limitini silmek istediğine emin misin?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('İptal'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              ref.read(budgetLimitProvider.notifier).softDelete(id);
-            },
-            child: Text(
-              'Sil',
-              style: TextStyle(color: AppColors.of(context).error),
-            ),
-          ),
-        ],
-      ),
+      title: 'Limiti Sil',
+      message: 'Bu bütçe limitini silmek istediğine emin misin?',
+      onConfirm: () => ref.read(budgetLimitProvider.notifier).softDelete(id),
     );
   }
 }

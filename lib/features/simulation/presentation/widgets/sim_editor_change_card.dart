@@ -31,6 +31,7 @@ class SimChangeCard extends StatelessWidget {
   IconData get _icon => switch (change) {
         CreditChange() => LucideIcons.creditCard,
         HousingChange() => LucideIcons.home,
+        HousingFinanceChange() => LucideIcons.building2,
         CarChange() => LucideIcons.car,
         RentChangeChange() => LucideIcons.building2,
         SalaryChangeChange() => LucideIcons.briefcase,
@@ -44,6 +45,8 @@ class SimChangeCard extends StatelessWidget {
           '${CurrencyFormatter.formatNoDecimal(c.principal)} · %${c.monthlyRate}/ay · ${c.termMonths} ay',
         HousingChange c =>
           '${CurrencyFormatter.formatNoDecimal(c.price)} · ${c.termMonths} ay',
+        HousingFinanceChange c =>
+          '${CurrencyFormatter.formatNoDecimal(c.price)} · ${c.termMonths} ay (Finansman)',
         CarChange c =>
           '${CurrencyFormatter.formatNoDecimal(c.price)} · ${c.termMonths} ay',
         RentChangeChange c =>

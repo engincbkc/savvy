@@ -144,6 +144,16 @@ class ChangeEditorSheet extends StatefulWidget {
   State<ChangeEditorSheet> createState() => _ChangeEditorSheetState();
 }
 
+/// Konut finansman tipi
+enum HousingFinanceType {
+  kredi('Kredi', LucideIcons.landmark),
+  diger('Diğer', LucideIcons.building2);
+
+  final String label;
+  final IconData icon;
+  const HousingFinanceType(this.label, this.icon);
+}
+
 class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
   late ChangeType _type;
   final _labelCtrl = TextEditingController();
@@ -159,6 +169,11 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
   bool _isRecurring = true;
   bool _isCompound = true;
   bool _includeTaxes = true; // Varsayılan açık
+
+  // Housing finance type (Kredi vs Diğer)
+  HousingFinanceType _housingFinanceType = HousingFinanceType.kredi;
+  double _orgFeePercent = 0.0; // Organizasyon bedeli %
+  final _financeTermCtrl = TextEditingController(text: '120'); // Varsayılan 120 ay
 
   // Slider state mirrors for rate and term
   double _rateSlider = 3.0;
@@ -234,6 +249,7 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
         _termSlider = c.termMonths.toDouble().clamp(_termMin, _termMax);
       case HousingChange c:
         _type = ChangeType.housing;
+        _housingFinanceType = HousingFinanceType.kredi;
         _labelCtrl.text = c.label;
         _amountCtrl.text = _fmtMoney(c.price);
         _amount2Ctrl.text = _fmtMoney(c.downPayment);
@@ -242,6 +258,15 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
         _extrasCtrl.text = _fmtMoney(c.monthlyExtras);
         _rateSlider = c.monthlyRate.clamp(_rateMin, _rateMax);
         _termSlider = c.termMonths.toDouble().clamp(_termMin, _termMax);
+      case HousingFinanceChange c:
+        _type = ChangeType.housing;
+        _housingFinanceType = HousingFinanceType.diger;
+        _labelCtrl.text = c.label;
+        _amountCtrl.text = _fmtMoney(c.price);
+        _amount2Ctrl.text = _fmtMoney(c.downPayment);
+        _orgFeePercent = c.orgFeePercent;
+        _financeTermCtrl.text = c.termMonths.toString();
+        _extrasCtrl.text = _fmtMoney(c.monthlyExtras);
       case CarChange c:
         _type = ChangeType.car;
         _labelCtrl.text = c.label;
@@ -320,6 +345,7 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
     _extrasCtrl.dispose();
     _descCtrl.dispose();
     _annualIncreaseCtrl.dispose();
+    _financeTermCtrl.dispose();
     super.dispose();
   }
 
@@ -335,14 +361,23 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
           termMonths: _parseInt(_termCtrl.text),
           label: label.isEmpty ? 'Kredi' : label,
         ),
-      ChangeType.housing => SimulationChange.housing(
-          price: _parseAmount(_amountCtrl.text),
-          downPayment: _parseAmount(_amount2Ctrl.text),
-          monthlyRate: _rateSlider,
-          termMonths: _parseInt(_termCtrl.text),
-          monthlyExtras: _parseAmount(_extrasCtrl.text),
-          label: label.isEmpty ? 'Ev Alımı' : label,
-        ),
+      ChangeType.housing => _housingFinanceType == HousingFinanceType.diger
+          ? SimulationChange.housingFinance(
+              price: _parseAmount(_amountCtrl.text),
+              downPayment: _parseAmount(_amount2Ctrl.text),
+              orgFeePercent: _orgFeePercent,
+              termMonths: _parseInt(_financeTermCtrl.text),
+              monthlyExtras: _parseAmount(_extrasCtrl.text),
+              label: label.isEmpty ? 'Ev Alımı (Finansman)' : label,
+            )
+          : SimulationChange.housing(
+              price: _parseAmount(_amountCtrl.text),
+              downPayment: _parseAmount(_amount2Ctrl.text),
+              monthlyRate: _rateSlider,
+              termMonths: _parseInt(_termCtrl.text),
+              monthlyExtras: _parseAmount(_extrasCtrl.text),
+              label: label.isEmpty ? 'Ev Alımı' : label,
+            ),
       ChangeType.car => SimulationChange.car(
           price: _parseAmount(_amountCtrl.text),
           downPayment: _parseAmount(_amount2Ctrl.text),
@@ -813,20 +848,67 @@ class _ChangeEditorSheetState extends State<ChangeEditorSheet> {
               hint: 'Ödeyeceğiniz peşinat tutarı'),
           const SizedBox(height: AppSpacing.sm),
           _loanAmountIndicator(color),
+          const SizedBox(height: AppSpacing.lg),
+
+          // Kredi / Evim sekmeleri
+          _HousingFinanceTabs(
+            selected: _housingFinanceType,
+            color: color,
+            onChanged: (type) => setState(() => _housingFinanceType = type),
+          ),
           const SizedBox(height: AppSpacing.md),
-          ..._rateAndTermSliders(color),
-          const SizedBox(height: AppSpacing.md),
-          _Field(
-              label: 'Aylık Ek Giderler',
-              controller: _extrasCtrl,
+
+          // Seçilen sekmeye göre içerik
+          if (_housingFinanceType == HousingFinanceType.kredi) ...[
+            // Banka kredisi
+            ..._rateAndTermSliders(color),
+            const SizedBox(height: AppSpacing.md),
+            _Field(
+                label: 'Aylık Ek Giderler',
+                controller: _extrasCtrl,
+                color: color,
+                icon: LucideIcons.receipt,
+                suffix: '₺',
+                numeric: true,
+                hint: 'Aidat, sigorta...'),
+            const SizedBox(height: AppSpacing.sm),
+            _HousingTaxInfo(color: color),
+          ] else ...[
+            // Finansman Evim Sistemleri
+            _FinanceSystemInfo(color: color),
+            const SizedBox(height: AppSpacing.md),
+            _OrgFeeSlider(
+              value: _orgFeePercent,
               color: color,
-              icon: LucideIcons.receipt,
-              suffix: '₺',
-              numeric: true,
-              hint: 'Aidat, sigorta...'),
-          // Konut: KKDF+BSMV MUAF — toggle gösterilmez
-          const SizedBox(height: AppSpacing.sm),
-          _HousingTaxInfo(color: color),
+              onChanged: (v) => setState(() => _orgFeePercent = v),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _Field(
+                label: 'Vade (ay)',
+                controller: _financeTermCtrl,
+                color: color,
+                icon: LucideIcons.calendar,
+                suffix: 'ay',
+                numeric: true,
+                hint: '60, 90, 120, 150 veya 180 ay'),
+            const SizedBox(height: AppSpacing.md),
+            _FinanceCalculationInfo(
+              housePrice: _parseAmount(_amountCtrl.text),
+              downPayment: _parseAmount(_amount2Ctrl.text),
+              termMonths: _parseInt(_financeTermCtrl.text),
+              orgFeePercent: _orgFeePercent,
+              color: color,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _Field(
+                label: 'Aylık Ek Giderler',
+                controller: _extrasCtrl,
+                color: color,
+                icon: LucideIcons.receipt,
+                suffix: '₺',
+                numeric: true,
+                hint: 'Aidat, sigorta...'),
+          ],
         ],
       ChangeType.car => [
           _Field(
@@ -1326,6 +1408,460 @@ class _CompoundToggle extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─── Housing Finance Tabs (Kredi / Evim) ─────────────────────────────
+
+class _HousingFinanceTabs extends StatelessWidget {
+  final HousingFinanceType selected;
+  final Color color;
+  final ValueChanged<HousingFinanceType> onChanged;
+
+  const _HousingFinanceTabs({
+    required this.selected,
+    required this.color,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: c.surfaceInput,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: c.borderDefault.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: HousingFinanceType.values.map((type) {
+          final isSelected = selected == type;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                onChanged(type);
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: isSelected ? color : Colors.transparent,
+                  borderRadius: AppRadius.chip,
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: color.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      type.icon,
+                      size: 16,
+                      color: isSelected ? Colors.white : c.textSecondary,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      type.label,
+                      style: AppTypography.labelMedium.copyWith(
+                        color: isSelected ? Colors.white : c.textSecondary,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+// ─── Finance System Info (Diğer sekmesi için açıklama) ───────────────
+
+class _FinanceSystemInfo extends StatelessWidget {
+  final Color color;
+  const _FinanceSystemInfo({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.08),
+            color.withValues(alpha: 0.03),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: AppRadius.card,
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(LucideIcons.building2, size: 18, color: color),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Finansman Evim Sistemleri',
+                style: AppTypography.labelLarge.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Eminevim, Fuzulevim gibi tasarruflu konut sistemleri. '
+            'Banka kredisi yerine aylık aidat ödersiniz. Faiz yoktur, '
+            'sadece organizasyon bedeli uygulanır.',
+            style: AppTypography.bodySmall.copyWith(
+              color: c.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: c.income.withValues(alpha: 0.1),
+              borderRadius: AppRadius.chip,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(LucideIcons.checkCircle, size: 12, color: c.income),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  'Faiz yok • Kura ile erken teslim şansı',
+                  style: AppTypography.caption.copyWith(
+                    color: c.income,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Organization Fee Slider ─────────────────────────────────────────
+
+class _OrgFeeSlider extends StatelessWidget {
+  final double value;
+  final Color color;
+  final ValueChanged<double> onChanged;
+
+  const _OrgFeeSlider({
+    required this.value,
+    required this.color,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(LucideIcons.percent, size: 16, color: color),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              'Organizasyon Bedeli',
+              style: AppTypography.labelMedium.copyWith(
+                color: c.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            GestureDetector(
+              onTap: () => _showOrgFeeInfo(context, color),
+              child: Icon(
+                LucideIcons.info,
+                size: 14,
+                color: c.textTertiary,
+              ),
+            ),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xs,
+              ),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: AppRadius.chip,
+              ),
+              child: Text(
+                '%${value.toStringAsFixed(1)}',
+                style: AppTypography.labelMedium.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        SliderTheme(
+          data: SliderThemeData(
+            activeTrackColor: color,
+            inactiveTrackColor: color.withValues(alpha: 0.2),
+            thumbColor: color,
+            overlayColor: color.withValues(alpha: 0.1),
+            trackHeight: 4,
+          ),
+          child: Slider(
+            value: value,
+            min: 0,
+            max: 10,
+            divisions: 20,
+            onChanged: onChanged,
+          ),
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('%0', style: AppTypography.caption.copyWith(color: c.textTertiary, fontSize: 10)),
+            Text('%10', style: AppTypography.caption.copyWith(color: c.textTertiary, fontSize: 10)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void _showOrgFeeInfo(BuildContext context, Color color) {
+    final c = AppColors.of(context);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: c.surfaceCard,
+        shape: RoundedRectangleBorder(borderRadius: AppRadius.cardLg),
+        title: Row(
+          children: [
+            Icon(LucideIcons.info, size: 20, color: color),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              'Organizasyon Bedeli',
+              style: AppTypography.titleMedium.copyWith(color: c.textPrimary),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Finansman evim sistemlerinde, banka faizi yerine organizasyon bedeli uygulanır.',
+              style: AppTypography.bodySmall.copyWith(color: c.textSecondary),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _infoRow(c, 'Eminevim', '%0 - %2 (kampanyaya göre)'),
+            _infoRow(c, 'Fuzulevim', '%2 - %3'),
+            _infoRow(c, 'Diğer firmalar', '%1 - %5'),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'Bu bedel genellikle konut tesliminde veya taksitlerle birlikte ödenir.',
+              style: AppTypography.caption.copyWith(
+                color: c.textTertiary,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('Anladım', style: TextStyle(color: color)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(dynamic c, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: AppTypography.bodySmall.copyWith(color: c.textPrimary)),
+          Text(value, style: AppTypography.caption.copyWith(color: c.textTertiary)),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Finance Calculation Info ────────────────────────────────────────
+
+class _FinanceCalculationInfo extends StatelessWidget {
+  final double housePrice;
+  final double downPayment;
+  final int termMonths;
+  final double orgFeePercent;
+  final Color color;
+
+  const _FinanceCalculationInfo({
+    required this.housePrice,
+    required this.downPayment,
+    required this.termMonths,
+    required this.orgFeePercent,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+
+    if (housePrice <= 0 || termMonths <= 0) {
+      return const SizedBox.shrink();
+    }
+
+    // Hesaplama:
+    // Kalan tutar = Konut fiyatı - Peşinat
+    // Aylık aidat = Kalan tutar / Vade
+    // Organizasyon bedeli = Kalan tutar * Org oranı
+    // Toplam maliyet = Kalan tutar + Organizasyon bedeli
+    final remaining = housePrice - downPayment;
+    final monthlyPayment = remaining / termMonths;
+    final orgFee = remaining * (orgFeePercent / 100);
+    final totalCost = remaining + orgFee;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: c.surfaceCard,
+        borderRadius: AppRadius.card,
+        border: Border.all(color: c.borderDefault.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(LucideIcons.calculator, size: 16, color: color),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                'Hesaplama',
+                style: AppTypography.labelMedium.copyWith(
+                  color: c.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          _calcRow(c, 'Konut fiyatı', CurrencyFormatter.formatNoDecimal(housePrice)),
+          _calcRow(c, 'Peşinat', '- ${CurrencyFormatter.formatNoDecimal(downPayment)}'),
+          Divider(height: AppSpacing.md, color: c.borderDefault),
+          _calcRow(c, 'Kalan tutar', CurrencyFormatter.formatNoDecimal(remaining)),
+          _calcRow(c, 'Vade', '$termMonths ay (${(termMonths / 12).toStringAsFixed(1)} yıl)'),
+          Divider(height: AppSpacing.md, color: c.borderDefault),
+
+          _calcRowHighlight(
+            c,
+            'Aylık aidat',
+            CurrencyFormatter.formatNoDecimal(monthlyPayment),
+            color,
+          ),
+
+          if (orgFeePercent > 0) ...[
+            const SizedBox(height: AppSpacing.sm),
+            _calcRow(
+              c,
+              'Organizasyon bedeli (%${orgFeePercent.toStringAsFixed(1)})',
+              CurrencyFormatter.formatNoDecimal(orgFee),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            _calcRow(
+              c,
+              'Toplam maliyet',
+              CurrencyFormatter.formatNoDecimal(totalCost),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _calcRow(dynamic c, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: AppTypography.caption.copyWith(color: c.textSecondary),
+          ),
+          Text(
+            value,
+            style: AppTypography.labelSmall.copyWith(
+              color: c.textPrimary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _calcRowHighlight(dynamic c, String label, String value, Color accent) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.12),
+        borderRadius: AppRadius.chip,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: AppTypography.labelSmall.copyWith(
+              color: accent,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          Text(
+            value,
+            style: AppTypography.titleSmall.copyWith(
+              color: accent,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }

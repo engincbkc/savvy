@@ -10,6 +10,7 @@ import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/features/budget/domain/models/budget_limit.dart';
 import 'package:savvy/features/budget/presentation/providers/budget_provider.dart';
 import 'package:savvy/features/transactions/presentation/widgets/form_shared_widgets.dart';
+import 'package:savvy/shared/widgets/savvy_snackbar.dart';
 import 'package:uuid/uuid.dart';
 
 class BudgetSetupSheet extends ConsumerStatefulWidget {
@@ -67,9 +68,7 @@ class _BudgetSetupSheetState extends ConsumerState<BudgetSetupSheet> {
       if (success) {
         Navigator.of(context).pop();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Bir hata oluştu, tekrar deneyin.')),
-        );
+        SavvySnackbar.error(context, 'Bir hata oluştu, tekrar deneyin.');
       }
     }
   }

@@ -11,6 +11,7 @@ import 'package:savvy/core/design/tokens/app_spacing.dart';
 import 'package:savvy/core/design/tokens/app_typography.dart';
 import 'package:savvy/core/design/tokens/app_icons.dart';
 import 'package:savvy/features/auth/presentation/providers/auth_provider.dart';
+import 'package:savvy/shared/widgets/savvy_snackbar.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -74,27 +75,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
 
     ref.listen(authProvider, (prev, next) {
       if (next.hasError && prev?.isLoading == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(LucideIcons.alertCircle,
-                    color: Colors.white, size: 18),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: Text(
-                    ref
-                        .read(authProvider.notifier)
-                        .mapFirebaseError(next.error!),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: AppColors.of(context).expense,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: AppRadius.chip),
-            margin: const EdgeInsets.all(AppSpacing.base),
-          ),
+        SavvySnackbar.error(
+          context,
+          ref.read(authProvider.notifier).mapFirebaseError(next.error!),
         );
       }
       if (prev?.isLoading == true && !next.isLoading && !next.hasError) {

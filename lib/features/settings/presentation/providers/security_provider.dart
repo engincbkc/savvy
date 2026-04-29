@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:savvy/core/services/screenshot_protection_service.dart';
 
 part 'security_provider.g.dart';
 
@@ -44,11 +45,18 @@ class SecuritySettingsNotifier extends _$SecuritySettingsNotifier {
 
   Future<void> _loadFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
+    final screenshotEnabled = prefs.getBool(_keyScreenshot) ?? false;
+
     state = SecuritySettings(
       appLockEnabled: prefs.getBool(_keyAppLock) ?? false,
       autoLockMinutes: prefs.getInt(_keyAutoLock) ?? 1,
-      screenshotProtection: prefs.getBool(_keyScreenshot) ?? false,
+      screenshotProtection: screenshotEnabled,
     );
+
+    // Apply screenshot protection if enabled
+    if (screenshotEnabled) {
+      await ScreenshotProtectionService.enable();
+    }
   }
 
   Future<void> setAppLock(bool enabled) async {
@@ -67,5 +75,12 @@ class SecuritySettingsNotifier extends _$SecuritySettingsNotifier {
     state = state.copyWith(screenshotProtection: enabled);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_keyScreenshot, enabled);
+
+    // Actually enable/disable screenshot protection
+    if (enabled) {
+      await ScreenshotProtectionService.enable();
+    } else {
+      await ScreenshotProtectionService.disable();
+    }
   }
 }
